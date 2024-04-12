@@ -85,7 +85,6 @@
               "browserTarget": "app:build:production"
             },
             "ci": {
-              "progress": false
             }
           }
         },
@@ -178,7 +177,8 @@
   },
   "cli": {
     "analytics": false,
-    "defaultCollection": "@ionic/angular-toolkit"
+    "defaultCollection": "@ionic/angular-toolkit",
+    "packageManager": "yarn"
   },
   "schematics": {
     "@ionic/angular-toolkit:component": {
