@@ -13,7 +13,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "deploy:dev": "ionic build --prod && rsync -zrvh ./www/* node-development:/var/www/stop-motion-app/",
-    "update-ng": "ng update @angular/core@14 @angular/cli@14"
+    "update-ng": "ng update @angular/core@15 @angular/cli@15"
   },
   "private": true,
   "dependencies": {
@@ -67,7 +67,7 @@
     "karma-jasmine-html-reporter": "^1.5.0",
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
-    "typescript": "~4.6.4"
+    "typescript": "~4.8.4"
   },
   "description": "An Ionic project"
 }
