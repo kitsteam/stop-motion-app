@@ -17,12 +17,14 @@ export class ServiceWorkerService {
 
     async initListener() {
         if (environment.production) {
-            this.swUpdate.available.subscribe(async (evt: any) => {
+            this.swUpdate.versionUpdates.subscribe(async (event: any) => {
+                if (event.type === "VERSION_READY") {
                 await  this.baseService.alertService.presentAlert({
                     header: this.baseService.translate.instant('alert_sw_update_title'),
                     message: this.baseService.translate.instant('alert_sw_update_message')
                 });
                 this.swUpdate.activateUpdate().then(() => window.location.reload());
+              }
             });
             // Allow the app to stabilize first, before starting polling for updates with `interval()`.
             const appIsStable = this.appRef.isStable.pipe(first(isStable => isStable === true));

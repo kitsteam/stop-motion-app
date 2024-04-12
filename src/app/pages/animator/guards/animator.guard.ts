@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, CanDeactivate } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { BasePage } from '@pages/base/base.page';
 import { AnimatorService } from '@services/animator/animator.service';
 import { BaseService } from '@services/base/base.service';
@@ -11,7 +11,7 @@ import { first } from 'rxjs/operators';
 
 @Injectable()
 
-export class AnimatorGuard implements CanDeactivate<BasePage> {
+export class AnimatorGuard  {
 
     constructor(
         private animatorService: AnimatorService,

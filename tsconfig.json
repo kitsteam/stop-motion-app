@@ -10,20 +10,42 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2015",
+    "target": "ES2022",
     "module": "es2020",
-    "lib": ["es2018", "dom"],
+    "lib": [
+      "es2018",
+      "dom"
+    ],
     "paths": {
-      "@components/*": ["src/app/components/*"],
-      "@environment/*": [ "src/environments/*" ],
-      "@enums/*": [ "src/app/enums/*" ],
-      "@interfaces/*": ["src/app/interfaces/*"],
-      "@models/*": ["src/app/models/*"],
-      "@pages/*": ["src/app/pages/*"],
-      "@services/*": ["src/app/services/*"],
-      "@shared/*": ["src/app/shared/*"],
-      "@pipes/*": ["src/app/pipes/*"],
+      "@components/*": [
+        "src/app/components/*"
+      ],
+      "@environment/*": [
+        "src/environments/*"
+      ],
+      "@enums/*": [
+        "src/app/enums/*"
+      ],
+      "@interfaces/*": [
+        "src/app/interfaces/*"
+      ],
+      "@models/*": [
+        "src/app/models/*"
+      ],
+      "@pages/*": [
+        "src/app/pages/*"
+      ],
+      "@services/*": [
+        "src/app/services/*"
+      ],
+      "@shared/*": [
+        "src/app/shared/*"
+      ],
+      "@pipes/*": [
+        "src/app/pipes/*"
+      ]
     },
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

@@ -5,7 +5,7 @@
 import { Enviroment } from '@interfaces/environment.interface';
 
 export const environment: Enviroment = {
-  apiUrl: 'http://localhost:9000',
+  apiUrl: 'http://localhost:9001',
   production: false,
   version: '1.1.0'
 };
