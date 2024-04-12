@@ -13,7 +13,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "deploy:dev": "ionic build --prod && rsync -zrvh ./www/* node-development:/var/www/stop-motion-app/",
-    "update-ng": "ng update @angular/core@16 @angular/cli@16"
+    "update-ng": "ng update @angular/core@17 @angular/cli@17"
   },
   "private": true,
   "dependencies": {
