@@ -9,7 +9,7 @@ import { BaseComponent } from '@components/base/base.component';
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent extends BaseComponent implements OnInit {
+export class HeaderComponent extends BaseComponent {
 
     @Input() options: HeaderOptions;
 

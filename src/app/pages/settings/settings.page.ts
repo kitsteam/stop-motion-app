@@ -7,7 +7,7 @@ import { BaseService } from '@services/base/base.service';
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
 })
-export class SettingsPage extends BasePage implements OnInit {
+export class SettingsPage extends BasePage {
 
   constructor(
     public baseService: BaseService

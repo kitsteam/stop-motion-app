@@ -12,8 +12,8 @@ env:
   NODE_VERSION: "20.12"
 
 jobs:
-  runs-on: ubuntu-latest
   yarn_test:
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -26,6 +26,7 @@ jobs:
       - run: yarn test
 
   yarn_lint:
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
