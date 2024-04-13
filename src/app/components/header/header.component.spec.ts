@@ -4,6 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { BaseService } from '@services/base/base.service';
 
 import { HeaderComponent } from './header.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -12,7 +13,7 @@ describe('HeaderComponent', () => {
   beforeEach((() => {
     TestBed.configureTestingModule({
       declarations: [ HeaderComponent ],
-      imports: [IonicModule.forRoot(), RouterTestingModule],
+      imports: [IonicModule.forRoot(), RouterTestingModule, TranslateModule.forRoot()],
       providers: [BaseService]
     })
     .compileComponents();
@@ -21,6 +22,7 @@ describe('HeaderComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
+    component.options = {backButton: false, backHref: "", title: "", leftButton: false, leftHref: "", leftIcon: "", rightButton: false, rightHref: "", rightIcon: ""};
     fixture.detectChanges();
   });
 

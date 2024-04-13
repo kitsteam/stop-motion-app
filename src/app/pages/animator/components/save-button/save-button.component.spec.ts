@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { SaveButtonComponent } from './save-button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('SaveButtonComponent', () => {
   let component: SaveButtonComponent;
@@ -10,7 +11,7 @@ describe('SaveButtonComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ SaveButtonComponent ],
-      imports: [IonicModule.forRoot()]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SaveButtonComponent);

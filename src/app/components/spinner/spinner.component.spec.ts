@@ -4,6 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { BaseService } from '@services/base/base.service';
 
 import { SpinnerComponent } from './spinner.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('SpinnerComponent', () => {
   let component: SpinnerComponent;
@@ -12,7 +13,7 @@ describe('SpinnerComponent', () => {
   beforeEach((() => {
     TestBed.configureTestingModule({
       declarations: [ SpinnerComponent ],
-      imports: [IonicModule.forRoot(), RouterTestingModule],
+      imports: [IonicModule.forRoot(), RouterTestingModule, TranslateModule.forRoot()],
       providers: [BaseService]
     })
     .compileComponents();
@@ -21,6 +22,7 @@ describe('SpinnerComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(SpinnerComponent);
     component = fixture.componentInstance;
+    component.spinnerOptions = {type: "slide"};
     fixture.detectChanges();
   });
 
