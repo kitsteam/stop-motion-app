@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ComponentsModule } from '@components/components.module';
 import { AnimatorPage } from './animator.page';
@@ -66,6 +66,7 @@ const MODALS = [
       }
     ])
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [...GUARDS],
   declarations: [...COMPONENTS, ...MODALS, AnimatorPage],
   exports: [...COMPONENTS]

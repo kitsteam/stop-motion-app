@@ -1,4 +1,4 @@
-FROM node:20.12-bookworm as base
+FROM node:18-bookworm as base
 
 USER node
 WORKDIR /home/node/app
@@ -24,22 +24,18 @@ RUN yarn install
 
 FROM base as production_builder
 
-USER node
+USER root
+
+# Copy project files into the docker image
+COPY --chown=node:node . ./
 
 # Install app dependencies
-COPY package.json /a
-COPY --chown=node:node package.json yarn.lock ./
 RUN yarn install
-# Copy project files into the docker image
-COPY . ./
 RUN yarn build:prod
 
-FROM nginx:alpine as production
-
-## Remove default nginx website
-RUN rm -rf /usr/share/nginx/html/*
+FROM nginxinc/nginx-unprivileged:stable-alpine AS production
 
 ## From 'builder' copy website to default nginx public folder
 COPY --from=production_builder /home/node/app/www /usr/share/nginx/html
-EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
