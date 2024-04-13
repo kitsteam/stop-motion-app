@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { LoadButtonComponent } from './load-button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('LoadButtonComponent', () => {
   let component: LoadButtonComponent;
@@ -10,7 +11,7 @@ describe('LoadButtonComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ LoadButtonComponent ],
-      imports: [IonicModule.forRoot()]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoadButtonComponent);

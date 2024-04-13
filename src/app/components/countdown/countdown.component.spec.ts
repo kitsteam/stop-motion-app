@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CountdownComponent } from './countdown.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('CountdownComponent', () => {
   let component: CountdownComponent;
@@ -8,7 +9,8 @@ describe('CountdownComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CountdownComponent ]
+      declarations: [ CountdownComponent ],
+      imports: [TranslateModule.forRoot()]
     })
     .compileComponents();
   }));

@@ -12,8 +12,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "deploy:dev": "ionic build --prod && rsync -zrvh ./www/* node-development:/var/www/stop-motion-app/",
-    "update-ng": "ng update @angular/core@17 @angular/cli@17"
+    "deploy:dev": "ionic build --prod && rsync -zrvh ./www/* node-development:/var/www/stop-motion-app/"
   },
   "private": true,
   "dependencies": {
@@ -58,14 +57,13 @@
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jsdoc": "30.7.6",
     "eslint-plugin-prefer-arrow": "1.2.2",
-    "jasmine-core": "3.8.0",
-    "jasmine-spec-reporter": "5.0.0",
-    "karma": "6.3.2",
-    "karma-chrome-launcher": "3.1.0",
-    "karma-coverage": "2.0.3",
-    "karma-coverage-istanbul-reporter": "3.0.2",
-    "karma-jasmine": "4.0.0",
-    "karma-jasmine-html-reporter": "1.5.0",
+    "jasmine-core": "5.1.2",
+    "jasmine-spec-reporter": "7.0.0",
+    "karma": "6.4.3",
+    "karma-chrome-launcher": "3.2.0",
+    "karma-coverage": "2.2.1",
+    "karma-jasmine": "5.1.0",
+    "karma-jasmine-html-reporter": "2.1.0",
     "protractor": "7.0.0",
     "ts-node": "8.3.0",
     "typescript": "5.4.5"
