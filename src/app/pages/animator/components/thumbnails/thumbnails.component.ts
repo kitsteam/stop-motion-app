@@ -49,9 +49,6 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnI
     super(baseService);
   }
 
-  ngOnInit(): void {
-  }
-
   private initialiseThumbnailsContainer() {
     this.list = this.animatorService.getFrames().pipe(tap(async (frames: HTMLCanvasElement[]) => {
       this.framesLength = frames.length;

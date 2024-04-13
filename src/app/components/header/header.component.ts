@@ -20,8 +20,6 @@ export class HeaderComponent extends BaseComponent implements OnInit {
         super(baseService);
     }
 
-    ngOnInit() {}
-
     onNavigate(url: string) {
         this.baseService.router.navigateByUrl(url);
     }
