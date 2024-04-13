@@ -124,7 +124,8 @@
           },
           "configurations": {
             "ci": {
-              "watch": false
+              "watch": false,
+              "progress": false
             }
           }
         },
