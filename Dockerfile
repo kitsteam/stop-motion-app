@@ -1,4 +1,4 @@
-FROM node:18-buster as base
+FROM node:20.12-bookworm as base
 
 USER node
 WORKDIR /home/node/app
@@ -12,7 +12,8 @@ RUN set -eux ; \
   python3 \
   && rm -rf /var/lib/apt/lists/*
 
-#USER node
+USER node
+
 # Set up Chromium Headless flags
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROME_PATH=/usr/lib/chromium/
