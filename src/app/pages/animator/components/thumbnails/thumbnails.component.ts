@@ -1,6 +1,6 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BaseComponent } from '@components/base/base.component';
-import { IonSlides } from '@ionic/angular';
+import { IonicSlides } from '@ionic/angular';
 import { AnimatorService } from '@services/animator/animator.service';
 import { BaseService } from '@services/base/base.service';
 import { first, takeUntil, tap } from 'rxjs/operators';
@@ -11,8 +11,21 @@ import { first, takeUntil, tap } from 'rxjs/operators';
   styleUrls: ['./thumbnails.component.scss'],
 })
 export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnInit {
+  private thumbnailsContainer: any;
+  public swiperModules = [IonicSlides];
 
-  @ViewChild('thumbnailsContainer', { static: true }) public thumbnailsContainer: IonSlides;
+  @ViewChild('thumbnailsContainer')
+  set swiper(thumbnailsContainerRef: ElementRef) {
+    /**
+     * This setTimeout waits for Ionic's async initialization to complete.
+     * Otherwise, an outdated swiper reference will be used.
+     */
+    setTimeout(() => {
+      this.thumbnailsContainer = thumbnailsContainerRef.nativeElement.swiper;
+      this.initialiseThumbnailsContainer();
+    }, 0);
+  }
+
   public slideOpts = {
     initialSlide: 0,
     speed: 100,
@@ -23,6 +36,7 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnI
     },
     navigation: true
   };
+  
   public framesLength: number;
   public status = false;
   private interval = null;
@@ -35,7 +49,10 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnI
     super(baseService);
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
+  }
+
+  private initialiseThumbnailsContainer() {
     this.list = this.animatorService.getFrames().pipe(tap(async (frames: HTMLCanvasElement[]) => {
       this.framesLength = frames.length;
       setTimeout(async () => {
