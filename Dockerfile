@@ -1,4 +1,4 @@
-FROM node:18-bookworm as base
+FROM node:20.12-bullseye as base
 
 USER node
 WORKDIR /home/node/app
