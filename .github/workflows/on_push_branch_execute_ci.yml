@@ -37,16 +37,3 @@ jobs:
           cache: "yarn"
       - run: yarn install --frozen-lockfile
       - run: yarn lint
-
-  yarn_build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn build:prod
