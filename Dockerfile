@@ -4,14 +4,14 @@ USER node
 WORKDIR /home/node/app
 
 FROM base as development
+
+# install chromium for karma:
 USER root
 RUN set -eux ; \
   apt-get update && apt-get install -y \
   chromium \
   chromium-driver \
-  python3 \
   && rm -rf /var/lib/apt/lists/*
-
 USER node
 
 # Set up Chromium Headless flags
@@ -23,9 +23,6 @@ COPY --chown=node:node package.json yarn.lock ./
 RUN yarn install
 
 FROM base as production_builder
-
-USER root
-
 # Copy project files into the docker image
 COPY --chown=node:node . ./
 

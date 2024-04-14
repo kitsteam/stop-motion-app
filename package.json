@@ -36,12 +36,13 @@
     "zone.js": "0.14.4"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.24.4",
     "@angular-devkit/build-angular": "17.3.4",
     "@angular-eslint/builder": "17.3.0",
     "@angular-eslint/eslint-plugin": "17.3.0",
     "@angular-eslint/eslint-plugin-template": "17.3.0",
     "@angular-eslint/template-parser": "17.3.0",
-    "@angular/cli": "17.3.4",
+    "@angular/cli": "^17.3.4",
     "@angular/compiler": "17.3.4",
     "@angular/compiler-cli": "17.3.4",
     "@angular/language-service": "17.3.4",
