@@ -10,7 +10,7 @@ import { first, takeUntil, tap } from 'rxjs/operators';
   templateUrl: './thumbnails.component.html',
   styleUrls: ['./thumbnails.component.scss'],
 })
-export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnInit {
+export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
   private thumbnailsContainer: any;
   public swiperModules = [IonicSlides];
 
@@ -47,9 +47,6 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy, OnI
     private animatorService: AnimatorService
   ) {
     super(baseService);
-  }
-
-  ngOnInit(): void {
   }
 
   private initialiseThumbnailsContainer() {

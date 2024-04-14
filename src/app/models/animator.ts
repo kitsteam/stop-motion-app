@@ -10,7 +10,7 @@ import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { ImagesService } from '@services/images/images.service';
-// eslint-disable-next-line @typescript-eslint/naming-convention
+
 declare const webm: any;
 @Injectable({
     providedIn: 'root'
