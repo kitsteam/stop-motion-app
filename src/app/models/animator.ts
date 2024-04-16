@@ -449,6 +449,7 @@ export class Animator {
             // If not specified this defaults to the same value as `quality`.
         });
 
+        // ::TODO: The imageService also requires a backend connection to get webp images. We should either try to do this client-side (if possible) or just download the images individually, instead of as a webm
         if (this.isSafari()) {
             for (const frame of this.frameWebps) {
                 const image = await this.imagesService.convertImages(frame);

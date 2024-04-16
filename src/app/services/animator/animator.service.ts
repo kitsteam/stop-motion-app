@@ -138,11 +138,14 @@ export class AnimatorService {
   }
 
   public async convertAudio(blob: Blob): Promise<void> {
-    const result = await this.audioService.convertAudio(blob);
-    console.log('🚀 ~ file: animator.service.ts ~ line 122 ~ AnimatorService ~ recordAudio ~ result', result);
-    const tempBlob = [result];
-    const finalBlob = new Blob(tempBlob, { type: MimeTypes.audioMp3 });
-    this.animator.setAudioSrc(finalBlob, MimeTypes.audioMp3);
+    // ::TODO:: for now, we'll just use the audio file unchanged:
+    //const result = await this.audioService.convertAudio(blob);
+    //console.log('🚀 ~ file: animator.service.ts ~ line 122 ~ AnimatorService ~ recordAudio ~ result', result);
+    //const tempBlob = [result];
+    //const finalBlob = new Blob(tempBlob, { type: MimeTypes.audioMp3 });
+    //this.animator.setAudioSrc(finalBlob, MimeTypes.audioMp3);
+    // ::TODO:: check if this is actually webM. Might not be the case fo rall browsers, but might be irrelevant either way
+    this.animator.setAudioSrc(blob, MimeTypes.audioWebm);
     return;
   }
 
@@ -160,12 +163,12 @@ export class AnimatorService {
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
       const result = await this.videoService.createVideo(this.animator.frameWebps,frameRate, this.animator.audioBlob);
+      // ::TODO:: decide on filename based on browser/output
       saveAs(new Blob([result]), filename + '.mp4', { autoBom: true });
       return;
     } else {
       return await this.animator.saveDraft(filename);
     }
-
   }
 
   public async load(filepath: string): Promise<any> {
