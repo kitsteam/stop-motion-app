@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 import { ThumbnailComponent } from './thumbnail.component';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -16,7 +16,7 @@ describe('ThumbnailComponent', () => {
 
     TestBed.configureTestingModule({
       declarations: [ ThumbnailComponent ],
-      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ThumbnailComponent);

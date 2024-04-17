@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 import { CameraSelectButtonComponent } from './camera-select-button.component';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -11,7 +11,7 @@ describe('CameraSelectButtonComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ CameraSelectButtonComponent ],
-      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(CameraSelectButtonComponent);

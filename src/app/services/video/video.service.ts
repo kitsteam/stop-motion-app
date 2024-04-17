@@ -1,145 +1,85 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '@services/http/http.service';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { Location, LocationStrategy } from '@angular/common';
+import { MimeTypes } from '@enums/mime-types.enum';
+
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideoService {
+  private loaded = false;
+  private ffmpeg = new FFmpeg();
 
-  constructor(public httpService: HttpService) { }
-  
-  public async createVideo(images: Blob[], frameRate: number, audio?: Blob) {
-    return await this.createVideoLocally(images, frameRate, audio);
-  }
-
-  // ::TODO:: we can safely remove this, once we've made sure that we don't need a server-side implementation. This is mostly for reference until then:
-  private async createVideoHttp(images: Blob[], frameRate: number, audio?: Blob) {
-    console.log('🚀 ~ file: video.service.ts ~ line 12 ~ VideoService ~ createVideo ~ images', images);
-    const data = new FormData();
-    images.forEach((image, index) => {
-      data.append('images', image, `${index}.${image.type}`);
+  private async loadFfmpeg() {
+    const assetBasePath = `${window.location.origin}/assets/js/ffmpeg`;
+    this.ffmpeg.on("log", ({ message }) => {
+      console.log(message)
     });
+    await this.ffmpeg.load({
+      coreURL: await toBlobURL(`${assetBasePath}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(
+        `${assetBasePath}/ffmpeg-core.wasm`,
+        "application/wasm"
+      ),
+      classWorkerURL: `${assetBasePath}/worker.js`
+    });
+    this.loaded = true;
+  };
 
-    data.append('frameRate', frameRate.toString());
+  constructor(private location: Location) { }
 
-    if (audio) {
-      data.append('audio', audio, `${audio.type}`);
+  public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
+    if (!this.loaded) {
+      await this.loadFfmpeg();
     }
 
-    return await this.httpService.post('/videoCreator', data, { responseType: 'arraybuffer' }).toPromise();
-  }
+    const fileEnding = this.fileEnding(imageBlobs[0]);
 
-  private async createVideoLocally(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
-     // canvas element in which we'll render the images:
-    const { canvas, ctx } = await this.buildCanvas(imageBlobs[0]);
+    for (let imageIndex = 0; imageIndex < imageBlobs.length; imageIndex++) {
+      this.ffmpeg.writeFile(`image_${imageIndex}${fileEnding}`, await fetchFile(imageBlobs[imageIndex]))
+    }
 
-    // create a video stream that will contain the generated images:
-    const stream = canvas.captureStream();
-    let audioElement: HTMLAudioElement;
-    let audioContext: AudioContext;
+    const outputFileName = 'output.mp4'
+    let parameters = []
+    parameters.push("-r", `${frameRate}`, "-i", `image_%d${fileEnding}`)
     
-    // videos do not have to have an audio stream, so we should make it optional:
     if (audioBlob) {
-      audioContext = new AudioContext();
-
-      // audio element we use to playback while rendering the images:
-      audioElement = this.buildAudioElement(audioBlob, audioElement);
-
-      const audioTrack = this.getAudioTrack(audioElement, audioContext);
-      // add it to your canvas stream:
-      stream.addTrack(audioTrack);
+      parameters.push("-i", "audio", "-y", "-acodec", "aac")
     }
 
-    // Create a media recorder for the video
-    const videoMediaRecorder = new MediaRecorder(stream);
-    
-    // We'll store the recorded video here:
-    const recordedVideoChunks: Blob[] = [];
-    videoMediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          recordedVideoChunks.push(event.data);
-        }
-    };
-    
-    // starting the video should also start the audio element playing:
-    videoMediaRecorder.onstart = (event) => {
-      if (audioBlob) {
-        audioElement.play();
-      }
-    };
+    parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName)
 
-    // start recording video
-    videoMediaRecorder.start();
-    const frameInterval = 1000 / frameRate;
-    let frameIndex = 0;
-    const intervalId = setInterval(() => {
-      if (frameIndex < imageBlobs.length) {
-        this.drawImage(ctx, imageBlobs[frameIndex]);
-        frameIndex++;
-      } else {
-        // wait for a bit at the end so the last frame does not get missed:
-        setTimeout((event) => {
-          videoMediaRecorder.stop();
-          }, frameInterval);
-        clearInterval(intervalId);
-      }
-    }, frameInterval);
+    this.ffmpeg.writeFile(`audio`, await fetchFile(audioBlob))
 
-    // Wait for the media recorder to stop
-    await new Promise<void>((resolve) => {
-        videoMediaRecorder.onstop = () => {
-        resolve();
-        };
-    });
+    await this.ffmpeg.exec(parameters);
+    const fileData = await this.ffmpeg.readFile(outputFileName);
+    const data = new Uint8Array(fileData as ArrayBuffer);
 
-    // again, optionally deal with the audio context:
-    if (audioBlob) {
-      audioContext.close();
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  }
+
+  // converts a PNG to a webP, which is necessary for the safari export:
+  public async convertPngToWebP(image: Blob): Promise<ArrayBuffer> {
+    if (!this.loaded) {
+      await this.loadFfmpeg();
     }
 
-    // Combine recorded chunks into a single Blob
-    const videoBlob = new Blob(recordedVideoChunks, {
-        type: recordedVideoChunks[0].type
-    });
-
-    return videoBlob;
-}
-
-  private async buildCanvas(imageBlob: Blob) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    // calculate video dimensions based on the first image
-    const firstImage = new Image();
-    firstImage.src = URL.createObjectURL(imageBlob);
-    await new Promise(resolve => firstImage.onload = resolve);
-
-    canvas.width = firstImage.width;
-    canvas.height = firstImage.height;
-    return { canvas, ctx };
+    this.ffmpeg.writeFile(`image.png`, await fetchFile(image))
+    await this.ffmpeg.exec(["-i", "image.png", "-c:v", "libwebp", "image.webp"]);
+    const fileData = await this.ffmpeg.readFile('image.webp');
+    const data = new Uint8Array(fileData as ArrayBuffer);
+    return data;
   }
 
-  private buildAudioElement(audioBlob: Blob, audioElement: HTMLAudioElement) {
-    const audioURL = URL.createObjectURL(audioBlob);
-    audioElement = document.createElement('audio');
-    audioElement.src = audioURL;
-    return audioElement;
-  }
-
-  private getAudioTrack(audioElement: HTMLMediaElement, audioContext: AudioContext): MediaStreamTrack {
-      // connect the audio track to destination:
-      let dest = audioContext.createMediaStreamDestination();
-      let sourceNode = audioContext.createMediaElementSource(audioElement);
-      sourceNode.connect(dest);
-
-      return dest.stream.getAudioTracks()[0];
-  }
-
-  private drawImage(ctx: CanvasRenderingContext2D, imageBlob: Blob) {
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0,0)
-    };
-    img.src =  URL.createObjectURL(imageBlob);
+  private fileEnding(imageBlob: Blob) {
+    if (imageBlob.type == MimeTypes.imagePng) {
+      return '.png'
+    }
+    else {
+      return '.webm'
+    }
   }
 }

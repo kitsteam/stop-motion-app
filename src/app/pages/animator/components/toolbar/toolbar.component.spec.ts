@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 import { ToolbarComponent } from './toolbar.component';
 import { SaveButtonComponent } from '../save-button/save-button.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,7 +15,7 @@ describe('CaptureButtonComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ ToolbarComponent, SaveButtonComponent, SettingsButtonComponent, ClearButtonComponent, LoadButtonComponent ],
-      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ToolbarComponent);

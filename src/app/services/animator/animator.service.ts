@@ -1,11 +1,9 @@
 import { ElementRef, Injectable } from '@angular/core';
 import { CameraStatus } from '@enums/camera-status.enum';
 import { FacingMode } from '@enums/facing-mode.enum';
-import { MimeTypes } from '@enums/mime-types.enum';
 import { SaveState } from '@enums/save-state';
 import { LayoutOptions } from '@interfaces/layout-options.interface';
 import { Animator } from '@models/animator';
-import { AudioService } from '@services/audio/audio.service';
 import { BaseService } from '@services/base/base.service';
 import { VideoService } from '@services/video/video.service';
 import { BehaviorSubject } from 'rxjs';
@@ -29,7 +27,6 @@ export class AnimatorService {
   constructor(
     public animator: Animator,
     public baseService: BaseService,
-    public audioService: AudioService,
     public videoService: VideoService
   ) {
     this.cameras = new BehaviorSubject([]);
@@ -138,14 +135,7 @@ export class AnimatorService {
   }
 
   public async convertAudio(blob: Blob): Promise<void> {
-    // ::TODO:: for now, we'll just use the audio file unchanged:
-    //const result = await this.audioService.convertAudio(blob);
-    //console.log('🚀 ~ file: animator.service.ts ~ line 122 ~ AnimatorService ~ recordAudio ~ result', result);
-    //const tempBlob = [result];
-    //const finalBlob = new Blob(tempBlob, { type: MimeTypes.audioMp3 });
-    //this.animator.setAudioSrc(finalBlob, MimeTypes.audioMp3);
-    // ::TODO:: check if this is actually webM. Might not be the case fo rall browsers, but might be irrelevant either way
-    this.animator.setAudioSrc(blob, MimeTypes.audioWebm);
+    this.animator.setAudioSrc(blob);
     return;
   }
 
@@ -163,7 +153,6 @@ export class AnimatorService {
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
       const result = await this.videoService.createVideo(this.animator.frameWebps,frameRate, this.animator.audioBlob);
-      // ::TODO:: decide on filename based on browser/output
       saveAs(new Blob([result]), filename + '.mp4', { autoBom: true });
       return;
     } else {

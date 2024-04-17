@@ -10,4 +10,4 @@ services:
       - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-4200}:4200"
     volumes:
       - .:/home/node/app
-      #- ./node_modules:/home/node/app/node_modules:cached
+      - ./node_modules:/home/node/app/node_modules:cached
