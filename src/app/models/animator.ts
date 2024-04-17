@@ -9,7 +9,7 @@ import * as WebMWriter from 'webm-writer';
 import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
-import { ImagesService } from '@services/images/images.service';
+import { VideoService } from '@services/video/video.service';
 
 declare const webm: any;
 @Injectable({
@@ -48,7 +48,7 @@ export class Animator {
         // TODO if possible get rid of injectable again
         public baseService: BaseService,
         private platform: Platform,
-        private imagesService: ImagesService,
+        private videoService: VideoService,
     ) {
         this.isAnimatorPlaying = new BehaviorSubject(false);
         this.frameRate = new BehaviorSubject(6.0);
@@ -162,7 +162,7 @@ export class Animator {
         const promise = await new Promise(((resolve, reject) => {
             this.snapshotContext.clearRect(0, 0, this.width, this.height);
             this.snapshotContext.drawImage(imageCanvas, 0, 0, this.width, this.height);
-            imageCanvas.toBlob(blob => { resolve(blob); }, 'image/webp');
+            imageCanvas.toBlob(blob => { resolve(blob); }, 'image/png');
         }));
         this.frameWebps.push(promise);
         return this.frames;
@@ -451,7 +451,7 @@ export class Animator {
 
         if (this.isSafari()) {
             for (const frame of this.frameWebps) {
-                const image = await this.imagesService.convertImages(frame);
+                const image = await this.videoService.convertPngToWebP(frame);
                 videoWriter.addFrame(this.uint8ToBase64(image));
             }
         } else {

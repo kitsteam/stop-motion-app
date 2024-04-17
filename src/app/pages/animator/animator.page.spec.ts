@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 import { AnimatorPage } from './animator.page';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
@@ -31,7 +31,7 @@ describe('AnimatorPage', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ AnimatorPage, ToolbarComponent, ThumbnailsComponent, SettingsPage, SettingsButtonComponent, ClearButtonComponent, LoadButtonComponent, SaveButtonComponent, SnapshotCanvasComponent, TimerComponent, CaptureButtonComponent, PlayerCanvasComponent, FramerateSliderComponent, VideoComponent, TabbarComponent, UndoButtonComponent, RecordAudioButtonComponent, CameraSelectButtonComponent, PlayButtonComponent],
-      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule, NoopAnimationsModule, RouterModule.forRoot([])]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), NoopAnimationsModule, RouterModule.forRoot([])]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AnimatorPage);

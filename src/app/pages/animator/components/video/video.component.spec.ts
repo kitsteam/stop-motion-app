@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 import { VideoComponent } from './video.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -12,7 +12,7 @@ describe('VideoComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ VideoComponent ],
-      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), HttpClientTestingModule, NoopAnimationsModule]
+      imports: [IonicModule.forRoot(), TranslateModule.forRoot(), NoopAnimationsModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(VideoComponent);
