@@ -14,6 +14,7 @@ import { AppComponent } from './app.component';
 import { ComponentsModule } from '@components/components.module';
 import { PipesModule } from '@pipes/pipes.module';
 import { CustomHttpInterceptor } from '@shared/http.interceptor';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpLoader(http);
 @NgModule({
@@ -35,7 +36,8 @@ export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpL
             // Register the ServiceWorker as soon as the app is stable
             // or after 30 seconds (whichever comes first).
             registrationStrategy: 'registerWhenStable:30000'
-        })
+        }),
+        NgbModule
     ],
     providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },

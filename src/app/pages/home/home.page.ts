@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
-  styleUrls: ['../../../assets/kits/css/index.css'],
+  styleUrls: [],
 })
 export class HomePage implements OnInit {
   public height: number;
