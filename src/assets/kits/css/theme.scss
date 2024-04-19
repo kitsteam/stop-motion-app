@@ -1,0 +1,71 @@
+// Import customisations first, afterwards import bootstrap
+@import "colors";
+@import "fonts";
+@import "button";
+@import "gradient";
+@import "form";
+@import "list";
+@import "utilities";
+
+@import "bootstrap/scss/bootstrap";
+
+//
+// Custom styles not related to bootstrap:
+//
+@include media-breakpoint-down(lg) {
+  // starting with LG size we only want one column:
+  .float-end {
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 100px;
+  }
+}
+
+#content {
+  margin-top: 3rem;
+}
+
+#static-footer .row {
+  margin: 1rem;
+}
+
+@media screen and (max-height: 812px) {
+  #content {
+    margin-top: 1rem;
+  }
+
+  #static-footer .row {
+    margin: 0.5rem;
+  }
+
+  .form-text.text-muted {
+    font-size: 0.75em;
+  }
+}
+
+@media screen and (max-height: 568px) {
+  #content {
+    margin-top: 0rem;
+  }
+
+  #static-footer .row {
+    margin: 0.5rem;
+  }
+
+  .form-text.text-muted {
+    font-size: 0.65em;
+  }
+}
+
+@media screen and (max-width: 374px) {
+  // for very small display widhts we need to reduce the font size for the footer:
+  #static-footer {
+    font-size: 14px;
+  }
+}
+
+// we don't want the footer logo to grow too big, otherwise the footer becomes too high:
+#static-footer-logo {
+  max-width: 80px !important;
+  min-width: 40px;
+}

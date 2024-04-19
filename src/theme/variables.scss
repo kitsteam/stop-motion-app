@@ -36,7 +36,7 @@
   --ion-color-success-tint: #42d77d;
 
   /** warning **/
-  --ion-color-warning: #FF781F;
+  --ion-color-warning: #ffaa00;
   --ion-color-warning-rgb: 236,155,35;
   --ion-color-warning-contrast: #ffffff;
   --ion-color-warning-contrast-rgb: 0,0,0;
@@ -83,3 +83,6 @@
   --ion-color-transparent-shade: rgba(0, 0, 0, 0);
   --ion-color-transparent-tint: rgba(0, 0, 0, 0);
 }
+
+/* Importing Kits SCSS file that includes bootstrap */
+@import '../assets/kits/css/theme.scss';

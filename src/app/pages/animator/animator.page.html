@@ -6,7 +6,7 @@
       Camera: {{ state[0] }}
     </span>
   </p>
-  <div class="container">
+  <div class="animator-container">
     <app-timer></app-timer>
     <app-video #appVideo></app-video>
     <app-snapshot-canvas #appSnapshotCanvas></app-snapshot-canvas>
@@ -16,10 +16,10 @@
   <app-tabbar></app-tabbar>
 
   <div class="screen-orientation-overlay">
-      <div class="overlay-container">
-        <ion-icon src="../../../assets/icons/custom/rotate-screen.svg" color="primary"></ion-icon>
-        <h2>{{ 'pages_animator_orientation_hint' | translate }}</h2>          
-      </div>
+    <div class="overlay-container">
+      <ion-icon src="../../../assets/icons/custom/rotate-screen.svg" color="primary"></ion-icon>
+      <h2>{{ 'pages_animator_orientation_hint' | translate }}</h2>
+    </div>
   </div>
 
 </ion-content>
