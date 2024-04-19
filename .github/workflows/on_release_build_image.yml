@@ -6,7 +6,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main", "20-design-add-new-kits-theme-to-application"]
+    branches: ["main"]
   release:
     types: [published]
 
