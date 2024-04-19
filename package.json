@@ -25,7 +25,6 @@
     "@angular/platform-browser-dynamic": "17.3.4",
     "@angular/router": "17.3.4",
     "@angular/service-worker": "17.3.4",
-    "@babel/runtime": "^7.24.4",
     "@ffmpeg/ffmpeg": "0.12.10",
     "@ffmpeg/util": "0.12.1",
     "@ionic/angular": "7.8.4",

@@ -30,7 +30,7 @@ COPY --chown=node:node . ./
 RUN yarn install
 RUN yarn build:prod
 
-FROM nginxinc/nginx-unprivileged:stable-alpine AS production
+FROM nginxinc/nginx-unprivileged:1.25.4-alpine3.18-slim AS production
 
 ## From 'builder' copy website to default nginx public folder
 COPY --from=production_builder /home/node/app/www /usr/share/nginx/html

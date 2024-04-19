@@ -27,21 +27,20 @@
 @import './theme/variables.scss';
 
 @font-face {
-  font-family: "Nunito";
-  src: url("assets/font/nunito/Nunito-Regular.ttf") format("truetype");
-  font-weight: 500;
+  font-family: FiraSans;
+  src: url("assets/kits/font/firasans/FiraSans-Regular.otf") format("opentype")
 }
 
 @font-face {
-  font-family: "Nunito";
-  src: url("assets/font/nunito/Nunito-Light.ttf") format("truetype");
-  font-weight: 300;
+  font-family: FiraSans;
+  font-weight: light;
+  src: url("assets/kits/font/firasans/FiraSans-Light.otf") format("opentype")
 }
 
 @font-face {
-  font-family: "Nunito";
-  src: url("assets/font/nunito/Nunito-Bold.ttf") format("truetype");
-  font-weight: 700;
+  font-family: FiraSans;
+  font-weight: bold;
+  src: url("assets/kits/font/firasans/FiraSans-Bold.otf") format("opentype")
 }
 
 html,
@@ -59,17 +58,17 @@ body {
 
 body,
 * {
-  font-family: "Nunito", sans !important;
+  font-family: "FiraSans", sans !important;
 }
 
 p {
-  font-family: "Nunito", sans;
+  font-family: "FiraSans", sans;
   font-weight: 300;
   font-size: 16px;
 }
 
 ion-button {
-  font-family: "Nunito", sans;
+  font-family: "FiraSans", sans;
   font-weight: 700;
   font-size: 20px;
 }
