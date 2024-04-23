@@ -1,7 +1,7 @@
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA, ErrorHandler } from '@angular/core';
 import { RouteReuseStrategy } from '@angular/router';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -15,6 +15,8 @@ import { ComponentsModule } from '@components/components.module';
 import { PipesModule } from '@pipes/pipes.module';
 import { CustomHttpInterceptor } from '@shared/http.interceptor';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import * as Sentry from "@sentry/angular-ivy";
+import { Router } from "@angular/router";
 
 export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpLoader(http);
 @NgModule({
@@ -42,7 +44,9 @@ export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpL
     providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
         { provide: HTTP_INTERCEPTORS, useClass: CustomHttpInterceptor, multi: true },
+        { provide: ErrorHandler, useValue: Sentry.createErrorHandler({showDialog: true })},
+        { provide: Sentry.TraceService, deps: [Router]},
     ],
     bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {  constructor(trace: Sentry.TraceService) {} }

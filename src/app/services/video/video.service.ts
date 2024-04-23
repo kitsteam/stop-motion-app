@@ -3,7 +3,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { Location, LocationStrategy } from '@angular/common';
 import { MimeTypes } from '@enums/mime-types.enum';
-
+import * as Sentry from "@sentry/angular-ivy";
 
 
 @Injectable({
@@ -12,11 +12,13 @@ import { MimeTypes } from '@enums/mime-types.enum';
 export class VideoService {
   private loaded = false;
   private ffmpeg = new FFmpeg();
+  private messages = [];
 
   private async loadFfmpeg() {
     const assetBasePath = `${window.location.origin}/assets/js/ffmpeg`;
     this.ffmpeg.on("log", ({ message }) => {
       console.log(message)
+      this.messages.push(message)
     });
     await this.ffmpeg.load({
       coreURL: await toBlobURL(`${assetBasePath}/ffmpeg-core.js`, "text/javascript"),
@@ -30,8 +32,26 @@ export class VideoService {
   };
 
   constructor(private location: Location) { }
-
+  
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
+    let video: Blob;
+
+    try {
+      video = await this.createVideoWithFfmpeg(imageBlobs, frameRate, audioBlob)
+    } catch (err) {
+      console.log("messages: " + this.messages.join("\n"))
+      Sentry.setContext("ffmpeg-log-error", {messages: this.messages.join("\n")})
+      Sentry.captureException(err);
+    }
+    
+    console.log("messages: " +  this.messages.join("\n"))
+    Sentry.setContext("ffmpeg-log", {messages:  this.messages.join("\n")})
+    Sentry.captureMessage("ffmpeg-log-captured")
+    
+    return video;
+  }
+
+  public async createVideoWithFfmpeg(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
