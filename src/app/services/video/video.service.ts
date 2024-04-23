@@ -22,10 +22,11 @@ export class VideoService {
     });
     await this.ffmpeg.load({
       coreURL: await toBlobURL(`${assetBasePath}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${assetBasePath}/ffmpeg-core.wasm`,
+      /*wasmURL: await toBlobURL(
+        ``,
         "application/wasm"
-      ),
+      ),*/
+      wasmURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm`, `application/wasm`),
       classWorkerURL: `${assetBasePath}/worker.js`
     });
     this.loaded = true;
