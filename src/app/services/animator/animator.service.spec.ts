@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { AnimatorService } from './animator.service';
 import { TranslateModule } from '@ngx-translate/core';
 
-fdescribe('AnimatorService', () => {
+describe('AnimatorService', () => {
   let service: AnimatorService;
 
   beforeEach(() => {
