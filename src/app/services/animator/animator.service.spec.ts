@@ -15,4 +15,10 @@ describe('AnimatorService', () => {
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
+
+  it('should remove frame from frameWebps', () => {
+    service.animator.frameWebps = ['a', 'b', 'c']
+    service.removeFrames(1)
+    expect(service.animator.frameWebps).toEqual(['a', 'c'])
+  })
 });

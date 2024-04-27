@@ -50,9 +50,15 @@ export class AnimatorService {
   }
 
   removeFrames(index: number) {
+    // remove from visible frames:
     const frames = this.frames.getValue();
     frames.splice(index, 1);
     this.frames.next(frames);
+
+    // also remove from framesWebp:
+    const frameWebps = this.animator.frameWebps;
+    frameWebps.splice(index, 1)
+    this.animator.frameWebps = frameWebps;
   }
 
   getCameraIsRotated() {
