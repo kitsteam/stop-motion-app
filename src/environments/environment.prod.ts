@@ -1,5 +1,4 @@
 export const environment = {
-  apiUrl: 'https://motion-api.kits.blog',
   production: true,
-  version: '1.1.0'
+  version: '2.0.0'
 };
