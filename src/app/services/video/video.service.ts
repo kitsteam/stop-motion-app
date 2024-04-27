@@ -14,7 +14,7 @@ export class VideoService {
   private ffmpeg = new FFmpeg();
 
   private async loadFfmpeg() {
-    const assetBasePath = `${window.location.origin}/assets/js/ffmpeg`;
+    const assetBasePath = `${window.location.origin}/assets/js/ffmpeg/0.12.6/`;
     this.ffmpeg.on("log", ({ message }) => {
       console.log(message)
     });
