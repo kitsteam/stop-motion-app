@@ -13,7 +13,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ComponentsModule } from '@components/components.module';
 import { PipesModule } from '@pipes/pipes.module';
-import { CustomHttpInterceptor } from '@shared/http.interceptor';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpLoader(http);
@@ -41,7 +40,6 @@ export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpL
     ],
     providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-        { provide: HTTP_INTERCEPTORS, useClass: CustomHttpInterceptor, multi: true },
     ],
     bootstrap: [AppComponent]
 })
