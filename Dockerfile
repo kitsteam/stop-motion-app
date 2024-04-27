@@ -23,7 +23,11 @@ COPY --chown=node:node package.json yarn.lock ./
 RUN yarn install
 
 FROM base as production_builder
-# Copy project files into the docker image
+# copy and yarn install package file first to make use of docker caching:
+COPY --chown=node:node package.json yarn.lock ./
+RUN yarn install
+
+# Copy rest of the project files into the docker image
 COPY --chown=node:node . ./
 
 # Install app dependencies
@@ -31,6 +35,9 @@ RUN yarn install
 RUN yarn build:prod
 
 FROM nginxinc/nginx-unprivileged:1.25.4-alpine3.18-slim AS production
+
+# Copy config file:
+COPY config/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 ## From 'builder' copy website to default nginx public folder
 COPY --from=production_builder /home/node/app/www /usr/share/nginx/html
