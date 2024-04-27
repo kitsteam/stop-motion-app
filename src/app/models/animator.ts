@@ -105,24 +105,24 @@ export class Animator {
         };
 
         facingMode = facingMode ? facingMode : 'user';
-        const aspectRatio = (layoutOptions.isPortrait) ? layoutOptions.height / layoutOptions.width
-            : layoutOptions.width / layoutOptions.height;
 
+        const aspectRatio = layoutOptions.width/layoutOptions.height;
+        
         if (this.platform.is('ios') || this.platform.is('android')) {
             constraints.video = {
-                // strange bug - width and height needs to be swaped
-                width: this.platform.is('android') ? layoutOptions.height : layoutOptions.width,
-                height: this.platform.is('android') ? layoutOptions.width : layoutOptions.height,
+                // strange bug - width and height needs to be swaped for portrait mode:
+                width: (layoutOptions.isPortrait) ? layoutOptions.height : layoutOptions.width,
+                height: (layoutOptions.isPortrait) ? layoutOptions.width : layoutOptions.height,
                 aspectRatio,
                 facingMode
             };
         } else {
             if (sourceId) {
                 constraints.video = {
-                    width: layoutOptions.width,
+                    width:  layoutOptions.width,
                     height: layoutOptions.height,
-                    sourceId,
-                    aspectRatio
+                    sourceId: sourceId,
+                    aspectRatio: aspectRatio
                 };
             } else {
                 constraints.video = true;
