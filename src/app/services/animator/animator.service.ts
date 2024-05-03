@@ -151,7 +151,7 @@ export class AnimatorService {
 
   public async save(filename: string, type: SaveState): Promise<void> {
     if (!filename.length) {
-      filename = 'StopMotion';
+      filename = 'StopClip';
     }
     filename = filename.replace(/\s+/g, '_');
     filename = filename.replace(/[^\w\-\.]+/g, '');

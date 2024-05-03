@@ -2,10 +2,10 @@
   "background_color": "#fafafa",
   "description": "Stop Motion App",
   "display": "fullscreen",
-  "name": "Stop Motion",
+  "name": "StopClip",
   "orientation": "portrait",
   "scope": "./",
-  "short_name": "Stop Motion",
+  "short_name": "StopClip",
   "start_url": "./",
   "theme_color": "#1976d2",
   "icons": [
