@@ -162,7 +162,7 @@ export class Animator {
         const promise = await new Promise(((resolve, reject) => {
             this.snapshotContext.clearRect(0, 0, this.width, this.height);
             this.snapshotContext.drawImage(imageCanvas, 0, 0, this.width, this.height);
-            imageCanvas.toBlob(blob => { resolve(blob); }, 'image/png');
+            imageCanvas.toBlob(blob => { resolve(blob); }, 'image/webp');
         }));
         this.frameWebps.push(promise);
         return this.frames;
@@ -360,7 +360,6 @@ export class Animator {
         console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
         try {
             await this.decodeFile(await new Response(result[0]).arrayBuffer());
-            console.log('after decode');
             if (result[1]) {
                 console.log('🚀 ~ file: animator.ts ~ line 363 ~ Animator ~ load ~ result[1]', result[1]);
                 this.setAudioSrc(result[1], MimeTypes.audioMp3);
@@ -554,7 +553,6 @@ export class Animator {
         let blobURL = URL.createObjectURL(blob);
         const image = new Image(this.width, this.height);
         this.framesInFlight++;
-
         image.addEventListener('error', (error) => {
             if (image.getAttribute('triedvp8l')) {
                 console.log(error);

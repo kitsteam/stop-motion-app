@@ -36,28 +36,30 @@ export class VideoService {
       await this.loadFfmpeg();
     }
 
-    const fileEnding = this.fileEnding(imageBlobs[0]);
+    // we always use webp - if a png is incoming (e.g. from safari or firefox), we'll convert it to webp
+    const fileEnding = '.webp';
+    const workingDirectory = await this.buildWorkingDirectory()
 
-    for (let imageIndex = 0; imageIndex < imageBlobs.length; imageIndex++) {
-      this.ffmpeg.writeFile(`image_${imageIndex}${fileEnding}`, await fetchFile(imageBlobs[imageIndex]))
-    }
+    // write images to the directory in parallel, wait for all images to be stored:
+    await this.storeImagesInFilesystem(imageBlobs, workingDirectory, fileEnding)
+    
+    const outputFileName = this.pathToFile(workingDirectory, 'output.mp4')
 
-    const outputFileName = 'output.mp4'
     let parameters = []
-    parameters.push("-r", `${frameRate}`, "-i", `image_%d${fileEnding}`)
+    parameters.push("-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d${fileEnding}`))
     
     if (audioBlob) {
-      parameters.push("-i", "audio", "-y", "-acodec", "aac")
+      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "aac")
+      await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob))
     }
 
     parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName)
 
-    this.ffmpeg.writeFile(`audio`, await fetchFile(audioBlob))
-
     await this.ffmpeg.exec(parameters);
     const fileData = await this.ffmpeg.readFile(outputFileName);
     const data = new Uint8Array(fileData as ArrayBuffer);
-
+    await this.deleteDirectory(workingDirectory)
+    
     return new Blob([data.buffer], { type: 'video/mp4' });
   }
 
@@ -66,20 +68,56 @@ export class VideoService {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
+    const workingDirectory = await this.buildWorkingDirectory()
+    
+    await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'image.png'), await fetchFile(image))
+    
+    await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image.png'), "-c:v", "libwebp", this.pathToFile(workingDirectory, 'image.webp')]);
+    const fileData = await this.ffmpeg.readFile(this.pathToFile(workingDirectory, 'image.webp'));
 
-    this.ffmpeg.writeFile(`image.png`, await fetchFile(image))
-    await this.ffmpeg.exec(["-i", "image.png", "-c:v", "libwebp", "image.webp"]);
-    const fileData = await this.ffmpeg.readFile('image.webp');
-    const data = new Uint8Array(fileData as ArrayBuffer);
-    return data;
+    await this.deleteDirectory(workingDirectory);
+
+    return fileData as ArrayBuffer;
   }
 
-  private fileEnding(imageBlob: Blob) {
-    if (imageBlob.type == MimeTypes.imagePng) {
-      return '.png'
-    }
-    else {
-      return '.webm'
-    }
+  private storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string, fileEnding: string): Promise<boolean[]> {
+    return Promise.all(imageBlobs.map(async (imageBlob, imageIndex) => {
+      let webpBlob: Blob;
+
+      // Safari does not support writing webp images, so we'll need to convert them first to keep consistency. 
+      // This is especially important after importing files, since there will be a mix afterwards for some browsers, as the export file format is webp.
+      if (imageBlob.type == MimeTypes.imagePng) {
+        webpBlob = new Blob([await this.convertPngToWebP(imageBlob)]);
+      }
+      else {
+        webpBlob = imageBlob;
+      }
+
+      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${imageIndex}${fileEnding}`), await fetchFile(webpBlob));
+    }));
+  }
+
+  // ffmpeg can't delete non-empty directories, so we have to delete its content first:
+  private async deleteDirectory(workingDirectory: string) {
+    const files = await this.ffmpeg.listDir(workingDirectory);
+    files.forEach(async (file) => {
+      // ignore directories:
+      if (!file.isDir) {
+        await this.ffmpeg.deleteFile(this.pathToFile(workingDirectory, file.name))
+      }
+    })
+
+    this.ffmpeg.deleteDir(workingDirectory)
+  }
+
+  private async buildWorkingDirectory() : Promise<string> {
+    // use a UUID for the directory so that we don't interfere with other running ffmpeg processes.
+    const workingDirectory = window.crypto.randomUUID().replaceAll('-', '')
+    await this.ffmpeg.createDir(workingDirectory);
+    return workingDirectory
+  }
+
+  private pathToFile(path: string, filename: string) {
+    return `${path}/${filename}`
   }
 }
