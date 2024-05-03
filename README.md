@@ -1,6 +1,6 @@
-# Stop Motion App
+# StopClip - Stop Motion App
 
-The [Stop Motion App](https://kits.blog/) is built the Ionic framework.
+The [StopClip App](https://kits.blog/) is built with the Ionic framework.
 
 This software was inspired by Stop Motion Animator, a web app developed by [szager](https://github.com/szager/stop-motion). We use components of the BSD0 licensed code.
 
