@@ -39,6 +39,7 @@ export class RecordAudioButtonComponent extends BaseComponent {
             text: this.baseService.translate.instant('buttons_record_audio'),
             handler: async () => {
               this.animatorService.clearAudio();
+              this.baseService.alertService.dismissAlert()
               await this.recordAudio();
             }
           }]
