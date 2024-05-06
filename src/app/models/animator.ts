@@ -449,9 +449,9 @@ export class Animator {
         });
 
         if (this.isSafari()) {
-            for (const frame of this.frameWebps) {
-                const image = await this.videoService.convertPngToWebP(frame);
-                videoWriter.addFrame(this.uint8ToBase64(image));
+            const convertedFrames = await this.videoService.convertPngToWebP(this.frameWebps);
+            for (const frame of convertedFrames) {
+                videoWriter.addFrame(this.uint8ToBase64(frame));
             }
         } else {
             for (const frame of this.frames) {
