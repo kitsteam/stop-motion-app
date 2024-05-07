@@ -31,6 +31,22 @@ export class VideoService {
 
   constructor(private location: Location) { }
 
+  public async convertAudio(audioBlob: Blob): Promise<Blob> {
+    if (!this.loaded) {
+      await this.loadFfmpeg();
+    }
+
+    const workingDirectory = await this.buildWorkingDirectory();
+    const outputPath = this.pathToFile(workingDirectory, 'output.mp3');
+    await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
+    await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'audio'), '-vn', outputPath]);
+    
+    const audioOutput = new Uint8Array(await this.ffmpeg.readFile(outputPath) as ArrayBuffer);
+    await this.deleteDirectory(workingDirectory)
+    
+    return new Blob([audioOutput.buffer], { type: MimeTypes.audioMp3 });
+  }
+
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
     if (!this.loaded) {
       await this.loadFfmpeg();
@@ -73,10 +89,10 @@ export class VideoService {
     const workingDirectory = await this.buildWorkingDirectory();
 
     await Promise.all(pngs.map(async (imageBlob, index) => {
-      return await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlob));
+      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlob));
     }));
 
-    await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.png'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
+    await this.convertPngsToWebP(workingDirectory);
 
     let webPs = [];
 
@@ -97,13 +113,11 @@ export class VideoService {
     const workingDirectory = await this.buildWorkingDirectory();
 
     await Promise.all(pngBlobsWithIndex.map(async (imageBlobWithIndex, index) => {
-      const imageBlob = imageBlobWithIndex.imageBlob;
-      return await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlob));
+      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlobWithIndex.imageBlob));
     }));
 
     // Unfortunately, ffmpeg does not keep the mapping, e.g. "image_2.png, image_4.png" will not be converted to "image_2.png, image_4.webp", but rather "image_1.webp, image_2.webp"
-
-    await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.png'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
+    await this.convertPngsToWebP(workingDirectory);
 
     // afterwards, we copy the converted image to the targetworkingdirectory
     // index follows the consecutive ordering ffmpeg uses, whereas the index from the pngBlobWithIndex is the right one:
@@ -116,10 +130,12 @@ export class VideoService {
     await this.deleteDirectory(workingDirectory)
   }
 
+  private async convertPngsToWebP(workingDirectory: string) {
+    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.png'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
+  }
 
   private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string) {
     // we can write webps directly, however pngs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
-
     let webpBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
         if (imageBlob.type != MimeTypes.imagePng) {
           return [{index: index, imageBlob: imageBlob}]
@@ -141,10 +157,7 @@ export class VideoService {
     )
 
     await Promise.all(webpBlobsWithIndex.map(async (webpBlobWithIndex) => {
-      console.log(webpBlobWithIndex)
-      const imageIndex = webpBlobWithIndex.index;
-      const imageBlob = webpBlobWithIndex.imageBlob;
-      return await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${imageIndex}.webp`), await fetchFile(imageBlob));
+      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${webpBlobWithIndex.index}.webp`), await fetchFile(webpBlobWithIndex.imageBlob));
     }));
 
     await this.convertToPngToWebPBatch(pngBlobsWithIndex, workingDirectory)

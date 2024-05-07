@@ -9,6 +9,7 @@ import { VideoService } from '@services/video/video.service';
 import { BehaviorSubject } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
+import { MimeTypes } from '@enums/mime-types.enum';
 @Injectable({
   providedIn: 'root'
 })
@@ -141,7 +142,8 @@ export class AnimatorService {
   }
 
   public async convertAudio(blob: Blob): Promise<void> {
-    this.animator.setAudioSrc(blob);
+    const result = await this.videoService.convertAudio(blob);
+    this.animator.setAudioSrc(result, MimeTypes.audioMp3);
     return;
   }
 
