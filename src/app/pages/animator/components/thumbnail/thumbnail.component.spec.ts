@@ -11,9 +11,6 @@ describe('ThumbnailComponent', () => {
   let mockContext: CanvasRenderingContext2D;
 
   beforeEach(waitForAsync(() => {
-    // we need to create a canvas for the thumbnail to draw on:
-    mockCanvas = document.createElement('canvas');
-
     TestBed.configureTestingModule({
       declarations: [ ThumbnailComponent ],
       imports: [IonicModule.forRoot(), TranslateModule.forRoot()]
@@ -21,7 +18,7 @@ describe('ThumbnailComponent', () => {
 
     fixture = TestBed.createComponent(ThumbnailComponent);
     component = fixture.componentInstance;
-    component.frame = mockCanvas;
+    component.frame = new Image()
     fixture.detectChanges();
   }));
 
