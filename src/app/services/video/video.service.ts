@@ -52,14 +52,12 @@ export class VideoService {
       await this.loadFfmpeg();
     }
 
-    // we always use webp - if a png is incoming (e.g. from safari), we'll convert it to webp
+    // we always use webp - if a jpeg is incoming (e.g. from safari), we'll convert it to webp
     const workingDirectory = await this.buildWorkingDirectory()
 
     // write images to the directory in parallel, wait for all images to be stored:
     await this.storeImagesInFilesystem(imageBlobs, workingDirectory)
     
-    console.log("images stored!")
-
     const outputFileName = this.pathToFile(workingDirectory, 'output.mp4')
 
     let parameters = []
@@ -80,24 +78,20 @@ export class VideoService {
     return new Blob([data.buffer], { type: 'video/mp4' });
   }
 
-  // converts a PNG to a webP, which is necessary for the safari export:
-  public async convertPngToWebP(pngs: any[]): Promise<ArrayBuffer[]> {
+  // converts all Jpegs in this list to webP, which is necessary for the safari export:
+  public async convertPotentiallyMixedFrames(potentiallyMixedFrames: any[]): Promise<ArrayBuffer[]> {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
     
     const workingDirectory = await this.buildWorkingDirectory();
 
-    await Promise.all(pngs.map(async (imageBlob, index) => {
-      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlob));
-    }));
-
-    await this.convertPngsToWebP(workingDirectory);
-
+    await this.storeImagesInFilesystem(potentiallyMixedFrames, workingDirectory);
+    
     let webPs = [];
 
-    for (let i = 0; i < pngs.length; i++) {
-      webPs.push(await this.ffmpeg.readFile(this.pathToFile(workingDirectory, `image_${i+1}.webp`)))
+    for (let i = 0; i < potentiallyMixedFrames.length; i++) {
+      webPs.push(await this.ffmpeg.readFile(this.pathToFile(workingDirectory, `image_${i}.webp`)))
     }
 
     await this.deleteDirectory(workingDirectory);
@@ -105,39 +99,44 @@ export class VideoService {
     return webPs;
   }
 
-  private async convertToPngToWebPBatch(pngBlobsWithIndex: {index: number, imageBlob: Blob}[], targetWorkingDirectory: string) {
+  private async convertToJpegToWebPBatch(jpegBlobsWithIndex: {index: number, imageBlob: Blob}[], targetWorkingDirectory: string) {
     if (!this.loaded) {
       await this.loadFfmpeg();
+    }
+
+    if (jpegBlobsWithIndex.length < 0) {
+      // nothing to do, all images are already webp
+      return;
     }
     
     const workingDirectory = await this.buildWorkingDirectory();
 
-    await Promise.all(pngBlobsWithIndex.map(async (imageBlobWithIndex, index) => {
-      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.png`), await fetchFile(imageBlobWithIndex.imageBlob));
+    await Promise.all(jpegBlobsWithIndex.map(async (imageBlobWithIndex, index) => {
+      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.jpg`), await fetchFile(imageBlobWithIndex.imageBlob));
     }));
 
-    // Unfortunately, ffmpeg does not keep the mapping, e.g. "image_2.png, image_4.png" will not be converted to "image_2.png, image_4.webp", but rather "image_1.webp, image_2.webp"
-    await this.convertPngsToWebP(workingDirectory);
+    // Unfortunately, ffmpeg does not keep the mapping, e.g. "image_2.jpg, image_4.jpg" will not be converted to "image_2.jpg, image_4.webp", but rather "image_1.webp, image_2.webp"
+    await this.convertJpegsToWebP(workingDirectory);
 
     // afterwards, we copy the converted image to the targetworkingdirectory
-    // index follows the consecutive ordering ffmpeg uses, whereas the index from the pngBlobWithIndex is the right one:
-    for (let index = 0; index < pngBlobsWithIndex.length; index++) {
+    // index follows the consecutive ordering ffmpeg uses, whereas the index from the jpegBlobWithIndex is the right one:
+    for (let index = 0; index < jpegBlobsWithIndex.length; index++) {
       const from = this.pathToFile(workingDirectory, `image_${index+1}.webp`)
-      const to = this.pathToFile(targetWorkingDirectory, `image_${pngBlobsWithIndex[index].index}.webp`)
+      const to = this.pathToFile(targetWorkingDirectory, `image_${jpegBlobsWithIndex[index].index}.webp`)
       await this.ffmpeg.writeFile(to, await this.ffmpeg.readFile(from))
     } 
     
     await this.deleteDirectory(workingDirectory)
   }
 
-  private async convertPngsToWebP(workingDirectory: string) {
-    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.png'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
+  private async convertJpegsToWebP(workingDirectory: string) {
+    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.jpg'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
   }
 
   private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string) {
-    // we can write webps directly, however pngs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
+    // we can write webps directly, however jpegs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
     let webpBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-        if (imageBlob.type != MimeTypes.imagePng) {
+        if (imageBlob.type != MimeTypes.imageJpeg) {
           return [{index: index, imageBlob: imageBlob}]
         }
         else {
@@ -146,8 +145,8 @@ export class VideoService {
       }
     )
 
-    let pngBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-      if (imageBlob.type == MimeTypes.imagePng) {
+    let jpegBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
+      if (imageBlob.type == MimeTypes.imageJpeg) {
         return [{index: index, imageBlob: imageBlob}]
       }
       else {
@@ -160,7 +159,7 @@ export class VideoService {
       return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${webpBlobWithIndex.index}.webp`), await fetchFile(webpBlobWithIndex.imageBlob));
     }));
 
-    await this.convertToPngToWebPBatch(pngBlobsWithIndex, workingDirectory)
+    await this.convertToJpegToWebPBatch(jpegBlobsWithIndex, workingDirectory)
   }
 
   // ffmpeg can't delete non-empty directories, so we have to delete its content first:

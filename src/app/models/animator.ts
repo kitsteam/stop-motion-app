@@ -40,6 +40,8 @@ export class Animator {
     videoStream: MediaStream;
     width: any;
     zeroPlayTime: number;
+    imageCanvas: any;
+    context: any;
 
     private isAnimatorPlaying: BehaviorSubject<boolean>;
     private frameRate: BehaviorSubject<number>;
@@ -135,10 +137,25 @@ export class Animator {
             this.videoStream = stream;
             this.isStreaming = true;
 
+            this.setupContext()
+
             return stream;
         } catch (err) {
             console.error(err);
             throw err;
+        }
+    }
+
+    private setupContext() {
+        this.imageCanvas = document.createElement('canvas');
+        this.imageCanvas.id = "capture-from-video-canvas"
+        this.imageCanvas.width = this.width;
+        this.imageCanvas.height = this.height;
+        
+        this.context = this.imageCanvas.getContext('2d', { alpha: false });
+        if (this.rotated) {
+            this.context.rotate(Math.PI);
+            this.context.translate(-this.width, -this.height);
         }
     }
 
@@ -148,23 +165,27 @@ export class Animator {
     public async capture() {
         // console.log('🚀 ~ file: animator.ts ~ line 103 ~ Animator ~ capture ~ capture');
         if (!this.isStreaming) { return; }
-        const imageCanvas: HTMLCanvasElement = document.createElement('canvas');
-        imageCanvas.width = this.width;
-        imageCanvas.height = this.height;
-        const context = imageCanvas.getContext('2d', { alpha: false });
-        if (this.rotated) {
-            context.rotate(Math.PI);
-            context.translate(-this.width, -this.height);
-        }
-        context.drawImage(this.video, 0, 0, this.width, this.height);
-        this.frames.push(imageCanvas);
+        
+        this.context.drawImage(this.video, 0, 0, this.width, this.height);
+        
+        this.imageCanvas.toBlob((blob: Blob) => { 
+              var img = new Image();
+            
+              const dataUrl = URL.createObjectURL(blob);
 
-        const promise = await new Promise(((resolve, reject) => {
-            this.snapshotContext.clearRect(0, 0, this.width, this.height);
-            this.snapshotContext.drawImage(imageCanvas, 0, 0, this.width, this.height);
-            imageCanvas.toBlob(blob => { resolve(blob); }, 'image/webp');
-        }));
-        this.frameWebps.push(promise);
+              img.onload = async() => {
+                this.frames.push(img);
+                URL.revokeObjectURL(dataUrl);
+              }
+              img.src = dataUrl;
+
+              this.snapshotContext.clearRect(0, 0, this.width, this.height);
+              this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
+
+              this.frameWebps.push(blob);
+
+        }, 'image/jpeg', 0.8);
+
         return this.frames;
     }
 
@@ -448,16 +469,18 @@ export class Animator {
             // If not specified this defaults to the same value as `quality`.
         });
 
-        if (this.isSafari()) {
-            const convertedFrames = await this.videoService.convertPngToWebP(this.frameWebps);
+        // ::TODO:: in the past, we only converted the frames for Safari. Right now, we always create jpegs.
+        // This simplifies the process quite a bit, as it's more consistent. However, we should check if this causes further issues.
+        //if (this.isSafari()) {
+            const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebps);
             for (const frame of convertedFrames) {
                 videoWriter.addFrame(this.uint8ToBase64(frame));
             }
-        } else {
+        /*} else {
             for (const frame of this.frames) {
                 videoWriter.addFrame(frame);
             }
-        }
+        }*/
 
         const blob = await videoWriter.complete();
         return blob;
@@ -551,7 +574,7 @@ export class Animator {
     */
     private addFrameVP8(frameOffset: number, callback: any, blob: Blob, index: number) {
         let blobURL = URL.createObjectURL(blob);
-        const image = new Image(this.width, this.height);
+        const image = new Image();
         this.framesInFlight++;
         image.addEventListener('error', (error) => {
             if (image.getAttribute('triedvp8l')) {
@@ -571,11 +594,8 @@ export class Animator {
         });
 
         image.addEventListener('load', async (evt: any) => {
-            const newCanvas = document.createElement('canvas');
-            newCanvas.width = this.width;
-            newCanvas.height = this.height;
-            newCanvas.getContext('2d', { alpha: false }).drawImage(evt.target, 0, 0, this.width, this.height);
-            this.frames[frameOffset + index] = newCanvas;
+            this.frames[frameOffset + index] = image
+
             this.frameWebps[frameOffset + index] = await new Promise((resolve, reject) => {
                 resolve(blob);
             });

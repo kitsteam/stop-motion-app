@@ -6,7 +6,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "61-bug-in-safari-the-canvas-uses-too-much-memory"]
   release:
     types: [published]
 
