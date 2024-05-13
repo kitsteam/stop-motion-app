@@ -39,7 +39,7 @@
     "swiper": "11.1.1",
     "tslib": "2.6.2",
     "webm-writer": "1.0.0",
-    "zone.js": "0.14.4"
+    "zone.js": "0.14.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "17.3.6",
