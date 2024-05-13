@@ -57,9 +57,9 @@ export class AnimatorService {
     this.frames.next(frames);
 
     // also remove from framesWebp:
-    const frameWebps = this.animator.frameWebps;
-    frameWebps.splice(index, 1)
-    this.animator.frameWebps = frameWebps;
+    const frameWebpsAndJpegs = this.animator.frameWebpsAndJpegs;
+    frameWebpsAndJpegs.splice(index, 1)
+    this.animator.frameWebpsAndJpegs = frameWebpsAndJpegs;
   }
 
   getCameraIsRotated() {
@@ -77,6 +77,11 @@ export class AnimatorService {
     const frames = await this.animator.capture();
     this.frames.next(frames);
     return;
+  }
+
+  public hasMemoryCapacity() {
+    const frameLimit = 360;
+    return this.animator.frames.length < frameLimit;
   }
 
   public undoCapture() {
@@ -160,7 +165,7 @@ export class AnimatorService {
 
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createVideo(this.animator.frameWebps,frameRate, this.animator.audioBlob);
+      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs,frameRate, this.animator.audioBlob);
       saveAs(new Blob([result]), filename + '.mp4', { autoBom: true });
       return;
     } else {

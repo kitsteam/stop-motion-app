@@ -25,7 +25,7 @@ export class Animator {
     rotated: boolean;
     frames: any[];
     framesInFlight: number;
-    frameWebps: any[];
+    frameWebpsAndJpegs: any[]; // this is a mix of webps and jpegs. webps will be imported, whereas jpegs will be captured
     height: number;
     isStreaming: boolean;
     isRecording: boolean;
@@ -77,7 +77,7 @@ export class Animator {
             this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             this.frames = [];
             this.framesInFlight = 0;
-            this.frameWebps = [];
+            this.frameWebpsAndJpegs = [];
             this.isStreaming = true;
             this.name = null;
             this.playCanvas = playCanvas;
@@ -182,7 +182,7 @@ export class Animator {
               this.snapshotContext.clearRect(0, 0, this.width, this.height);
               this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
 
-              this.frameWebps.push(blob);
+              this.frameWebpsAndJpegs.push(blob);
 
         }, 'image/jpeg', 0.8);
 
@@ -194,7 +194,7 @@ export class Animator {
     */
     public undoCapture() {
         this.frames.pop();
-        this.frameWebps.pop();
+        this.frameWebpsAndJpegs.pop();
         if (this.frames.length) {
             this.drawFrame(this.frames.length - 1, this.snapshotContext);
         } else {
@@ -212,7 +212,7 @@ export class Animator {
         this.setAudioSrc(null);
         if (this.frames.length === 0) { return; }
         this.frames = [];
-        this.frameWebps = [];
+        this.frameWebpsAndJpegs = [];
         this.snapshotContext.clearRect(0, 0, this.width, this.height);
         this.playContext.clearRect(0, 0, this.width, this.height);
         this.name = null;
@@ -472,7 +472,7 @@ export class Animator {
         // ::TODO:: in the past, we only converted the frames for Safari. Right now, we always create jpegs.
         // This simplifies the process quite a bit, as it's more consistent. However, we should check if this causes further issues.
         //if (this.isSafari()) {
-            const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebps);
+            const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs);
             for (const frame of convertedFrames) {
                 videoWriter.addFrame(this.uint8ToBase64(frame));
             }
@@ -542,7 +542,7 @@ export class Animator {
             blobs.unshift(blobs.pop());
         }
         console.log('🚀 ~ file: animator.ts ~ line 505 ~ Animator ~ readFile ~ blobs', blobs);
-        console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frameWebps', this.frameWebps);
+        console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frameWebpsAndJpegs', this.frameWebpsAndJpegs);
         console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frames', this.frames);
         return blobs;
     }
@@ -596,7 +596,7 @@ export class Animator {
         image.addEventListener('load', async (evt: any) => {
             this.frames[frameOffset + index] = image
 
-            this.frameWebps[frameOffset + index] = await new Promise((resolve, reject) => {
+            this.frameWebpsAndJpegs[frameOffset + index] = await new Promise((resolve, reject) => {
                 resolve(blob);
             });
             this.framesInFlight--;
