@@ -9,11 +9,10 @@ import { AnimatorService } from '@services/animator/animator.service';
 export class ThumbnailComponent implements OnInit {
 
   @ViewChild('thumbnail', { static: true }) public thumbnail: ElementRef;
-  @Input() frame: HTMLCanvasElement;
+  @Input() frame: HTMLImageElement;
   @Input() index: number;
   @Output() thumbnailClicked = new EventEmitter();
 
-  public ctx: CanvasRenderingContext2D;
   public width = this.animatorService.animator.width;
   public height = this.animatorService.animator.height;
 
@@ -24,8 +23,7 @@ export class ThumbnailComponent implements OnInit {
   ngOnInit() {
     this.thumbnail.nativeElement.width = this.width;
     this.thumbnail.nativeElement.height = this.height;
-    this.ctx = this.thumbnail.nativeElement.getContext('2d');
-    this.ctx.drawImage(this.frame, 0, 0, this.width, this.height);
+    this.thumbnail.nativeElement.appendChild(this.frame);
   }
 
   onClick() {

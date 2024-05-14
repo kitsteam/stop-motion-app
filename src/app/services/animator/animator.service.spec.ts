@@ -16,9 +16,9 @@ describe('AnimatorService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should remove frame from frameWebps', () => {
-    service.animator.frameWebps = ['a', 'b', 'c']
+  it('should remove frame from frameWebpsAndJpegs', () => {
+    service.animator.frameWebpsAndJpegs = ['a', 'b', 'c']
     service.removeFrames(1)
-    expect(service.animator.frameWebps).toEqual(['a', 'c'])
+    expect(service.animator.frameWebpsAndJpegs).toEqual(['a', 'c'])
   })
 });
