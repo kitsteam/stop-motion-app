@@ -62,6 +62,7 @@ body {
 body,
 * {
   font-family: "FiraSans", sans !important;
+  overflow: hidden !important; /* Hide scrollbars */
 }
 
 p {

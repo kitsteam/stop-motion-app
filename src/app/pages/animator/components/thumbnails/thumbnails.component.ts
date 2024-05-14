@@ -14,7 +14,7 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
   private thumbnailsContainer: any;
   public swiperModules = [IonicSlides];
 
-  @ViewChild('thumbnailsContainer')
+  @ViewChild('thumbnailsContainer', { static: true })
   set swiper(thumbnailsContainerRef: ElementRef) {
     /**
      * This setTimeout waits for Ionic's async initialization to complete.
@@ -34,12 +34,12 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
     pagination: {
       type: 'progressbar'
     },
-    navigation: true
+    navigation: true,
   };
   
   public framesLength: number;
   public status = false;
-  private interval = null;
+  private interval: ReturnType<typeof setInterval> = null;
 
 
   constructor(
@@ -50,15 +50,18 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
   }
 
   private initialiseThumbnailsContainer() {
-    this.list = this.animatorService.getFrames().pipe(tap(async (frames: HTMLCanvasElement[]) => {
+    this.list = this.animatorService.getFrames().pipe(tap(async (frames: HTMLImageElement[]) => {
       this.framesLength = frames.length;
+
+      // this will be called after this.list has been updated with the new frames with a timeout. 
+      // otherwise, we would update the list before this.list has been updated
       setTimeout(async () => {
-        await this.thumbnailsContainer.slideTo(frames.length + 1);
+        // update first, so that the slide is actually present:
         await this.thumbnailsContainer.update();
+        await this.thumbnailsContainer.slideTo(frames.length);
       }, 100);
     }));
-
-
+  
     this.animatorService.animator.getIsPlaying().pipe(takeUntil(this.unsubscribe$)).subscribe(async (isPlaying: boolean) => {
       if (isPlaying) {
         // reset slider if already moved
@@ -71,14 +74,21 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
         const milliSeconds = (seconds * 1000) / frames;
         // set nextFrame to -1, so that slider does not start immediatley
         let nextFrame = -1;
+
         this.interval = setInterval(async () => {
-          await this.thumbnailsContainer.slideTo(nextFrame);
-          nextFrame++;
+          if (this.animatorService.animator.isPlaying()) {
+            await this.thumbnailsContainer.slideTo(nextFrame);
+            nextFrame++;
+          }
+          else {
+            this.clearInterval()
+          }
+
         }, milliSeconds);
       } else {
         // if player has stopped playing slide to first slide and clear interval
+        this.clearInterval()
         this.thumbnailsContainer.slideTo(0);
-        this.clearInterval();
       }
     });
   }

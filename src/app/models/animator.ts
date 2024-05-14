@@ -168,23 +168,25 @@ export class Animator {
         
         this.context.drawImage(this.video, 0, 0, this.width, this.height);
         
-        this.imageCanvas.toBlob((blob: Blob) => { 
-              var img = new Image();
-            
-              const dataUrl = URL.createObjectURL(blob);
+        // we need to wait until the image is loaded:
+        await new Promise((resolve, reject) => {
+          this.imageCanvas.toBlob(async (blob: Blob) => { 
+                var img = new Image();
+                const dataUrl = URL.createObjectURL(blob);
 
-              img.onload = async() => {
-                this.frames.push(img);
-                URL.revokeObjectURL(dataUrl);
-              }
-              img.src = dataUrl;
+                img.onload = async() => {
+                  this.frames.push(img);
+                  URL.revokeObjectURL(dataUrl);
+                  resolve(img)
+                }
+                img.src = dataUrl;
 
-              this.snapshotContext.clearRect(0, 0, this.width, this.height);
-              this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
+                this.snapshotContext.clearRect(0, 0, this.width, this.height);
+                this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
 
-              this.frameWebpsAndJpegs.push(blob);
-
-        }, 'image/jpeg', 0.8);
+                this.frameWebpsAndJpegs.push(blob);
+          }, 'image/jpeg', 0.8);
+        });
 
         return this.frames;
     }

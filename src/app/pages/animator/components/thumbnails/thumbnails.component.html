@@ -2,9 +2,9 @@
   <ion-icon *ngIf="!status" slot="icon-only" color="light" src="/assets/icons/custom/show.svg"></ion-icon>
   <ion-icon *ngIf="status" slot="icon-only" color="light" src="/assets/icons/custom/hidden.svg"></ion-icon>
 </p>
-<swiper-container [ngClass]="status ? 'hidden' : 'shown'" #thumbnailsContainer id="thumbnail-container" scrollbar="true"
+<swiper-container [ngClass]="status ? 'hidden' : 'shown'" #thumbnailsContainer id="thumbnail-container" scrollbar="true" cssMode="true"
   [modules]="swiperModules" [initialSlide]="slideOpts.initialSlide" [speed]="slideOpts.speed" [slidesPerView]="slideOpts.slidesPerView"
-  [spaceBetween]="slideOpts.spaceBetween" [navigation]="slideOpts.navigation" [pagination]="slideOpts.pagination" class=" ion-margin-start">
+  [spaceBetween]="slideOpts.spaceBetween" [navigation]="slideOpts.navigation" [pagination]="slideOpts.pagination" class="ion-margin-start">
   <ng-container *ngIf="(list | async) as frames ">
     <swiper-slide *ngFor="let frame of frames; let i = index">
       <app-thumbnail [frame]="frame" [index]="i" (thumbnailClicked)="onThumbnailClicked($event)"></app-thumbnail> 
