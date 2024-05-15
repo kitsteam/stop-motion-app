@@ -23,7 +23,7 @@ export class AnimatorService {
   private cameraIsRotated: BehaviorSubject<boolean>;
   private cameraStatus: BehaviorSubject<CameraStatus>;
   private facingMode: FacingMode;
-  private frames: BehaviorSubject<HTMLCanvasElement[]>;
+  private frames: BehaviorSubject<HTMLImageElement[]>;
 
   constructor(
     public animator: Animator,
