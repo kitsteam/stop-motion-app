@@ -6,7 +6,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main", "60-bug-scrolling-behaviour-after-playbackaudio-recording-broken"]
+    branches: ["main"]
   release:
     types: [published]
 
