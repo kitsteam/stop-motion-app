@@ -59,6 +59,12 @@ export class SaveButtonComponent extends BaseComponent {
           value: SaveState.draft,
         },
         {
+          name: SaveState.gif,
+          type: 'radio',
+          label: this.baseService.translate.instant('labels_save_as_gif'),
+          value: SaveState.gif,
+        },
+        {
           name: SaveState.video,
           type: 'radio',
           label: this.baseService.translate.instant('labels_save_as_video'),

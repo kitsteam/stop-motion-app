@@ -53,29 +53,53 @@ export class VideoService {
     }
 
     // we always use webp - if a jpeg is incoming (e.g. from safari), we'll convert it to webp
-    const workingDirectory = await this.buildWorkingDirectory()
+    const workingDirectory = await this.buildWorkingDirectory();
 
     // write images to the directory in parallel, wait for all images to be stored:
-    await this.storeImagesInFilesystem(imageBlobs, workingDirectory)
+    await this.storeImagesInFilesystem(imageBlobs, workingDirectory);
     
-    const outputFileName = this.pathToFile(workingDirectory, 'output.mp4')
+    const outputFileName = this.pathToFile(workingDirectory, 'output.mp4');
 
     let parameters = []
-    parameters.push("-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`))
+    parameters.push("-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`));
     
     if (audioBlob) {
-      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "aac")
-      await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob))
+      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "aac");
+      await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
     }
 
-    parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName)
+    parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName);
 
+    const data = await this.execute(parameters, outputFileName);
+    await this.deleteDirectory(workingDirectory);
+
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  }
+
+  public async createGif(imageBlobs: Blob[], frameRate: number): Promise<Blob> {
+    if (!this.loaded) {
+      await this.loadFfmpeg();
+    }
+
+    // we always use webp - if a jpeg is incoming (e.g. from safari), we'll convert it to webp
+    const workingDirectory = await this.buildWorkingDirectory();
+
+    // write images to the directory in parallel, wait for all images to be stored:
+    await this.storeImagesInFilesystem(imageBlobs, workingDirectory);
+    
+    const outputFileName = this.pathToFile(workingDirectory, 'output.gif');
+    const gifParameters = ["-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`), "-vf", `fps=${frameRate},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, "-loop", "0", outputFileName];
+
+    const data = await this.execute(gifParameters, outputFileName);
+    await this.deleteDirectory(workingDirectory);
+
+    return new Blob([data.buffer], { type: 'image/gif' });
+  }
+
+  private async execute(parameters: string[], outputFileName: string): Promise<Uint8Array> {
     await this.ffmpeg.exec(parameters);
     const fileData = await this.ffmpeg.readFile(outputFileName);
-    const data = new Uint8Array(fileData as ArrayBuffer);
-    await this.deleteDirectory(workingDirectory)
-    
-    return new Blob([data.buffer], { type: 'video/mp4' });
+    return new Uint8Array(fileData as ArrayBuffer);
   }
 
   // converts all Jpegs in this list to webP, which is necessary for the safari export:

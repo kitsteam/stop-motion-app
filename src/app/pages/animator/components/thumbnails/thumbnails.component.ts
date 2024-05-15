@@ -83,7 +83,6 @@ export class ThumbnailsComponent extends BaseComponent implements OnDestroy {
           else {
             this.clearInterval()
           }
-
         }, milliSeconds);
       } else {
         // if player has stopped playing slide to first slide and clear interval
