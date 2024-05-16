@@ -24,6 +24,8 @@
     "buttons_select": "Auswählen",
     "buttons_yes": "Ja",
     "error_message_unknown": "Ein unbekannter Fehler ist aufgetreten.",
+    "encoding_state_converting_images": "Bilder werden geladen: {{progress}}%",
+    "encoding_state_creating_video": "Video wird konvertiert: {{progress}}%",
     "labels_filename": "Dateiname",
     "labels_important_links": "Wichtige Links",
     "labels_imprint": "Impressum",

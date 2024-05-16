@@ -10,6 +10,7 @@ import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { VideoService } from '@services/video/video.service';
+import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 
 declare const webm: any;
 @Injectable({
@@ -474,7 +475,9 @@ export class Animator {
         // ::TODO:: in the past, we only converted the frames for Safari. Right now, we always create jpegs.
         // This simplifies the process quite a bit, as it's more consistent. However, we should check if this causes further issues.
         //if (this.isSafari()) {
-            const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs);
+          // we don't want to do anything right now with the progress callback here:
+          const progressCallback: ProgressCallback = (progress, time) => {};
+            const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
             for (const frame of convertedFrames) {
                 videoWriter.addFrame(this.uint8ToBase64(frame));
             }

@@ -3,6 +3,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { Location, LocationStrategy } from '@angular/common';
 import { MimeTypes } from '@enums/mime-types.enum';
+import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 
 
 
@@ -47,7 +48,7 @@ export class VideoService {
     return new Blob([audioOutput.buffer], { type: MimeTypes.audioMp3 });
   }
 
-  public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob?: Blob) {
+  public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob: Blob | undefined, progressCallback: ProgressCallback) {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
@@ -56,8 +57,8 @@ export class VideoService {
     const workingDirectory = await this.buildWorkingDirectory();
 
     // write images to the directory in parallel, wait for all images to be stored:
-    await this.storeImagesInFilesystem(imageBlobs, workingDirectory);
-    
+    await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
+
     const outputFileName = this.pathToFile(workingDirectory, 'output.mp4');
 
     let parameters = []
@@ -70,13 +71,12 @@ export class VideoService {
 
     parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName);
 
-    const data = await this.execute(parameters, outputFileName);
+    const data = await this.executeVideoConversion(parameters, outputFileName, progressCallback);
     await this.deleteDirectory(workingDirectory);
-
     return new Blob([data.buffer], { type: 'video/mp4' });
   }
 
-  public async createGif(imageBlobs: Blob[], frameRate: number): Promise<Blob> {
+  public async createGif(imageBlobs: Blob[], frameRate: number, progressCallback: ProgressCallback): Promise<Blob> {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
@@ -85,12 +85,12 @@ export class VideoService {
     const workingDirectory = await this.buildWorkingDirectory();
 
     // write images to the directory in parallel, wait for all images to be stored:
-    await this.storeImagesInFilesystem(imageBlobs, workingDirectory);
+    await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
     
     const outputFileName = this.pathToFile(workingDirectory, 'output.gif');
     const gifParameters = ["-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`), "-vf", `fps=${frameRate},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, "-loop", "0", outputFileName];
 
-    const data = await this.execute(gifParameters, outputFileName);
+    const data = await this.executeVideoConversion(gifParameters, outputFileName, progressCallback);
     await this.deleteDirectory(workingDirectory);
 
     return new Blob([data.buffer], { type: 'image/gif' });
@@ -102,15 +102,23 @@ export class VideoService {
     return new Uint8Array(fileData as ArrayBuffer);
   }
 
+  private async executeVideoConversion(parameters: string[], outputFileName: string, progressCallback: ProgressCallback): Promise<Uint8Array> {
+    const callback = this.startProgressCallback('creating_video', progressCallback)
+    const data = await this.execute(parameters, outputFileName);
+    this.ffmpeg.off('progress', callback);
+
+    return data;
+  }
+
   // converts all Jpegs in this list to webP, which is necessary for the safari export:
-  public async convertPotentiallyMixedFrames(potentiallyMixedFrames: any[]): Promise<ArrayBuffer[]> {
+  public async convertPotentiallyMixedFrames(potentiallyMixedFrames: any[], progressCallback: ProgressCallback): Promise<ArrayBuffer[]> {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
     
     const workingDirectory = await this.buildWorkingDirectory();
 
-    await this.storeImagesInFilesystem(potentiallyMixedFrames, workingDirectory);
+    await this.storeImagesInFilesystem(potentiallyMixedFrames, workingDirectory, progressCallback);
     
     let webPs = [];
 
@@ -157,7 +165,9 @@ export class VideoService {
     this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.jpg'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
   }
 
-  private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string) {
+  private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string, progressCallback: ProgressCallback) {
+    const callback = this.startProgressCallback('converting_images', progressCallback);
+
     // we can write webps directly, however jpegs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
     let webpBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
         if (imageBlob.type != MimeTypes.imageJpeg) {
@@ -184,6 +194,16 @@ export class VideoService {
     }));
 
     await this.convertToJpegToWebPBatch(jpegBlobsWithIndex, workingDirectory)
+    this.ffmpeg.off('progress', callback)
+  }
+
+  private startProgressCallback(state: string, progressCallback: ProgressCallback) {
+    const callback = ({ progress, time }) => {
+        progressCallback(state, progress, time);
+    };
+
+    this.ffmpeg.on('progress', callback);
+    return callback;
   }
 
   // ffmpeg can't delete non-empty directories, so we have to delete its content first:
