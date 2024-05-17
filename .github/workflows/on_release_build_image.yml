@@ -6,7 +6,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main", "71-feature-show-progress-during-video-conversion"]
+    branches: ["main"]
   release:
     types: [published]
 
