@@ -21,7 +21,9 @@ export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpL
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     imports: [
         BrowserModule,
-        IonicModule.forRoot(),
+        IonicModule.forRoot({
+          mode: 'md' // force material UI mode, iOS has not been styled
+        }),
         AppRoutingModule,
         BrowserAnimationsModule,
         ComponentsModule,
