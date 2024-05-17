@@ -10,6 +10,7 @@ import { BehaviorSubject } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
 import { MimeTypes } from '@enums/mime-types.enum';
+import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 @Injectable({
   providedIn: 'root'
 })
@@ -156,7 +157,7 @@ export class AnimatorService {
     this.animator.clearAudio();
   }
 
-  public async save(filename: string, type: SaveState): Promise<void> {
+  public async save(filename: string, type: SaveState, progressCallback: ProgressCallback): Promise<void> {
     if (!filename.length) {
       filename = 'StopClip';
     }
@@ -165,13 +166,13 @@ export class AnimatorService {
 
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs,frameRate, this.animator.audioBlob);
+      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs,frameRate, this.animator.audioBlob, progressCallback);
       saveAs(new Blob([result]), filename + '.mp4', { autoBom: true });
       return;
     }
     else if (type === SaveState.gif) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createGif(this.animator.frameWebpsAndJpegs, frameRate);
+      const result = await this.videoService.createGif(this.animator.frameWebpsAndJpegs, frameRate, progressCallback);
       saveAs(new Blob([result]), filename + '.gif', { autoBom: true });
       return;
     } else {

@@ -5,6 +5,8 @@ import { AnimatorService } from '@services/animator/animator.service';
 import { BaseService } from '@services/base/base.service';
 import { first } from 'rxjs/operators';
 
+export interface ProgressCallback { (state: string, progress: number, time: number): void };
+
 @Component({
   selector: 'app-save-button',
   templateUrl: './save-button.component.html',
@@ -35,10 +37,15 @@ export class SaveButtonComponent extends BaseComponent {
         text: this.baseService.translate.instant('buttons_save'),
         handler: async (inputData: any) => {
           await this.baseService.alertService.dismissAlert();
-          await this.presentLoading({
-            message: this.baseService.translate.instant('loader_export_start')
+          const loader = await this.presentLoading({
+            message: this.baseService.translate.instant('loader_export_start'),
           });
-          await this.animatorService.save(inputData.filename, type);
+          
+          const progressCallback: ProgressCallback = (state, progress, time) => {
+            loader.message = this.baseService.translate.instant(`encoding_state_${state}`, {progress: this.formatProgress(progress)});
+          }
+
+          await this.animatorService.save(inputData.filename, type, progressCallback);
           this.dismissloading();
         }
       }]
@@ -90,4 +97,9 @@ export class SaveButtonComponent extends BaseComponent {
     }
   }
 
+  private formatProgress(progress: number) {
+    let value = Math.round(progress*100)
+    // ffmpeg sometimes returns value larger than a 100. This will reduce the accuracy of the progress, but at least up to a 100% there is something to report and users can see progress:
+    return (value <= 99) ? value : 99;
+  }
 }
