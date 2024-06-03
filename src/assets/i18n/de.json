@@ -37,7 +37,7 @@
     "labels_version": "Version",
     "loader_export_start": "Export gestartet - Je nach Länge des Videos kann die dafür benötigte Zeit variieren",
     "loader_record_audio_message": "Aufnahme startet in Kürze",
-    "pages_animator_orientation_hint": "Bitte wechsle in den Portrait-Mode. Der Landscape-Mode wird nur auf bestimmten Geräten unterstützt.",
+    "pages_animator_orientation_hint": "Bitte wechsle ins Hochformat. Querformat wird nur auf bestimmten Geräten unterstützt.",
     "pages_home_welcome": "Mit der StopClip App kannst du einfach und schnell faszinierende Stop-Motion Filme erstellen. Zahlreiche Funktionen erleichtern deinen Workflow.",
     "pages_title_animator": "StopClip",
     "pages_title_info": "Info",
