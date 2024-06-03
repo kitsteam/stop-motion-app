@@ -153,11 +153,6 @@
     "@nx/devkit" "^17.2.8 || ^18.0.0"
     nx "^17.2.8 || ^18.0.0"
 
-"@angular-eslint/bundled-angular-compiler@17.3.0":
-  version "17.3.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-17.3.0.tgz#08b8b1bebbb677a1f208b56516fc9177a289d212"
-  integrity sha512-ejfNzRuBeHUV8m2fkgs+M809rj5STuCuQo4fdfc6ccQpzXDI6Ha7BKpTznWfg5g529q/wrkoGSGgFxU9Yc2/dQ==
-
 "@angular-eslint/bundled-angular-compiler@17.4.0":
   version "17.4.0"
   resolved "https://registry.yarnpkg.com/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-17.4.0.tgz#d526c76f3505178a9dace60f39390bb8669536e0"
@@ -167,6 +162,11 @@
   version "17.5.1"
   resolved "https://registry.yarnpkg.com/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-17.5.1.tgz#21017c29486bf2f0f83501fb034dd0ff0a2c173e"
   integrity sha512-2gYFcWsGcw3BytCzt6DzKNayOHhW1dhMAgttor94lXLYOYN82eLGomC+aZF/U6fqVGBjm5JIEJpWbNF+NawZ7w==
+
+"@angular-eslint/bundled-angular-compiler@18.0.1":
+  version "18.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-18.0.1.tgz#94c53b8193de1d630c9f45af2acbcd64757b6b2e"
+  integrity sha512-lr4Ysoo28FBOKcJFQUGTMpbWDcak+gyuYvyggp37ERvazE6EDomPFxzEHNqVT9EI9sZ+GDBOoPR+EdFh0ALGNw==
 
 "@angular-eslint/eslint-plugin-template@17.5.1":
   version "17.5.1"
@@ -189,12 +189,12 @@
     "@angular-eslint/utils" "17.4.0"
     "@typescript-eslint/utils" "7.8.0"
 
-"@angular-eslint/template-parser@17.3.0":
-  version "17.3.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-17.3.0.tgz#580a703cbaa4967d36a953a00f5c347987c14171"
-  integrity sha512-m+UzAnWgtjeS0x6skSmR0eXltD/p7HZA+c8pPyAkiHQzkxE7ohhfyZc03yWGuYJvWQUqQAKKdO/nQop14TP0bg==
+"@angular-eslint/template-parser@18.0.1":
+  version "18.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-18.0.1.tgz#d5e7f89f71913a670ae2a603584d77d1f9b3a95b"
+  integrity sha512-22fKzkWo9Ts8aY/WHL1A6seS2tpltgRRXVfnZnnqvQRyRiuPnx1FC0ly7+QPZkThh8vdLwxU+BvtLq9Uiqh9OQ==
   dependencies:
-    "@angular-eslint/bundled-angular-compiler" "17.3.0"
+    "@angular-eslint/bundled-angular-compiler" "18.0.1"
     eslint-scope "^8.0.0"
 
 "@angular-eslint/utils@17.4.0":
