@@ -50,7 +50,7 @@
     "@angular/cli": "^17.3.7",
     "@angular/compiler": "17.3.4",
     "@angular/compiler-cli": "17.3.4",
-    "@angular/language-service": "17.3.7",
+    "@angular/language-service": "18.0.1",
     "@angular/localize": "17.3.4",
     "@ionic/angular-toolkit": "11.0.1",
     "@types/dom-mediacapture-record": "1.0.19",
