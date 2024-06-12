@@ -69,3 +69,8 @@
   max-width: 80px !important;
   min-width: 40px;
 }
+
+// we don't want the content to overlay the logo:
+#kits-logo {
+  min-height: 100px;
+}
