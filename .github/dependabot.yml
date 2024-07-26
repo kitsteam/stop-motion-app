@@ -11,7 +11,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 25
     ignore:
-      - dependency-name: "angular*"
+      - dependency-name: "@angular*"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "docker"
     directory: "/" # Location of package manifests
