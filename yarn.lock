@@ -2784,10 +2784,10 @@
     js-yaml "^3.10.0"
     tslib "^2.4.0"
 
-"@zip.js/zip.js@2.7.47":
-  version "2.7.47"
-  resolved "https://registry.yarnpkg.com/@zip.js/zip.js/-/zip.js-2.7.47.tgz#bc3ec3d3b191f2331450242edfa06dfac08082cc"
-  integrity sha512-jmtJMA3/Jl4rMzo/DZ79s6g0CJ1AZcNAO6emTy/vHfIKAB/iiFY7PLs6KmbRTJ+F8GnK2eCLnjQfCCneRxXgzg==
+"@zip.js/zip.js@2.7.51":
+  version "2.7.51"
+  resolved "https://registry.yarnpkg.com/@zip.js/zip.js/-/zip.js-2.7.51.tgz#a434e285048b951a5788d3d2d59aa68f209e7141"
+  integrity sha512-RKHaebzZZgQkUuzb49/qweN69e8Np9AUZ9QygydDIrbG1njypSAKwkeqIVeuf2JVGBDyB7Z9HKvzPgYrSlv9gw==
 
 "@zkochan/js-yaml@0.0.6":
   version "0.0.6"
