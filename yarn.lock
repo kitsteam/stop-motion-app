@@ -1693,20 +1693,20 @@
     "@angular-devkit/schematics" "^17.0.0"
     "@schematics/angular" "^17.0.0"
 
-"@ionic/angular@8.2.6":
-  version "8.2.6"
-  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.2.6.tgz#158959b815ab681939772c3b31f9bc8959318fa4"
-  integrity sha512-0P6QPn4slKIsAgNrnrQXdZXRyxRgc8+pGMFFGhd2zXh3K8pJpuKvK/FkrOSlNdJxiG/MNVfqrDS73ZjFe+M20w==
+"@ionic/angular@8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.3.0.tgz#650edbd97d4a5188abde670782875174fdb11cc7"
+  integrity sha512-xC+BMG1nLn/J+p7VwH/B6cwTZ2+JAwxu4KVfCTzrABn+DH8Nw+8EoI6DMtGH9P2RrBGiMXvduLeLgEZTK0lIaA==
   dependencies:
-    "@ionic/core" "8.2.6"
+    "@ionic/core" "8.3.0"
     ionicons "^7.0.0"
     jsonc-parser "^3.0.0"
     tslib "^2.3.0"
 
-"@ionic/core@8.2.6":
-  version "8.2.6"
-  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.2.6.tgz#6ae7317ec6d90642d95260e42e0ac8ddd4087437"
-  integrity sha512-9vLxIR+QFzeim/C6LV62vOm5e6EIoVZsLb5RjlnQICDbDf14iqcBjA+MZpW628HbADX7p9/ulaq8WFgx5085ZA==
+"@ionic/core@8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.3.0.tgz#ee5a0fcfcba8aa8289a774a0939bc2f5e1289be5"
+  integrity sha512-Yv/LA2OOsvdelhvVYKTNL+0AduKXO74DTdQ3lqS/NN512/wCNf2CVt8J62oCs25XOttLAy8RflDUN8joT3bO7A==
   dependencies:
     "@stencil/core" "^4.19.2"
     ionicons "^7.2.2"
