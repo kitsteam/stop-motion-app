@@ -1693,22 +1693,22 @@
     "@angular-devkit/schematics" "^17.0.0"
     "@schematics/angular" "^17.0.0"
 
-"@ionic/angular@8.2.6":
-  version "8.2.6"
-  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.2.6.tgz#158959b815ab681939772c3b31f9bc8959318fa4"
-  integrity sha512-0P6QPn4slKIsAgNrnrQXdZXRyxRgc8+pGMFFGhd2zXh3K8pJpuKvK/FkrOSlNdJxiG/MNVfqrDS73ZjFe+M20w==
+"@ionic/angular@8.3.1":
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.3.1.tgz#8b31a2c4f0e83e26b9292b158d25686906c87724"
+  integrity sha512-D/qP3R6xbaH/y7qNSQ1F6/hVediPq+F5a6KxfhOIZPXrD94r9haDTD9XpQh7LMoAzoem85h7icn2XfHzcDP1HA==
   dependencies:
-    "@ionic/core" "8.2.6"
+    "@ionic/core" "8.3.1"
     ionicons "^7.0.0"
     jsonc-parser "^3.0.0"
     tslib "^2.3.0"
 
-"@ionic/core@8.2.6":
-  version "8.2.6"
-  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.2.6.tgz#6ae7317ec6d90642d95260e42e0ac8ddd4087437"
-  integrity sha512-9vLxIR+QFzeim/C6LV62vOm5e6EIoVZsLb5RjlnQICDbDf14iqcBjA+MZpW628HbADX7p9/ulaq8WFgx5085ZA==
+"@ionic/core@8.3.1":
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.3.1.tgz#524292cc3a7b973ac05fb538652fd1069fca3861"
+  integrity sha512-md4JFwKYLgN/YP+uzoTE5H7ah0W5SQQNZ1cJOQtxhv0ytCCHHaXJrfRVzefdy8iy8NdzL9s6EV5ZTKYH98E+ZQ==
   dependencies:
-    "@stencil/core" "^4.19.2"
+    "@stencil/core" "4.20.0"
     ionicons "^7.2.2"
     tslib "^2.1.0"
 
@@ -2158,15 +2158,15 @@
   resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.1.tgz#621270c02c0a5d4f4669eb1caa9723c91cf201de"
   integrity sha512-dzJtaDAAoXx4GCOJpbB2eG/Qj8VDpdwkLsWGzGm+0L7E8/434RyMbAHmk9ubXWVAb9nXmc44jUf8GKqVDiKezg==
 
+"@stencil/core@4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-4.20.0.tgz#221f2b36ab999891560449b02d6915862c435f49"
+  integrity sha512-WPrTHFngvN081RY+dJPneKQLwnOFD60OMCOQGmmSHfCW0f4ujPMzzhwWU1gcSwXPWXz5O+8cBiiCaxAbJU7kAg==
+
 "@stencil/core@^4.0.3":
   version "4.15.0"
   resolved "https://registry.yarnpkg.com/@stencil/core/-/core-4.15.0.tgz#84db0d9e34cd6e420222e76fb8ada1c5bdee41a2"
   integrity sha512-C5syM3chCyxX0Os5M+ZWrBujjqwUfrTb87YiLr8RC+kMTmIpnRvvtj8/s3QYDGdDENGRxGkBpeboVh82IGqk0w==
-
-"@stencil/core@^4.19.2":
-  version "4.19.2"
-  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-4.19.2.tgz#02d377aa0133fa211f5e4c1ace4baa329ed1cde2"
-  integrity sha512-ZdnbHmHEl8E5vN0GWDtONe5w6j3CrSqqxZM4hNLBPkV/aouWKug7D5/Mi6RazfYO5U4fmHQYLwMz60rHcx0G4g==
 
 "@tsconfig/node10@^1.0.7":
   version "1.0.11"
