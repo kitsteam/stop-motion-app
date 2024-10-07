@@ -2276,10 +2276,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/dom-mediacapture-record@1.0.19":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.19.tgz#27ade00734877fc83323b9b0550f259b08903841"
-  integrity sha512-Cz/85z3YTuUPnXrOp5MvSZZSgDkWTWvj1HgE7MWc5C8d/w/soJBXjnAoYDl4P5gmenDNNZkhXzNylGqxS1FzOw==
+"@types/dom-mediacapture-record@1.0.20":
+  version "1.0.20"
+  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.20.tgz#ab48ee0e0f38810110ceb158d6844ad4c964bcdf"
+  integrity sha512-+Dau03yBsbbunOxsTs7kyb+ZNIT6bE/hNBK+FdDtAj2bmC+p5DtbfxeewgtezXGwK3RvJflY1w6UtyLglzi2+Q==
 
 "@types/eslint-scope@^3.7.3":
   version "3.7.7"
