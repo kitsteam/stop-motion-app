@@ -6,7 +6,7 @@ import { RouteReuseStrategy } from '@angular/router';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 // Modules and Components
 import { environment } from '@environment/environment';
 import { AppRoutingModule } from './app-routing.module';
@@ -16,19 +16,16 @@ import { PipesModule } from '@pipes/pipes.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpLoader(http);
-@NgModule({
-    declarations: [AppComponent],
+@NgModule({ declarations: [AppComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    imports: [
-        BrowserModule,
+    bootstrap: [AppComponent], imports: [BrowserModule,
         IonicModule.forRoot({
-          mode: 'md' // force material UI mode, iOS has not been styled
+            mode: 'md' // force material UI mode, iOS has not been styled
         }),
         AppRoutingModule,
         BrowserAnimationsModule,
         ComponentsModule,
         PipesModule,
-        HttpClientModule,
         TranslateModule.forRoot({
             loader: { provide: TranslateLoader, useFactory: translationLoaderFactory, deps: [HttpClient] }
         }),
@@ -38,11 +35,8 @@ export const translationLoaderFactory = (http: HttpClient) => new TranslateHttpL
             // or after 30 seconds (whichever comes first).
             registrationStrategy: 'registerWhenStable:30000'
         }),
-        NgbModule
-    ],
-    providers: [
+        NgbModule], providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    ],
-    bootstrap: [AppComponent]
-})
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule { }
