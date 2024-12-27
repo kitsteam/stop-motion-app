@@ -41,6 +41,9 @@
     "webm-writer": "1.0.0",
     "zone.js": "0.14.10"
   },
+  "resolutions": {
+    "wrap-ansi": "7.0.0"
+  },
   "devDependencies": {
     "@angular-devkit/build-angular": "18.2.7",
     "@angular-eslint/builder": "18.3.1",
