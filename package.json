@@ -32,7 +32,7 @@
     "@ngx-translate/core": "16.0.4",
     "@ngx-translate/http-loader": "16.0.1",
     "@popperjs/core": "^2.11.8",
-    "@zip.js/zip.js": "2.7.57",
+    "@zip.js/zip.js": "2.7.60",
     "bootstrap": "^5.3.2",
     "file-saver": "2.0.5",
     "rxjs": "7.8.1",
