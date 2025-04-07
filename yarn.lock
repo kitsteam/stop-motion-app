@@ -2504,10 +2504,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/dom-mediacapture-record@1.0.21":
-  version "1.0.21"
-  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.21.tgz#b8f0edb20b3c1f504f3a38362b9c33494ba3430e"
-  integrity sha512-JwJc6MRVy5xnOUKUgzgGRZA/DOZO14x+4B4hJNZ8c4T5Cs+U00ca62RJHXaj4F9NWZoorKT2PxW5Cq+ENT+E7w==
+"@types/dom-mediacapture-record@1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.22.tgz#e044c8ca2263c53f205c0eea832d9068f7fb11e6"
+  integrity sha512-mUMZLK3NvwRLcAAT9qmcK+9p7tpU2FHdDsntR3YI4+GY88XrgG4XiE7u1Q2LAN2/FZOz/tdMDC3GQCR4T8nFuw==
 
 "@types/estree@1.0.5":
   version "1.0.5"
