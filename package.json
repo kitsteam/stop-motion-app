@@ -27,7 +27,7 @@
     "@angular/service-worker": "18.2.7",
     "@ffmpeg/ffmpeg": "0.12.15",
     "@ffmpeg/util": "0.12.1",
-    "@ionic/angular": "8.5.6",
+    "@ionic/angular": "8.5.7",
     "@ng-bootstrap/ng-bootstrap": "^16.0.0",
     "@ngx-translate/core": "16.0.4",
     "@ngx-translate/http-loader": "16.0.1",
