@@ -24,7 +24,7 @@
     "@angular/platform-browser": "18.2.7",
     "@angular/platform-browser-dynamic": "18.2.7",
     "@angular/router": "18.2.7",
-    "@angular/service-worker": "18.2.7",
+    "@angular/service-worker": "18.2.13",
     "@ffmpeg/ffmpeg": "0.12.15",
     "@ffmpeg/util": "0.12.2",
     "@ionic/angular": "8.5.7",
