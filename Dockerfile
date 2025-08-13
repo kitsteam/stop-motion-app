@@ -34,7 +34,7 @@ COPY --chown=node:node . ./
 RUN yarn install
 RUN yarn build:prod
 
-FROM nginxinc/nginx-unprivileged:1.25.4-alpine3.18-slim AS production
+FROM nginxinc/nginx-unprivileged:1.29.0-alpine3.22-slim AS production
 
 # Copy config file:
 COPY config/nginx/default.conf /etc/nginx/conf.d/default.conf
