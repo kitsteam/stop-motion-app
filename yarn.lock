@@ -2994,10 +2994,10 @@
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
   integrity sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==
 
-"@zip.js/zip.js@2.7.72":
-  version "2.7.72"
-  resolved "https://registry.yarnpkg.com/@zip.js/zip.js/-/zip.js-2.7.72.tgz#2c53887c2a3b79e9d9f1c63f048bc0cf485703c3"
-  integrity sha512-3/A4JwrgkvGBlCxtItjxs8HrNbuTAAl/zlGkV6tC5Fb5k5nk4x2Dqxwl/YnUys5Ch+QB01eJ8Q5K/J2uXfy9Vw==
+"@zip.js/zip.js@2.8.1":
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/@zip.js/zip.js/-/zip.js-2.8.1.tgz#8907f0d7914e3f69548be5e473af9b457044e5bc"
+  integrity sha512-U20br2zjlo2+Ikw1S2jIWtxirUTj4kQwY3qZYa+LZi7F7hSbJVHoSNxgIO2UEN1VWYWuHJtx1UYkmERpA3TqIg==
 
 abbrev@^2.0.0:
   version "2.0.0"
