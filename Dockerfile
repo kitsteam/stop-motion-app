@@ -1,4 +1,4 @@
-FROM node:24.5-bullseye as base
+FROM node:24.8-bullseye as base
 
 USER node
 WORKDIR /home/node/app
