@@ -2022,17 +2022,17 @@
   resolved "https://registry.yarnpkg.com/@ngtools/webpack/-/webpack-18.2.21.tgz#c7de5cf90807e33a10d089c5bd86627e7b5a6e3a"
   integrity sha512-mfLT7lXbyJRlsazuPyuF5AGsMcgzRJRwsDlgxFbiy1DBlaF1chRFsXrKYj1gQ/WXQWNcEd11aedU0Rt+iCNDVw==
 
-"@ngx-translate/core@16.0.4":
-  version "16.0.4"
-  resolved "https://registry.yarnpkg.com/@ngx-translate/core/-/core-16.0.4.tgz#8e17d6ed6b306803ed2eb19ab72a0fdb697f1d76"
-  integrity sha512-s8llTL2SJvROhqttxvEs7Cg+6qSf4kvZPFYO+cTOY1d8DWTjlutRkWAleZcPPoeX927Dm7ALfL07G7oYDJ7z6w==
+"@ngx-translate/core@17.0.0":
+  version "17.0.0"
+  resolved "https://registry.yarnpkg.com/@ngx-translate/core/-/core-17.0.0.tgz#d6c0738c5004b53273bc97e6ca5488f6a6816f25"
+  integrity sha512-Rft2D5ns2pq4orLZjEtx1uhNuEBerUdpFUG1IcqtGuipj6SavgB8SkxtNQALNDA+EVlvsNCCjC2ewZVtUeN6rg==
   dependencies:
     tslib "^2.3.0"
 
-"@ngx-translate/http-loader@16.0.1":
-  version "16.0.1"
-  resolved "https://registry.yarnpkg.com/@ngx-translate/http-loader/-/http-loader-16.0.1.tgz#01219d623ea810fd36ba2911d1452975cd32a041"
-  integrity sha512-xJEOUpvs6Zfc8G4cmQmegFOEpfYSoplTHHoisPNrATXjRBjpaKsBaPOXlZsuFUW2XV00s16gIyI4+9z1XkO5bw==
+"@ngx-translate/http-loader@17.0.0":
+  version "17.0.0"
+  resolved "https://registry.yarnpkg.com/@ngx-translate/http-loader/-/http-loader-17.0.0.tgz#6ab727e780189a9a5e80059c758dc95de93608ea"
+  integrity sha512-hgS8sa0ARjH9ll3PhkLTufeVXNI2DNR2uFKDhBgq13siUXzzVr/a31M6zgecrtwbA34iaBV01hsTMbMS8V7iIw==
   dependencies:
     tslib "^2.3.0"
 
@@ -2664,12 +2664,19 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@24.2.1", "@types/node@>=10.0.0":
+"@types/node@*", "@types/node@>=10.0.0":
   version "24.2.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-24.2.1.tgz#83e41543f0a518e006594bb394e2cd961de56727"
   integrity sha512-DRh5K+ka5eJic8CjH7td8QpYEV6Zo10gfRkjHCO3weqZHWDtAaSTFtl4+VMqOJ4N5jcuhZ9/l+yy8rVgw7BQeQ==
   dependencies:
     undici-types "~7.10.0"
+
+"@types/node@22.18.6":
+  version "22.18.6"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.18.6.tgz#38172ef0b65e09d1a4fc715eb09a7d5decfdc748"
+  integrity sha512-r8uszLPpeIWbNKtvWRt/DbVi5zbqZyj1PTmhRMqBMvDnaz1QpmSKujUtJLrqGZeoM8v72MfYggDceY4K1itzWQ==
+  dependencies:
+    undici-types "~6.21.0"
 
 "@types/node@^22.5.5":
   version "22.15.21"
