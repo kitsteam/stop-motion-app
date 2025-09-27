@@ -28,7 +28,7 @@
     "@ffmpeg/ffmpeg": "0.12.15",
     "@ffmpeg/util": "0.12.2",
     "@ionic/angular": "8.7.5",
-    "@ng-bootstrap/ng-bootstrap": "^16.0.0",
+    "@ng-bootstrap/ng-bootstrap": "^17.0.1",
     "@ngx-translate/core": "16.0.4",
     "@ngx-translate/http-loader": "16.0.1",
     "@popperjs/core": "^2.11.8",
@@ -39,10 +39,7 @@
     "swiper": "11.2.10",
     "tslib": "2.8.1",
     "webm-writer": "1.0.0",
-    "zone.js": "0.15.1"
-  },
-  "resolutions": {
-    "wrap-ansi": "7.0.0"
+    "zone.js": "0.14.10"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "18.2.21",
@@ -63,6 +60,8 @@
     "@types/node": "24.2.1",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
+    "@typescript-eslint/utils": "7.18.0",
+    "@typescript-eslint/types": "7.18.0",
     "eslint": "8.57.0",
     "jasmine-core": "5.11.0",
     "jasmine-spec-reporter": "7.0.0",
@@ -72,7 +71,7 @@
     "karma-jasmine": "5.1.0",
     "karma-jasmine-html-reporter": "2.1.0",
     "ts-node": "10.9.2",
-    "typescript": "5.6.3"
+    "typescript": "5.5.4"
   },
   "description": "An Ionic project"
 }
