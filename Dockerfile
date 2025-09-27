@@ -1,17 +1,17 @@
-FROM node:24.8-bullseye as base
+FROM node:24.8-bullseye AS base
 
 USER node
 WORKDIR /home/node/app
 
-FROM base as development
+FROM base AS development
 
 # install chromium for karma:
 USER root
 RUN set -eux ; \
   apt-get update && apt-get install -y \
-  chromium \
-  chromium-driver \
+  chromium chromium-driver \
   && rm -rf /var/lib/apt/lists/*
+
 USER node
 
 # Set up Chromium Headless flags
@@ -22,7 +22,7 @@ COPY --chown=node:node package.json yarn.lock ./
 
 RUN yarn install
 
-FROM base as production_builder
+FROM base AS production_builder
 # copy and yarn install package file first to make use of docker caching:
 COPY --chown=node:node package.json yarn.lock ./
 RUN yarn install
