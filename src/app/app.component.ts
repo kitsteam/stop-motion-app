@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
     private baseService: BaseService,
     private serviceWorkerService: ServiceWorkerService
   ) {
-    this.baseService.translate.setDefaultLang('de');
+    this.baseService.translate.setFallbackLang('de');
   }
 
   async ngOnInit() {
