@@ -166,8 +166,8 @@ export class AnimatorService {
 
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs,frameRate, this.animator.audioBlob, progressCallback);
-      saveAs(new Blob([result]), filename + '.mp4', { autoBom: true });
+      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs, frameRate, this.animator.audioBlob, progressCallback);
+      saveAs(new Blob([result]), filename + '.webm', { autoBom: true });
       return;
     }
     else if (type === SaveState.gif) {
