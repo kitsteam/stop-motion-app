@@ -149,7 +149,7 @@ export class AnimatorService {
 
   public async convertAudio(blob: Blob): Promise<void> {
     const result = await this.videoService.convertAudio(blob);
-    this.animator.setAudioSrc(result, MimeTypes.audioMp3);
+    this.animator.setAudioSrc(result, MimeTypes.audioWebm);
     return;
   }
 

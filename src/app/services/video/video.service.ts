@@ -38,14 +38,14 @@ export class VideoService {
     }
 
     const workingDirectory = await this.buildWorkingDirectory();
-    const outputPath = this.pathToFile(workingDirectory, 'output.mp3');
+    const outputPath = this.pathToFile(workingDirectory, 'output.ogg');
     await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
     await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'audio'), '-vn', outputPath]);
 
     const audioOutput = new Uint8Array(await this.ffmpeg.readFile(outputPath) as ArrayBuffer);
     await this.deleteDirectory(workingDirectory)
 
-    return new Blob([audioOutput.buffer], { type: MimeTypes.audioMp3 });
+    return new Blob([audioOutput.buffer], { type: MimeTypes.audioWebm });
   }
 
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob: Blob | undefined, progressCallback: ProgressCallback) {
