@@ -41,10 +41,10 @@ export class VideoService {
     const outputPath = this.pathToFile(workingDirectory, 'output.mp3');
     await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
     await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'audio'), '-vn', outputPath]);
-    
+
     const audioOutput = new Uint8Array(await this.ffmpeg.readFile(outputPath) as ArrayBuffer);
     await this.deleteDirectory(workingDirectory)
-    
+
     return new Blob([audioOutput.buffer], { type: MimeTypes.audioMp3 });
   }
 
@@ -59,21 +59,21 @@ export class VideoService {
     // write images to the directory in parallel, wait for all images to be stored:
     await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
 
-    const outputFileName = this.pathToFile(workingDirectory, 'output.mp4');
+    const outputFileName = this.pathToFile(workingDirectory, 'output.webm');
 
     let parameters = []
     parameters.push("-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`));
-    
+
     if (audioBlob) {
-      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "aac");
+      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "libopus");
       await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
     }
 
-    parameters.push("-vcodec", "libx264", "-movflags", "+faststart", "-vf", "scale=640:-2,format=yuv420p", outputFileName);
+    parameters.push("-vcodec", "libvpx", "-vf", "scale=640:-2,format=yuv420p", outputFileName);
 
     const data = await this.executeVideoConversion(parameters, outputFileName, progressCallback);
     await this.deleteDirectory(workingDirectory);
-    return new Blob([data.buffer], { type: 'video/mp4' });
+    return new Blob([data.buffer], { type: 'video/webm' });
   }
 
   public async createGif(imageBlobs: Blob[], frameRate: number, progressCallback: ProgressCallback): Promise<Blob> {
@@ -86,7 +86,7 @@ export class VideoService {
 
     // write images to the directory in parallel, wait for all images to be stored:
     await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
-    
+
     const outputFileName = this.pathToFile(workingDirectory, 'output.gif');
     const gifParameters = ["-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`), "-vf", `fps=${frameRate},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, "-loop", "0", outputFileName];
 
@@ -115,11 +115,11 @@ export class VideoService {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
-    
+
     const workingDirectory = await this.buildWorkingDirectory();
 
     await this.storeImagesInFilesystem(potentiallyMixedFrames, workingDirectory, progressCallback);
-    
+
     let webPs = [];
 
     for (let i = 0; i < potentiallyMixedFrames.length; i++) {
@@ -131,7 +131,7 @@ export class VideoService {
     return webPs;
   }
 
-  private async convertToJpegToWebPBatch(jpegBlobsWithIndex: {index: number, imageBlob: Blob}[], targetWorkingDirectory: string) {
+  private async convertToJpegToWebPBatch(jpegBlobsWithIndex: { index: number, imageBlob: Blob }[], targetWorkingDirectory: string) {
     if (!this.loaded) {
       await this.loadFfmpeg();
     }
@@ -140,7 +140,7 @@ export class VideoService {
       // nothing to do, all images are already webp
       return;
     }
-    
+
     const workingDirectory = await this.buildWorkingDirectory();
 
     await Promise.all(jpegBlobsWithIndex.map(async (imageBlobWithIndex, index) => {
@@ -153,16 +153,16 @@ export class VideoService {
     // afterwards, we copy the converted image to the targetworkingdirectory
     // index follows the consecutive ordering ffmpeg uses, whereas the index from the jpegBlobWithIndex is the right one:
     for (let index = 0; index < jpegBlobsWithIndex.length; index++) {
-      const from = this.pathToFile(workingDirectory, `image_${index+1}.webp`)
+      const from = this.pathToFile(workingDirectory, `image_${index + 1}.webp`)
       const to = this.pathToFile(targetWorkingDirectory, `image_${jpegBlobsWithIndex[index].index}.webp`)
       await this.ffmpeg.writeFile(to, await this.ffmpeg.readFile(from))
-    } 
-    
+    }
+
     await this.deleteDirectory(workingDirectory)
   }
 
   private async convertJpegsToWebP(workingDirectory: string) {
-    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.jpg'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "75", this.pathToFile(workingDirectory, 'image_%d.webp')]);
+    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.jpg'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "65", this.pathToFile(workingDirectory, 'image_%d.webp')]);
   }
 
   private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string, progressCallback: ProgressCallback) {
@@ -170,23 +170,23 @@ export class VideoService {
 
     // we can write webps directly, however jpegs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
     let webpBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-        if (imageBlob.type != MimeTypes.imageJpeg) {
-          return [{index: index, imageBlob: imageBlob}]
-        }
-        else {
-          return []
-        }
-      }
-    )
-
-    let jpegBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-      if (imageBlob.type == MimeTypes.imageJpeg) {
-        return [{index: index, imageBlob: imageBlob}]
+      if (imageBlob.type != MimeTypes.imageJpeg) {
+        return [{ index: index, imageBlob: imageBlob }]
       }
       else {
         return []
       }
+    }
+    )
+
+    let jpegBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
+      if (imageBlob.type == MimeTypes.imageJpeg) {
+        return [{ index: index, imageBlob: imageBlob }]
       }
+      else {
+        return []
+      }
+    }
     )
 
     await Promise.all(webpBlobsWithIndex.map(async (webpBlobWithIndex) => {
@@ -199,7 +199,7 @@ export class VideoService {
 
   private startProgressCallback(state: string, progressCallback: ProgressCallback) {
     const callback = ({ progress, time }) => {
-        progressCallback(state, progress, time);
+      progressCallback(state, progress, time);
     };
 
     this.ffmpeg.on('progress', callback);
@@ -219,7 +219,7 @@ export class VideoService {
     this.ffmpeg.deleteDir(workingDirectory)
   }
 
-  private async buildWorkingDirectory() : Promise<string> {
+  private async buildWorkingDirectory(): Promise<string> {
     // use a UUID for the directory so that we don't interfere with other running ffmpeg processes.
     const workingDirectory = window.crypto.randomUUID().replaceAll('-', '')
     await this.ffmpeg.createDir(workingDirectory);
