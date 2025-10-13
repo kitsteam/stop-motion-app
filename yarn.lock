@@ -1834,22 +1834,22 @@
     "@angular-devkit/schematics" "^19.0.0"
     "@schematics/angular" "^19.0.0"
 
-"@ionic/angular@8.7.5":
-  version "8.7.5"
-  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.7.5.tgz#b06e0ff22568e9a22b03f705517bafd2ab0e65b4"
-  integrity sha512-dnNVnC4j7ahLD2WN4AbplchCLufwKlgk0sykliKKt27VmWrPytlIxfXJA3eme1k5AAL7MmFXzOeVtF9r7DN+pA==
+"@ionic/angular@8.7.6":
+  version "8.7.6"
+  resolved "https://registry.yarnpkg.com/@ionic/angular/-/angular-8.7.6.tgz#e0a3227111d2e5185285600b1e204a2792435127"
+  integrity sha512-nKMwdfGkohfcYVlGQIqfyat/vm0TQUsX3Lb1cSSkcUD7OPyYNRkjXQXh1vg6lsfqoI3dDeP58QqQHxmw8cV7CA==
   dependencies:
-    "@ionic/core" "8.7.5"
+    "@ionic/core" "8.7.6"
     ionicons "^8.0.13"
     jsonc-parser "^3.0.0"
     tslib "^2.3.0"
 
-"@ionic/core@8.7.5":
-  version "8.7.5"
-  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.7.5.tgz#a3144a393f15aeb434ffaa061aacd3baaf754838"
-  integrity sha512-Uk1qdGPoLHaVhd2FnYSAvRehd3VwwcPIfXaR51qiC7C2L5VhD27VyLSgDetc15G4U+VAIFjgUSR/pKdLFEuMPA==
+"@ionic/core@8.7.6":
+  version "8.7.6"
+  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-8.7.6.tgz#241df9e4406111cb41613d4ab2ea5ee5ef0d813e"
+  integrity sha512-ufV64Pl0BYSoNla+DaTRXTS3hX6MQZZJPhAR3fJQ4N5Fg/vwMcHADQffstKZeoPqk6mbJoLqoTBjcWvaLRdO0g==
   dependencies:
-    "@stencil/core" "4.36.2"
+    "@stencil/core" "4.38.0"
     ionicons "^8.0.13"
     tslib "^2.1.0"
 
@@ -2434,7 +2434,21 @@
   resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.2.tgz#821f8442f4175d8f0467b9daf26e3a18e2d02af2"
   integrity sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==
 
-"@stencil/core@4.36.2", "@stencil/core@^4.35.3":
+"@stencil/core@4.38.0":
+  version "4.38.0"
+  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-4.38.0.tgz#44ca8bafee9e46842630a42b3ad2546ea73eb95e"
+  integrity sha512-oC3QFKO0X1yXVvETgc8OLY525MNKhn9vISBrbtKnGoPlokJ6rI8Vk1RK22TevnNrHLI4SExNLbcDnqilKR35JQ==
+  optionalDependencies:
+    "@rollup/rollup-darwin-arm64" "4.34.9"
+    "@rollup/rollup-darwin-x64" "4.34.9"
+    "@rollup/rollup-linux-arm64-gnu" "4.34.9"
+    "@rollup/rollup-linux-arm64-musl" "4.34.9"
+    "@rollup/rollup-linux-x64-gnu" "4.34.9"
+    "@rollup/rollup-linux-x64-musl" "4.34.9"
+    "@rollup/rollup-win32-arm64-msvc" "4.34.9"
+    "@rollup/rollup-win32-x64-msvc" "4.34.9"
+
+"@stencil/core@^4.35.3":
   version "4.36.2"
   resolved "https://registry.yarnpkg.com/@stencil/core/-/core-4.36.2.tgz#b43cba342c5c5ceba7c09463fdba7edff792496e"
   integrity sha512-PRFSpxNzX9Oi0Wfh02asztN9Sgev/MacfZwmd+VVyE6ZxW+a/kEpAYZhzGAmE+/aKVOGYuug7R9SulanYGxiDQ==
