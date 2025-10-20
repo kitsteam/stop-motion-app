@@ -55,7 +55,7 @@
     "@ionic/angular-toolkit": "12.2.0",
     "@types/dom-mediacapture-record": "1.0.22",
     "@types/file-saver": "2.0.7",
-    "@types/jasmine": "5.1.9",
+    "@types/jasmine": "5.1.12",
     "@types/jasminewd2": "2.0.13",
     "@types/node": "22.18.6",
     "@typescript-eslint/eslint-plugin": "7.18.0",
