@@ -1,5 +1,7 @@
 FROM node:22.20-bullseye AS base
 
+RUN corepack enable
+
 USER node
 WORKDIR /home/node/app
 
