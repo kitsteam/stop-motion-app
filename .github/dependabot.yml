@@ -17,17 +17,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      angular:
+        patterns:
+          - "@angular*"
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       - dependency-name: "@angular*"
         update-types: ["version-update:semver-major"]
-    groups:
-      angular:
-        applies-to: version-updates
-        patterns:
-          - "@angular*"
-        update-types:
-          - "minor"
-          - "patch"    
   - package-ecosystem: "docker"
     directory: "/" # Location of package manifests
     schedule:
