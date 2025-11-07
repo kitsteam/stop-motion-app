@@ -42,10 +42,11 @@ export class VideoService {
     await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
     await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'audio'), '-vn', outputPath]);
 
-    const audioOutput = new Uint8Array(await this.ffmpeg.readFile(outputPath) as ArrayBuffer);
+    const fileData = await this.ffmpeg.readFile(outputPath);
+    const audioOutput = fileData instanceof Uint8Array ? fileData : new Uint8Array();
     await this.deleteDirectory(workingDirectory)
 
-    return new Blob([audioOutput.buffer], { type: MimeTypes.audioWebm });
+    return new Blob([audioOutput as BlobPart], { type: MimeTypes.audioWebm });
   }
 
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob: Blob | undefined, progressCallback: ProgressCallback) {
@@ -73,7 +74,7 @@ export class VideoService {
 
     const data = await this.executeVideoConversion(parameters, outputFileName, progressCallback);
     await this.deleteDirectory(workingDirectory);
-    return new Blob([data.buffer], { type: 'video/webm' });
+    return new Blob([data as BlobPart], { type: 'video/webm' });
   }
 
   public async createGif(imageBlobs: Blob[], frameRate: number, progressCallback: ProgressCallback): Promise<Blob> {
@@ -93,13 +94,13 @@ export class VideoService {
     const data = await this.executeVideoConversion(gifParameters, outputFileName, progressCallback);
     await this.deleteDirectory(workingDirectory);
 
-    return new Blob([data.buffer], { type: 'image/gif' });
+    return new Blob([data as BlobPart], { type: 'image/gif' });
   }
 
   private async execute(parameters: string[], outputFileName: string): Promise<Uint8Array> {
     await this.ffmpeg.exec(parameters);
     const fileData = await this.ffmpeg.readFile(outputFileName);
-    return new Uint8Array(fileData as ArrayBuffer);
+    return fileData instanceof Uint8Array ? fileData : new Uint8Array();
   }
 
   private async executeVideoConversion(parameters: string[], outputFileName: string, progressCallback: ProgressCallback): Promise<Uint8Array> {
