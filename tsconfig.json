@@ -45,7 +45,12 @@
         "src/app/pipes/*"
       ]
     },
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    // skipLibCheck is required to bypass type conflicts in @ionic/core v8.7.9
+    // where HTMLIonInputElement and HTMLIonSearchbarElement have incompatible
+    // 'autocorrect' property definitions with HTMLStencilElement.
+    // This is a temporary workaround until Ionic fixes the type definitions.
+    "skipLibCheck": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

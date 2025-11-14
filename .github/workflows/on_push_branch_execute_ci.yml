@@ -12,28 +12,20 @@ env:
   NODE_VERSION: "22.20"
 
 jobs:
-  yarn_test:
+  yarn_tasks:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [test:ci, lint]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
+      - name: Enable Corepack
+        run: corepack enable
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - run: yarn install --frozen-lockfile
-      - run: yarn test:ci
-
-  yarn_lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v5
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn lint
+      - run: yarn ${{ matrix.task }}
