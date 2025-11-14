@@ -27,5 +27,5 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn ${{ matrix.task }}
