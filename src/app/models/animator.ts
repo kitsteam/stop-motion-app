@@ -386,7 +386,7 @@ export class Animator {
       await this.decodeFile(await new Response(result[0]).arrayBuffer());
       if (result[1]) {
         console.log('🚀 ~ file: animator.ts ~ line 363 ~ Animator ~ load ~ result[1]', result[1]);
-        this.setAudioSrc(result[1], MimeTypes.audioWebm);
+        this.setAudioSrc(result[1], result[1].type as MimeTypes);
       }
       this.snapshotContext.clearRect(0, 0, this.width, this.height);
       this.snapshotContext.drawImage(this.frames[this.frames.length - 1], 0, 0, this.width, this.height);
@@ -426,7 +426,8 @@ export class Animator {
       this.audio.appendChild(sourceElement);
       sourceElement.src = URL.createObjectURL(blob);
       console.log('🚀 ~ file: animator.ts ~ line 527 ~ Animator ~ setAudioSrc ~ URL.createObjectURL(blob)', URL.createObjectURL(blob));
-      sourceElement.type = (mimeType) ? mimeType : this.getAudioMimeType();
+      const resolvedMime = this.getAudioPlaybackMimeType(mimeType ?? (blob.type as MimeTypes) ?? this.audioMimeType);
+      sourceElement.type = resolvedMime;
       this.audio.load();
     }
   }
@@ -491,7 +492,8 @@ export class Animator {
     const zipWriter = new zip.ZipWriter(new zip.Data64URIWriter('application/zip'));
     await zipWriter.add('video.webm', new zip.BlobReader(videoBlob));
     if (audioBlob) {
-      await zipWriter.add('audio.webm', new zip.BlobReader(audioBlob));
+      const audioFileExtension = this.getAudioFileExtension(audioBlob);
+      await zipWriter.add(`audio.${audioFileExtension}`, new zip.BlobReader(audioBlob));
     }
     const dataURI = await zipWriter.close();
     return dataURI;
@@ -526,12 +528,11 @@ export class Animator {
   private async readFile(file: any): Promise<Blob[]> {
     const reader = new zip.ZipReader(new zip.BlobReader(file));
     const entries = await reader.getEntries();
-    const blobs = [];
-    await Promise.all(entries.map(async (entry: any, index: number) => {
+    const blobs = await Promise.all(entries.map(async (entry: any, index: number) => {
       console.log('🚀 ~ file: animator.ts ~ line 496 ~ Animator ~ awaitPromise.all ~ entry', entry);
       const blob = await this.readFileEntry(entry, index);
       console.log('🚀 ~ file: animator.ts ~ line 498 ~ Animator ~ awaitPromise.all ~ blob', blob);
-      blobs.push(blob);
+      return blob;
     }));
     await reader.close();
     if (blobs.length > 1 && blobs[0].type !== MimeTypes.video) {
@@ -548,7 +549,7 @@ export class Animator {
   * Method is used to read file inside of zip file
   */
   private async readFileEntry(entry: any, index: number): Promise<Blob> {
-    const type = (index === 0) ? MimeTypes.video : MimeTypes.audioWebm;
+    const type = (index === 0) ? MimeTypes.video : this.getAudioMimeTypeFromEntry(entry.filename);
     return await entry.getData(new zip.BlobWriter(type));
   }
 
@@ -556,6 +557,53 @@ export class Animator {
   * Method is used to get proper audio mime type
   */
   private getAudioMimeType(): string {
+    const recorderConstructor = (typeof window !== 'undefined') ? (window as any).MediaRecorder : undefined;
+    const candidates = [MimeTypes.audioWebm, MimeTypes.audioMp4, MimeTypes.audioMp4Container];
+
+    if (recorderConstructor && typeof recorderConstructor.isTypeSupported === 'function') {
+      for (const candidate of candidates) {
+        try {
+          if (recorderConstructor.isTypeSupported(candidate)) {
+            return candidate;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+
+    return MimeTypes.audioWebm;
+  }
+
+  private getAudioPlaybackMimeType(mimeType: string): string {
+    if (!mimeType) {
+      return this.getAudioMimeType();
+    }
+    if (mimeType.startsWith(MimeTypes.audioMp4)) {
+      return MimeTypes.audioMp4Container;
+    }
+    if (mimeType.startsWith(MimeTypes.audioMp4Container)) {
+      return MimeTypes.audioMp4Container;
+    }
+    if (mimeType.startsWith(MimeTypes.audioWebm)) {
+      return MimeTypes.audioWebm;
+    }
+    return mimeType;
+  }
+
+  private getAudioFileExtension(blob: Blob | null): string {
+    const type = blob?.type ?? this.audioMimeType ?? '';
+    if (type.includes('mp4')) {
+      return 'mp4';
+    }
+    return 'webm';
+  }
+
+  private getAudioMimeTypeFromEntry(filename: string): MimeTypes {
+    const lowerCaseName = (filename || '').toLowerCase();
+    if (lowerCaseName.endsWith('.mp4') || lowerCaseName.endsWith('.m4a')) {
+      return MimeTypes.audioMp4;
+    }
     return MimeTypes.audioWebm;
   }
 
