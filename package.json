@@ -62,7 +62,7 @@
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
     "@typescript-eslint/types": "7.18.0",
-    "@typescript-eslint/utils": "7.18.0",
+    "@typescript-eslint/utils": "8.46.4",
     "eslint": "8.57.0",
     "jasmine-core": "5.12.1",
     "jasmine-spec-reporter": "7.0.0",
