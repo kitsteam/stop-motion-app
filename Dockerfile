@@ -1,4 +1,4 @@
-FROM node:22.20-bullseye AS base
+FROM node:25.2-bullseye AS base
 
 RUN corepack enable
 
