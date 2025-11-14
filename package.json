@@ -5,6 +5,9 @@
   "homepage": "https://kits.blog/",
   "license": "GNU Affero General Public License (AGPL)",
   "packageManager": "yarn@4.5.1",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve --live-reload=false --disable-host-check --host 0.0.0.0",
