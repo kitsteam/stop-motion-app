@@ -472,20 +472,12 @@ export class Animator {
       // If not specified this defaults to the same value as `quality`.
     });
 
-    // ::TODO:: in the past, we only converted the frames for Safari. Right now, we always create jpegs.
-    // This simplifies the process quite a bit, as it's more consistent. However, we should check if this causes further issues.
-    //if (this.isSafari()) {
-    // we don't want to do anything right now with the progress callback here:
+    // Convert all frames to WebP for consistency across browsers
     const progressCallback: ProgressCallback = (progress, time) => { };
     const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
     for (const frame of convertedFrames) {
       videoWriter.addFrame(this.uint8ToBase64(frame));
     }
-    /*} else {
-        for (const frame of this.frames) {
-            videoWriter.addFrame(frame);
-        }
-    }*/
 
     const blob = await videoWriter.complete();
     return blob;
@@ -558,13 +550,6 @@ export class Animator {
   private async readFileEntry(entry: any, index: number): Promise<Blob> {
     const type = (index === 0) ? MimeTypes.video : MimeTypes.audioWebm;
     return await entry.getData(new zip.BlobWriter(type));
-  }
-
-  /*
-  * Method is used to determine wether browser has user agent safari or is used on ios
-  */
-  private isSafari(): boolean {
-    return (navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1) || this.platform.is('ios');
   }
 
   /*

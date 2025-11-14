@@ -60,6 +60,8 @@ This approach ensures:
 - Consistent processing pipeline
 - Cross-browser import/export compatibility
 
+**Note:** Previous versions conditionally converted frames only on Safari. Now all frames are consistently converted to WebP regardless of browser, which simplifies the codebase and improves cross-browser compatibility.
+
 ## Video Formats
 
 ### Container: WebM
