@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        task: [test:ci, lint]
+        task: [lint, test:ci, build:prod]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
