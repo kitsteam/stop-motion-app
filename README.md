@@ -37,3 +37,8 @@ yarn start
 # Test the application:
 yarn test
 ```
+
+## Documentation
+
+- [Codec Documentation](docs/CODECS.md) - Information about image, video, and audio codecs used
+- [Third-Party Licenses](THIRD_PARTY_LICENSES.md) - License information for codec-related dependencies
