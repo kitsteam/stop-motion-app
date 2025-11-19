@@ -1,0 +1,26 @@
+# StopClip Agent Notes
+- **Architecture**: Angular 18 + Ionic 8 PWA; `src/app/app.module.ts` forces Material mode and wires shared modules (components, pipes, translate).
+- **Routing**: `src/app/app-routing.module.ts` lazy-loads `pages/home`, `pages/animator`, `pages/settings`; any new feature module should follow the same lazy pattern.
+- **Animator Core**: `src/app/models/animator.ts` owns camera/video/audio state, canvas rendering, export pipeline, and exposes `BehaviorSubject`s for playback state and frame rate.
+- **AnimatorService**: `src/app/services/animator/animator.service.ts` is the integration layer; components always call it instead of the model so the `BehaviorSubject` caches stay consistent.
+- **Frame Handling**: Captured frames live in `Animator.frames` for playback and `Animator.frameWebpsAndJpegs` for export; respect the 360-frame limit and use `AnimatorService.removeFrames`/`clear` to keep both lists aligned.
+- **Playback & Export**: `AnimatorService.save()` branches to draft/video/gif; supply a `ProgressCallback` like `save-button.component.ts` to update loader text during FFmpeg work.
+- **DevicePerformance**: `src/app/services/device/device-performance.service.ts` adjusts capture scaling and export batch sizes; call `Animator.setDimensions()` on layout changes so `captureSettings` refresh.
+- **VideoService**: `src/app/services/video/video.service.ts` lazy-loads `@ffmpeg/ffmpeg` assets from `src/assets/js/external/ffmpeg`; keep filenames and relative paths stable or exports break.
+- **Audio Workflow**: `Animator.recordAudio()` uses `MediaRecorder`; after recording, call `VideoService.convertAudio()` to get an Opus blob before invoking `Animator.setAudioSrc()`.
+- **LayoutService**: `src/app/services/layout/layout.service.ts` publishes orientation-aware width/height; subscribe via `AnimatorPage` instead of querying `window` directly.
+- **Base Classes**: Extend `BaseComponent`/`BasePage` for loading, translate, and platform helpers; shared components belong in `src/app/components` and must be exported via `components.module.ts`.
+- **Shared Services**: UI feedback flows through `BaseService` (`alertService`, `toastService`, `loadingController`); reuse these instead of creating Ionic controllers manually.
+- **Navigation Guard**: `pages/animator/guards/animator.guard.ts` prevents losing unsaved frames by showing a translated alert; mirror this pattern for other destructive routes.
+- **Translations**: Locales live in `src/assets/i18n`; `app.component.ts` sets fallback to `de`, so add new keys there and reference translation IDs in templates.
+- **Environment & Aliases**: `tsconfig.json` defines `@services/*`, `@pages/*`, etc.; ensure new directories are added to both the filesystem and path map.
+- **TypeScript Quirk**: `skipLibCheck` stays enabled to dodge Ionic `HTMLIonInputElement` type conflicts; do not disable without upgrading Ionic.
+- **Generated Output**: The `www/` folder is produced by `ionic build`; never hand-edit—use `yarn build` or `yarn build:prod` to regenerate.
+- **Dev Server**: `yarn start` runs `ng serve --live-reload=false --disable-host-check --host 0.0.0.0`; it binds on port 4200 inside containers.
+- **Testing**: `yarn test` uses Karma + Jasmine with the custom `ChromiumHeadless` launcher; `yarn test:ci` is the headless CI variant—avoid APIs blocked in headless Chromium.
+- **Linting**: `yarn lint` runs Angular ESLint with strict template checks; fix lint issues before pushing or CI will fail.
+- **Service Worker**: `src/app/services/service-worker/service-worker.service.ts` only activates in production and prompts via an alert before `SwUpdate.activateUpdate()`.
+- **Export Details**: Draft saves pack `video.webm` + optional `audio.webm` into a zip via `zip.js`; animated exports use `webm-writer` or FFmpeg scaling to the device-specific target width.
+- **FFmpeg Temp FS**: `VideoService` writes to random in-memory directories and cleans them with `deleteDirectory`; preserve this cleanup when extending export flows.
+- **Camera Switching**: `AnimatorService.switchCamera()` flips `FacingMode` and reattaches the stream; remember Safari returns JPEG frames, so rely on `convertPotentiallyMixedFrames()` when manipulating stored blobs.
+- **Testing Patterns**: See `src/app/services/animator/animator.service.spec.ts` for mocking `Animator`; tests typically inject services via Angular TestBed and spy on `BaseService` helpers.
