@@ -3859,10 +3859,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jasmine@npm:*, @types/jasmine@npm:5.1.12":
+"@types/jasmine@npm:*":
   version: 5.1.12
   resolution: "@types/jasmine@npm:5.1.12"
   checksum: 10c0/707c4eabc01f1be06a580868e044f7ee1aa2abfe0e59cd344c93d3c71916b54233d2745d107ddfbb9afecaf6faebea1784dd9c0763c354e723aa8a5d8098c605
+  languageName: node
+  linkType: hard
+
+"@types/jasmine@npm:5.1.13":
+  version: 5.1.13
+  resolution: "@types/jasmine@npm:5.1.13"
+  checksum: 10c0/f162b7949f44e1e68391711772e6e19ad8db77318dbff8068f79e06f9532956f4e762a814797a48abf3356786830cb23487623eb9bf1dd55624e21a1935bc09f
   languageName: node
   linkType: hard
 
@@ -10210,7 +10217,7 @@ __metadata:
     "@popperjs/core": "npm:^2.11.8"
     "@types/dom-mediacapture-record": "npm:1.0.22"
     "@types/file-saver": "npm:2.0.7"
-    "@types/jasmine": "npm:5.1.12"
+    "@types/jasmine": "npm:5.1.13"
     "@types/jasminewd2": "npm:2.0.13"
     "@types/node": "npm:22.18.6"
     "@typescript-eslint/eslint-plugin": "npm:8.47.0"
@@ -10234,7 +10241,7 @@ __metadata:
     tslib: "npm:2.8.1"
     typescript: "npm:5.5.4"
     webm-writer: "npm:1.0.0"
-    zone.js: "npm:0.15.1"
+    zone.js: "npm:0.14.10"
   languageName: unknown
   linkType: soft
 
@@ -11329,9 +11336,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zone.js@npm:0.15.1":
-  version: 0.15.1
-  resolution: "zone.js@npm:0.15.1"
-  checksum: 10c0/4eca000f90dbea1c34f62e88ce56910dace8cdecbe14747b214f2af37aa511264c7bd50faf3e9b00612e95dc4567da156a9690fef1983bfcf74604a630d190ef
+"zone.js@npm:0.14.10":
+  version: 0.14.10
+  resolution: "zone.js@npm:0.14.10"
+  checksum: 10c0/61283d152cb1eff899bae61621dccd572aa9f47e0c60c04b249bf86b43e3e4ba627bf6dba371b725023a4f302f39e554d7bf2d25bbf40c869c6c52f774b17e8b
   languageName: node
   linkType: hard
