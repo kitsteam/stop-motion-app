@@ -109,8 +109,7 @@ The application uses the following codecs:
 - **VP9:** Not currently used but supported by modern browsers
 
 ### Audio Formats
-- **Opus:** Audio codec in WebM container
-- **OGG:** Used for audio storage after conversion
+- **Opus:** Audio codec in the WebM container
 
 ## Browser Compatibility
 
