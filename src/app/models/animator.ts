@@ -11,6 +11,8 @@ import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { VideoService } from '@services/video/video.service';
 import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
+import { CaptureSettings } from '@interfaces/device-performance-profile.interface';
+import { DevicePerformanceService } from '@services/device/device-performance.service';
 
 declare const webm: any;
 @Injectable({
@@ -43,6 +45,9 @@ export class Animator {
   zeroPlayTime: number;
   imageCanvas: any;
   context: any;
+  private captureSettings: CaptureSettings;
+  private downscaleCanvas: HTMLCanvasElement | null;
+  private downscaleContext: CanvasRenderingContext2D | null;
 
   private isAnimatorPlaying: BehaviorSubject<boolean>;
   private frameRate: BehaviorSubject<number>;
@@ -52,9 +57,13 @@ export class Animator {
     public baseService: BaseService,
     private platform: Platform,
     private videoService: VideoService,
+    private devicePerformanceService: DevicePerformanceService,
   ) {
     this.isAnimatorPlaying = new BehaviorSubject(false);
     this.frameRate = new BehaviorSubject(6.0);
+    this.captureSettings = { scale: 1, jpegQuality: 0.8 };
+    this.downscaleCanvas = null;
+    this.downscaleContext = null;
   }
 
   getIsPlaying(): Observable<any> {
@@ -160,6 +169,37 @@ export class Animator {
     }
   }
 
+  private getTargetCanvas(scale: number): HTMLCanvasElement {
+    if (!this.imageCanvas || scale >= 1) {
+      return this.imageCanvas;
+    }
+
+    const targetWidth = Math.max(1, Math.round(this.width * scale));
+    const targetHeight = Math.max(1, Math.round(this.height * scale));
+
+    if (!this.downscaleCanvas) {
+      this.downscaleCanvas = document.createElement('canvas');
+    }
+
+    if (!this.downscaleContext) {
+      this.downscaleContext = this.downscaleCanvas.getContext('2d', { alpha: false });
+    }
+
+    if (!this.downscaleContext) {
+      return this.imageCanvas;
+    }
+
+    if (this.downscaleCanvas.width !== targetWidth || this.downscaleCanvas.height !== targetHeight) {
+      this.downscaleCanvas.width = targetWidth;
+      this.downscaleCanvas.height = targetHeight;
+    }
+
+    this.downscaleContext.clearRect(0, 0, targetWidth, targetHeight);
+    this.downscaleContext.drawImage(this.imageCanvas, 0, 0, targetWidth, targetHeight);
+
+    return this.downscaleCanvas;
+  }
+
   /*
   * Method is used to capture new image and create canvas out of it and share it with other components
   */
@@ -167,26 +207,46 @@ export class Animator {
     // console.log('🚀 ~ file: animator.ts ~ line 103 ~ Animator ~ capture ~ capture');
     if (!this.isStreaming) { return; }
 
+    // Capture the raw frame at full resolution before applying any scaling heuristics.
     this.context.drawImage(this.video, 0, 0, this.width, this.height);
 
-    // we need to wait until the image is loaded:
-    await new Promise((resolve, reject) => {
-      this.imageCanvas.toBlob(async (blob: Blob) => {
-        var img = new Image();
-        const dataUrl = URL.createObjectURL(blob);
+    const settings = this.captureSettings || { scale: 1, jpegQuality: 0.8 };
+    // Determine whether the device profile wants a downscaled canvas before encoding.
+    const targetCanvas = this.getTargetCanvas(settings.scale);
 
-        img.onload = async () => {
+    if (!targetCanvas) {
+      return this.frames;
+    }
+
+    this.snapshotContext.clearRect(0, 0, this.width, this.height);
+    this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
+
+    await new Promise<void>((resolve) => {
+      // Encode the canvas into a JPEG blob respecting the tuned quality factor.
+      targetCanvas.toBlob((blob: Blob | null) => {
+        if (!blob) {
+          resolve();
+          return;
+        }
+
+        const dataUrl = URL.createObjectURL(blob);
+        const img = new Image();
+
+        img.onload = () => {
+          // Store the decoded image for playback while keeping the blob for FFmpeg.
           this.frames.push(img);
           URL.revokeObjectURL(dataUrl);
-          resolve(img)
-        }
+          resolve();
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(dataUrl);
+          resolve();
+        };
+
         img.src = dataUrl;
-
-        this.snapshotContext.clearRect(0, 0, this.width, this.height);
-        this.snapshotContext.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
-
         this.frameWebpsAndJpegs.push(blob);
-      }, 'image/jpeg', 0.8);
+      }, 'image/jpeg', settings.jpegQuality);
     });
 
     return this.frames;
@@ -374,6 +434,11 @@ export class Animator {
     this.snapshotCanvas.height = this.height;
     this.playCanvas.width = this.width;
     this.playCanvas.height = this.height;
+    this.captureSettings = this.devicePerformanceService.getCaptureSettings(this.width, this.height);
+    if (this.captureSettings.scale >= 1) {
+      this.downscaleCanvas = null;
+      this.downscaleContext = null;
+    }
   }
 
   /*
