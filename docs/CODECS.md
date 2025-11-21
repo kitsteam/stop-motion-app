@@ -122,7 +122,7 @@ VP9 is the successor to VP8 and offers better compression:
 
 ### Recording: WebM/Opus
 
-Audio is recorded using the **Opus** codec in a WebM container:
+Audio recording prefers the **Opus** codec in a WebM container:
 
 ```typescript
 this.audioRecorder = new MediaRecorder(this.audioStream, {
@@ -131,27 +131,26 @@ this.audioRecorder = new MediaRecorder(this.audioStream, {
 ```
 
 **Rationale:**
-- Best quality-to-bitrate ratio for speech
-- Low latency
-- Native MediaRecorder support
-- Excellent browser support
+- Opus offers excellent quality at low bitrates and is widely supported
+- WebM container matches the rest of the video pipeline
+- Recent Safari and Chrome builds both expose `audio/webm;codecs=opus`, so no additional fallback is required
 
-### Storage: OGG
+### Storage: WebM/Opus
 
-Audio is converted to **OGG** format for storage:
+Regardless of the recorder outcome, audio blobs are converted to **WebM/Opus**:
 
 ```typescript
 await this.ffmpeg.exec([
   "-i", inputAudioPath,
-  '-vn',
-  outputPath // .ogg
+  "-vn",
+  "-c:a", "libopus",
+  outputPath // .webm
 ]);
 ```
 
 **Rationale:**
-- Open, royalty-free format
-- Good compression
-- Wide compatibility for audio playback
+- Aligns with the WebM-based video pipeline
+- Opus is royalty-free and optimised for voice
 
 ## GIF Export
 
@@ -182,7 +181,7 @@ Projects are saved as ZIP files containing:
 ```
 project.zip
 ├── video.webm   (WebM with VP8 video codec)
-└── audio.webm   (WebM with Opus audio codec, optional)
+└── audio.webm   (WebM with Opus audio codec)
 ```
 
 **Implementation:**

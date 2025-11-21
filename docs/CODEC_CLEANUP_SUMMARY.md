@@ -28,7 +28,7 @@ All licenses are compatible with the project's AGPL-3.0 license.
 Created detailed technical documentation explaining:
 - Image format choices (JPEG capture → WebP storage)
 - Video codec selection (WebM container with VP8 codec)
-- Audio format handling (Opus/WebM recording → OGG storage)
+- Audio format handling (Opus/WebM recording → WebM storage)
 - Browser compatibility matrix
 - Cross-browser considerations
 - Performance characteristics
@@ -90,7 +90,7 @@ The application now uses a consistent codec strategy:
 
 #### Audio Encoding
 - **Recording:** Opus in WebM container (best quality-to-bitrate)
-- **Storage:** OGG format (good compression and compatibility)
+- **Storage:** WebM/Opus
 
 ### 4. Dependencies Review
 

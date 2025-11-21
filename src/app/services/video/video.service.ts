@@ -38,15 +38,32 @@ export class VideoService {
     }
 
     const workingDirectory = await this.buildWorkingDirectory();
-    const outputPath = this.pathToFile(workingDirectory, 'output.ogg');
-    await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
-    await this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'audio'), '-vn', outputPath]);
+    const inputPath = this.pathToFile(workingDirectory, 'audio');
+    await this.ffmpeg.writeFile(inputPath, await fetchFile(audioBlob));
 
-    const fileData = await this.ffmpeg.readFile(outputPath);
-    const audioOutput = fileData instanceof Uint8Array ? fileData : new Uint8Array();
-    await this.deleteDirectory(workingDirectory)
+    const webmOutputPath = this.pathToFile(workingDirectory, 'output.webm');
 
-    return new Blob([audioOutput as BlobPart], { type: MimeTypes.audioWebm });
+    let outputBlob: Blob | null = null;
+    try {
+      await this.ffmpeg.exec([
+        '-i', inputPath,
+        '-vn',
+        '-c:a', 'libopus',
+        webmOutputPath
+      ]);
+
+      const fileData = await this.ffmpeg.readFile(webmOutputPath);
+      const audioOutput = fileData instanceof Uint8Array ? fileData : new Uint8Array();
+      outputBlob = new Blob([audioOutput as BlobPart], { type: MimeTypes.audioWebm });
+    } finally {
+      await this.deleteDirectory(workingDirectory);
+    }
+
+    if (!outputBlob) {
+      throw new Error('Audio conversion failed.');
+    }
+
+    return outputBlob;
   }
 
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob: Blob | undefined, progressCallback: ProgressCallback) {

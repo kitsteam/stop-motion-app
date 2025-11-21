@@ -73,7 +73,7 @@ export class Animator {
       this.audio = null;
       this.audioBlob = null;
       this.audioChunks = [];
-      // determine if os is iOS or browser is safari, if so use other codec to store audio
+      // determine recorder capabilities and pick best available codec
       this.audioMimeType = this.getAudioMimeType();
       this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.frames = [];
@@ -295,6 +295,7 @@ export class Animator {
           message: this.baseService.translate.instant('toast_animator_audio_play_error'),
           color: 'danger',
         });
+        console.error(error);
       }
     }
   }
@@ -302,8 +303,8 @@ export class Animator {
   endPlay(cb) {
     if (this.isPlaying()) { clearTimeout(this.playTimer); }
     this.playTimer = null;
-    if (this.audioRecorder && this.audioRecorder.state === RecorderState.recording) {
-      this.audioRecorder.stop();
+    if (this.getAudioRecorderState() === RecorderState.recording) {
+      this.stopActiveAudioRecorder();
     } else if (this.audio) {
       this.audio.pause();
     }
@@ -338,27 +339,85 @@ export class Animator {
     if (!this.frames.length) {
       return;
     }
-    const state = this.audioRecorder ? this.audioRecorder.state : RecorderState.inactive;
+    const state = this.getAudioRecorderState();
     if (state === RecorderState.recording) {
       return;
     }
 
-    return new Promise((async (resolve, reject) => {
-      this.audioRecorder = new MediaRecorder(this.audioStream, { mimeType: this.audioMimeType });
-      this.audioRecorder.ondataavailable = ((event: any) => {
-        console.log('🚀 ~ file: animator.ts ~ line 318 ~ Animator ~ returnnewPromise ~ event', event);
-        this.audioChunks.push(event.data);
-      });
-      this.audioRecorder.onstop = ((evt: any) => {
-        this.audioRecorder = null;
-        const blob = new Blob(this.audioChunks, { type: this.audioMimeType });
+    return new Promise((resolve, reject) => {
+      try {
         this.audioChunks = [];
-        resolve(blob);
-      });
-      // pass true to do not play audio at the same time
-      this.startPlay(true);
-      this.audioRecorder.start();
-    }));
+        this.audioRecorder = this.createAudioRecorder();
+
+        if (!this.audioRecorder) {
+          reject(new Error('Audio recorder could not be created.'));
+          return;
+        }
+
+        this.audioRecorder.ondataavailable = (event: any) => {
+          if (event && event.data) {
+            this.audioChunks.push(event.data);
+          }
+        };
+
+        this.audioRecorder.onstop = () => {
+          const blob = new Blob(this.audioChunks, { type: this.audioMimeType });
+          this.audioChunks = [];
+          this.audioRecorder = null;
+          resolve(blob);
+        };
+
+        // pass true to not play audio at the same time
+        this.startPlay(true);
+        this.audioRecorder.start();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private createAudioRecorder(): MediaRecorder {
+    if (!this.audioStream) {
+      throw new Error('Audio stream is not initialized.');
+    }
+
+    if (typeof MediaRecorder === 'undefined') {
+      throw new Error('MediaRecorder is not supported in this environment.');
+    }
+
+    try {
+      const recorder = new MediaRecorder(this.audioStream, { mimeType: this.audioMimeType });
+      console.log('[Animator] MediaRecorder using mime type:', this.audioMimeType);
+      return recorder;
+    } catch (error) {
+      console.warn('Falling back to alternative mime type due to MediaRecorder error.', error);
+      const fallback = this.getFallbackMimeType(this.audioMimeType);
+      if (fallback) {
+        this.audioMimeType = fallback;
+        const recorder = new MediaRecorder(this.audioStream, { mimeType: fallback });
+        console.log('[Animator] MediaRecorder using fallback mime type:', this.audioMimeType);
+        return recorder;
+      }
+      throw error;
+    }
+  }
+
+  private getAudioRecorderState(): RecorderState {
+    if (!this.audioRecorder) {
+      return RecorderState.inactive;
+    }
+    return this.audioRecorder.state as RecorderState;
+  }
+
+  private stopActiveAudioRecorder(): void {
+    if (!this.audioRecorder) {
+      return;
+    }
+    try {
+      this.audioRecorder.stop();
+    } catch (error) {
+      console.warn('Stopping audio recorder failed.', error);
+    }
   }
 
   /*
@@ -417,7 +476,9 @@ export class Animator {
     console.log('🚀 ~ file: animator.ts ~ line 513 ~ Animator ~ setAudioSrc ~ blob', blob, mimeType);
     this.audioBlob = blob;
     if (this.audio) {
-      URL.revokeObjectURL(this.audio.src);
+      if (this.audio.src) {
+        URL.revokeObjectURL(this.audio.src);
+      }
       this.audio = null;
     }
     if (blob) {
@@ -558,7 +619,10 @@ export class Animator {
   */
   private getAudioMimeType(): string {
     const recorderConstructor = (typeof window !== 'undefined') ? (window as any).MediaRecorder : undefined;
-    const candidates = [MimeTypes.audioWebm, MimeTypes.audioMp4, MimeTypes.audioMp4Container];
+    const candidates = [
+      MimeTypes.audioWebm,
+      MimeTypes.audioWebmContainer
+    ];
 
     if (recorderConstructor && typeof recorderConstructor.isTypeSupported === 'function') {
       for (const candidate of candidates) {
@@ -579,32 +643,52 @@ export class Animator {
     if (!mimeType) {
       return this.getAudioMimeType();
     }
-    if (mimeType.startsWith(MimeTypes.audioMp4)) {
-      return MimeTypes.audioMp4Container;
-    }
-    if (mimeType.startsWith(MimeTypes.audioMp4Container)) {
-      return MimeTypes.audioMp4Container;
-    }
     if (mimeType.startsWith(MimeTypes.audioWebm)) {
-      return MimeTypes.audioWebm;
+      return MimeTypes.audioWebmContainer;
+    }
+    if (mimeType.startsWith(MimeTypes.audioWebmContainer)) {
+      return MimeTypes.audioWebmContainer;
     }
     return mimeType;
   }
 
   private getAudioFileExtension(blob: Blob | null): string {
     const type = blob?.type ?? this.audioMimeType ?? '';
-    if (type.includes('mp4')) {
-      return 'mp4';
+    if (type.includes('webm')) {
+      return 'webm';
     }
     return 'webm';
   }
 
   private getAudioMimeTypeFromEntry(filename: string): MimeTypes {
     const lowerCaseName = (filename || '').toLowerCase();
-    if (lowerCaseName.endsWith('.mp4') || lowerCaseName.endsWith('.m4a')) {
-      return MimeTypes.audioMp4;
+    if (lowerCaseName.endsWith('.webm')) {
+      return MimeTypes.audioWebm;
     }
     return MimeTypes.audioWebm;
+  }
+
+  private getFallbackMimeType(currentMimeType: string): MimeTypes | null {
+    const recorderConstructor = (typeof window !== 'undefined') ? (window as any).MediaRecorder : undefined;
+    const fallbackCandidates = [
+      MimeTypes.audioWebm,
+      MimeTypes.audioWebmContainer
+    ];
+    if (recorderConstructor && typeof recorderConstructor.isTypeSupported === 'function') {
+      for (const candidate of fallbackCandidates) {
+        if (candidate === currentMimeType) {
+          continue;
+        }
+        try {
+          if (recorderConstructor.isTypeSupported(candidate)) {
+            return candidate;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+    return null;
   }
 
   /*
