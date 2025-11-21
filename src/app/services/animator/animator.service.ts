@@ -5,7 +5,7 @@ import { SaveState } from '@enums/save-state';
 import { LayoutOptions } from '@interfaces/layout-options.interface';
 import { Animator } from '@models/animator';
 import { BaseService } from '@services/base/base.service';
-import { VideoService } from '@services/video/video.service';
+import { MediaExportService } from '@services/media-export/media-export.service';
 import { BehaviorSubject } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
@@ -29,7 +29,7 @@ export class AnimatorService {
   constructor(
     public animator: Animator,
     public baseService: BaseService,
-    public videoService: VideoService
+    public mediaExportService: MediaExportService
   ) {
     this.cameras = new BehaviorSubject([]);
     this.currentCameraIndex = null;
@@ -148,7 +148,7 @@ export class AnimatorService {
   }
 
   public async convertAudio(blob: Blob): Promise<void> {
-    const result = await this.videoService.convertAudio(blob);
+    const result = await this.mediaExportService.convertAudio(blob);
     const resolvedMime = (result && result.type) ? result.type as MimeTypes : MimeTypes.audioWebm;
     this.animator.setAudioSrc(result, resolvedMime);
     return;
@@ -167,13 +167,13 @@ export class AnimatorService {
 
     if (type === SaveState.video) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createVideo(this.animator.frameWebpsAndJpegs, frameRate, this.animator.audioBlob, progressCallback);
+      const result = await this.mediaExportService.createVideo(this.animator.frameWebpsAndJpegs, frameRate, this.animator.audioBlob, progressCallback);
       saveAs(new Blob([result]), filename + '.webm', { autoBom: true });
       return;
     }
     else if (type === SaveState.gif) {
       const frameRate = await this.animator.getFramerate().pipe(first()).toPromise();
-      const result = await this.videoService.createGif(this.animator.frameWebpsAndJpegs, frameRate, progressCallback);
+      const result = await this.mediaExportService.createGif(this.animator.frameWebpsAndJpegs, frameRate, progressCallback);
       saveAs(new Blob([result]), filename + '.gif', { autoBom: true });
       return;
     } else {

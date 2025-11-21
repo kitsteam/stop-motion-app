@@ -1,7 +1,7 @@
 # MediaRecorder Migration Spec
 
 ## 1. Zielsetzung
-- Ersetzt die aktuelle `@ffmpeg/ffmpeg`-basierte Export-Pipeline (`VideoService`) vollständig durch die native MediaRecorder API des Browsers.
+- Ersetzt die aktuelle `@ffmpeg/ffmpeg`-basierte Export-Pipeline (`MediaExportService`, vormals `VideoService`) vollständig durch die native MediaRecorder API des Browsers.
 - Liefert weiterhin dieselben Ausgabeformate (primär `video/webm`, optional `audio/webm` sowie GIF-Export) ohne serverseitige Verarbeitung.
 - Entfernt sämtliche FFmpeg-Abhängigkeiten aus `package.json`, Assets (`assets/js/external/ffmpeg/*`) und Code.
 
@@ -22,14 +22,14 @@
 3. Kein zusätzliches Backend; alles läuft clientseitig.
 
 ## 4. Ist-Zustand (Kurzfassung)
-- `src/app/services/video/video.service.ts` kapselt sämtliche FFmpeg-Aufrufe: Audio-Konvertierung, Video- und GIF-Erzeugung, JPEG→WebP.
+- `src/app/services/media-export/media-export.service.ts` kapselt sämtliche Export-Aufgaben: Audio-Konvertierung, Video- und GIF-Erzeugung, JPEG→WebP.
 - Assets (`assets/js/external/ffmpeg/`) liefern `ffmpeg-core`, `worker.js` etc.
 - Progress-Events stammen aus `ffmpeg.on('progress')` und landen via `ProgressCallback` (u.a. `save-button`).
 - Speicherstrategie: temporäre virtuelle FS pro Export (`crypto.randomUUID`).
 
 ## 5. Zielarchitektur
 ### 5.1 Übersicht
-- Neuer `RecordingService` (oder Umbenennung von `VideoService`) abstrahiert Export-Workflows und kapselt MediaRecorder.
+- Neuer `RecordingService` (bzw. das in `MediaExportService` umbenannte Modul) abstrahiert Export-Workflows und kapselt MediaRecorder.
 - Gemeinsame Hilfsklassen:
   - `CaptureStreamFactory`: baut MediaStreams aus Canvas/Preview-Elementen und AudioContext.
   - `BlobStore`: verwaltet temporäre Blobs (ersetzt virtuelles FFmpeg-FS) und bereitet Downloads/Uploads vor.

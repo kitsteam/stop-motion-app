@@ -9,7 +9,7 @@ import * as WebMWriter from 'webm-writer';
 import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
-import { VideoService } from '@services/video/video.service';
+import { MediaExportService } from '@services/media-export/media-export.service';
 import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 
 declare const webm: any;
@@ -51,7 +51,7 @@ export class Animator {
     // TODO if possible get rid of injectable again
     public baseService: BaseService,
     private platform: Platform,
-    private videoService: VideoService,
+    private mediaExportService: MediaExportService,
   ) {
     this.isAnimatorPlaying = new BehaviorSubject(false);
     this.frameRate = new BehaviorSubject(6.0);
@@ -536,7 +536,7 @@ export class Animator {
 
     // Convert all frames to WebP for consistency across browsers
     const progressCallback: ProgressCallback = (progress, time) => { };
-    const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
+    const convertedFrames = await this.mediaExportService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
     for (const frame of convertedFrames) {
       videoWriter.addFrame(this.uint8ToBase64(frame));
     }
