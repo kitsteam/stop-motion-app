@@ -1,36 +1,36 @@
-import { Injectable } from '@angular/core';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable } from '@angular/core';
+import { GIFEncoder, GifPalette, applyPalette, quantize } from 'gifenc';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 import { RecordingService } from '@services/recording/recording.service';
 
+type ProgressPhase = 'converting_images' | 'creating_video';
+
+interface DrawableImage {
+  element: CanvasImageSource;
+  width: number;
+  height: number;
+  dispose(): void;
+}
+
+interface CanvasContextResult {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+}
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideoService {
-  private loaded = false;
-  private ffmpeg = new FFmpeg();
+  private readonly maxGifWidth = 480;
+  private readonly jpegToWebpQuality = 0.65;
 
-  private async loadFfmpeg() {
-    const assetBasePath = `${window.location.origin}/assets/js/external/ffmpeg/`;
-    this.ffmpeg.on("log", ({ message }) => {
-      console.log(message)
-    });
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${assetBasePath}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${assetBasePath}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-      classWorkerURL: `${assetBasePath}/worker.js`
-    });
-    this.loaded = true;
-  };
-
-  constructor(private recordingService: RecordingService) { }
+  constructor(
+    private recordingService: RecordingService,
+    @Inject(DOCUMENT) private document: Document
+  ) { }
 
   public async convertAudio(audioBlob: Blob): Promise<Blob> {
     return this.recordingService.convertAudioBlob(audioBlob);
@@ -46,156 +46,207 @@ export class VideoService {
   }
 
   public async createGif(imageBlobs: Blob[], frameRate: number, progressCallback: ProgressCallback): Promise<Blob> {
-    if (!this.loaded) {
-      await this.loadFfmpeg();
+    if (!imageBlobs?.length) {
+      throw new Error('No frames available for GIF export.');
     }
 
-    // we always use webp - if a jpeg is incoming (e.g. from safari), we'll convert it to webp
-    const workingDirectory = await this.buildWorkingDirectory();
+    this.ensureBrowserEnvironment();
 
-    // write images to the directory in parallel, wait for all images to be stored:
-    await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
+    const startTime = performance.now();
+    const firstDrawable = await this.decodeDrawable(imageBlobs[0]);
+    const { width, height } = this.computeGifDimensions(firstDrawable.width, firstDrawable.height);
+    const { ctx } = this.createCanvasContext(width, height);
+    const encoder = GIFEncoder();
+    const totalFrames = imageBlobs.length;
+    const delay = this.toGifDelay(frameRate);
 
-    const outputFileName = this.pathToFile(workingDirectory, 'output.gif');
-    const gifParameters = ["-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`), "-vf", `fps=${frameRate},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, "-loop", "0", outputFileName];
+    for (let index = 0; index < totalFrames; index++) {
+      const drawable = index === 0 ? firstDrawable : await this.decodeDrawable(imageBlobs[index]);
+      this.drawDrawable(ctx, drawable, width, height);
+      drawable.dispose();
 
-    const data = await this.executeVideoConversion(gifParameters, outputFileName, progressCallback);
-    await this.deleteDirectory(workingDirectory);
+      this.reportProgress('converting_images', index + 1, totalFrames, progressCallback, startTime);
 
-    return new Blob([data as BlobPart], { type: 'image/gif' });
-  }
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const palette = this.buildPalette(imageData.data);
+      const indexedPixels = applyPalette(imageData.data, palette, 'rgba4444');
+      const transparentIndex = this.findTransparentIndex(palette);
 
-  private async execute(parameters: string[], outputFileName: string): Promise<Uint8Array> {
-    await this.ffmpeg.exec(parameters);
-    const fileData = await this.ffmpeg.readFile(outputFileName);
-    return fileData instanceof Uint8Array ? fileData : new Uint8Array();
-  }
+      encoder.writeFrame(indexedPixels, width, height, {
+        palette,
+        delay,
+        transparent: transparentIndex >= 0,
+        transparentIndex: transparentIndex >= 0 ? transparentIndex : undefined,
+        repeat: index === 0 ? 0 : undefined
+      });
 
-  private async executeVideoConversion(parameters: string[], outputFileName: string, progressCallback: ProgressCallback): Promise<Uint8Array> {
-    const callback = this.startProgressCallback('creating_video', progressCallback)
-    const data = await this.execute(parameters, outputFileName);
-    this.ffmpeg.off('progress', callback);
+      this.reportProgress('creating_video', index + 1, totalFrames, progressCallback, startTime);
+    }
 
-    return data;
+    encoder.finish();
+    const gifBytes = encoder.bytes();
+    const gifBuffer = gifBytes.buffer.slice(gifBytes.byteOffset, gifBytes.byteOffset + gifBytes.byteLength) as ArrayBuffer;
+    return new Blob([gifBuffer], { type: 'image/gif' });
   }
 
   // converts all Jpegs in this list to webP, which is necessary for the safari export:
   public async convertPotentiallyMixedFrames(potentiallyMixedFrames: any[], progressCallback: ProgressCallback): Promise<ArrayBuffer[]> {
-    if (!this.loaded) {
-      await this.loadFfmpeg();
+    if (!potentiallyMixedFrames?.length) {
+      return [];
     }
 
-    const workingDirectory = await this.buildWorkingDirectory();
+    this.ensureBrowserEnvironment();
+    const startTime = performance.now();
+    const converted: ArrayBuffer[] = [];
 
-    await this.storeImagesInFilesystem(potentiallyMixedFrames, workingDirectory, progressCallback);
-
-    let webPs = [];
-
-    for (let i = 0; i < potentiallyMixedFrames.length; i++) {
-      webPs.push(await this.ffmpeg.readFile(this.pathToFile(workingDirectory, `image_${i}.webp`)))
+    for (let index = 0; index < potentiallyMixedFrames.length; index++) {
+      const frame = this.toBlob(potentiallyMixedFrames[index]);
+      const normalized = await this.ensureWebP(frame);
+      converted.push(await normalized.arrayBuffer());
+      this.reportProgress('converting_images', index + 1, potentiallyMixedFrames.length, progressCallback, startTime);
     }
 
-    await this.deleteDirectory(workingDirectory);
-
-    return webPs;
+    return converted;
   }
 
-  private async convertToJpegToWebPBatch(jpegBlobsWithIndex: { index: number, imageBlob: Blob }[], targetWorkingDirectory: string) {
-    if (!this.loaded) {
-      await this.loadFfmpeg();
+  private ensureBrowserEnvironment(): void {
+    if (!this.document || !this.document.defaultView) {
+      throw new Error('VideoService is only available in browser environments.');
+    }
+  }
+
+  private computeGifDimensions(sourceWidth: number, sourceHeight: number): { width: number; height: number } {
+    const width = this.maxGifWidth;
+    const aspectRatio = sourceWidth > 0 ? sourceHeight / sourceWidth : 1;
+    const height = Math.max(1, Math.round(width * aspectRatio));
+    return { width, height };
+  }
+
+  private toGifDelay(frameRate: number): number {
+    const safeRate = Math.max(1, frameRate || 1);
+    const delayHundredths = Math.round(100 / safeRate);
+    return Math.max(2, Math.min(65535, delayHundredths));
+  }
+
+  private createCanvasContext(width: number, height: number): CanvasContextResult {
+    const canvas = this.document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) {
+      throw new Error('Unable to acquire 2D rendering context.');
+    }
+    return { canvas, ctx };
+  }
+
+  private drawDrawable(ctx: CanvasRenderingContext2D, drawable: DrawableImage, width: number, height: number) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(drawable.element, 0, 0, width, height);
+  }
+
+  private buildPalette(data: Uint8ClampedArray): GifPalette {
+    return quantize(data, 256, {
+      format: 'rgba4444',
+      clearAlpha: true,
+      clearAlphaColor: 0,
+      clearAlphaThreshold: 4,
+      oneBitAlpha: true
+    });
+  }
+
+  private findTransparentIndex(palette: GifPalette): number {
+    return palette.findIndex(entry => entry.length > 3 && entry[3] === 0);
+  }
+
+  private async ensureWebP(blob: Blob): Promise<Blob> {
+    if (blob.type === MimeTypes.imageWebp) {
+      return blob;
+    }
+    return this.convertBlobToFormat(blob, MimeTypes.imageWebp, this.jpegToWebpQuality);
+  }
+
+  private async convertBlobToFormat(blob: Blob, type: string, quality?: number): Promise<Blob> {
+    const drawable = await this.decodeDrawable(blob);
+    const { canvas, ctx } = this.createCanvasContext(drawable.width, drawable.height);
+    this.drawDrawable(ctx, drawable, canvas.width, canvas.height);
+    drawable.dispose();
+    const converted = await this.canvasToBlob(canvas, type, quality);
+    if (!converted) {
+      throw new Error('Canvas conversion failed.');
+    }
+    return converted;
+  }
+
+  private canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> {
+    return new Promise(resolve => {
+      canvas.toBlob(resolve, type, quality);
+    });
+  }
+
+  private async decodeDrawable(blob: Blob): Promise<DrawableImage> {
+    const win = this.document.defaultView as (Window & { createImageBitmap?: typeof createImageBitmap }) | null;
+    if (win?.createImageBitmap) {
+      const bitmap = await win.createImageBitmap(blob);
+      return {
+        element: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+        dispose: () => bitmap.close()
+      };
     }
 
-    if (jpegBlobsWithIndex.length < 0) {
-      // nothing to do, all images are already webp
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const image = await this.loadImage(objectUrl);
+      return {
+        element: image,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        dispose: () => {
+          image.src = '';
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+    } catch (error) {
+      URL.revokeObjectURL(objectUrl);
+      throw error;
+    }
+  }
+
+  private loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = (event) => reject(event);
+      image.src = src;
+    });
+  }
+
+  private toBlob(input: any): Blob {
+    if (input instanceof Blob) {
+      return input;
+    }
+    if (input instanceof ArrayBuffer) {
+      return new Blob([input], { type: MimeTypes.imageWebp });
+    }
+    if (input?.buffer instanceof ArrayBuffer) {
+      return new Blob([input.buffer], { type: MimeTypes.imageWebp });
+    }
+    return new Blob([input], { type: MimeTypes.imageWebp });
+  }
+
+  private reportProgress(
+    phase: ProgressPhase,
+    completed: number,
+    total: number,
+    callback: ProgressCallback | undefined,
+    startedAt: number
+  ) {
+    if (!callback) {
       return;
     }
-
-    const workingDirectory = await this.buildWorkingDirectory();
-
-    await Promise.all(jpegBlobsWithIndex.map(async (imageBlobWithIndex, index) => {
-      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${index}.jpg`), await fetchFile(imageBlobWithIndex.imageBlob));
-    }));
-
-    // Unfortunately, ffmpeg does not keep the mapping, e.g. "image_2.jpg, image_4.jpg" will not be converted to "image_2.jpg, image_4.webp", but rather "image_1.webp, image_2.webp"
-    await this.convertJpegsToWebP(workingDirectory);
-
-    // afterwards, we copy the converted image to the targetworkingdirectory
-    // index follows the consecutive ordering ffmpeg uses, whereas the index from the jpegBlobWithIndex is the right one:
-    for (let index = 0; index < jpegBlobsWithIndex.length; index++) {
-      const from = this.pathToFile(workingDirectory, `image_${index + 1}.webp`)
-      const to = this.pathToFile(targetWorkingDirectory, `image_${jpegBlobsWithIndex[index].index}.webp`)
-      await this.ffmpeg.writeFile(to, await this.ffmpeg.readFile(from))
-    }
-
-    await this.deleteDirectory(workingDirectory)
-  }
-
-  private async convertJpegsToWebP(workingDirectory: string) {
-    this.ffmpeg.exec(["-i", this.pathToFile(workingDirectory, 'image_%d.jpg'), "-c:v", "libwebp", "-lossless", "0", "-compression_level", "4", "-quality", "65", this.pathToFile(workingDirectory, 'image_%d.webp')]);
-  }
-
-  private async storeImagesInFilesystem(imageBlobs: Blob[], workingDirectory: string, progressCallback: ProgressCallback) {
-    const callback = this.startProgressCallback('converting_images', progressCallback);
-
-    // we can write webps directly, however jpegs need to be converted first. we batch the conversion, as otherwise we are likely to get an out of memory error on safari:
-    let webpBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-      if (imageBlob.type != MimeTypes.imageJpeg) {
-        return [{ index: index, imageBlob: imageBlob }]
-      }
-      else {
-        return []
-      }
-    }
-    )
-
-    let jpegBlobsWithIndex = imageBlobs.flatMap((imageBlob, index) => {
-      if (imageBlob.type == MimeTypes.imageJpeg) {
-        return [{ index: index, imageBlob: imageBlob }]
-      }
-      else {
-        return []
-      }
-    }
-    )
-
-    await Promise.all(webpBlobsWithIndex.map(async (webpBlobWithIndex) => {
-      return this.ffmpeg.writeFile(this.pathToFile(workingDirectory, `image_${webpBlobWithIndex.index}.webp`), await fetchFile(webpBlobWithIndex.imageBlob));
-    }));
-
-    await this.convertToJpegToWebPBatch(jpegBlobsWithIndex, workingDirectory)
-    this.ffmpeg.off('progress', callback)
-  }
-
-  private startProgressCallback(state: string, progressCallback: ProgressCallback) {
-    const callback = ({ progress, time }) => {
-      progressCallback(state, progress, time);
-    };
-
-    this.ffmpeg.on('progress', callback);
-    return callback;
-  }
-
-  // ffmpeg can't delete non-empty directories, so we have to delete its content first:
-  private async deleteDirectory(workingDirectory: string) {
-    const files = await this.ffmpeg.listDir(workingDirectory);
-    files.forEach(async (file) => {
-      // ignore directories:
-      if (!file.isDir) {
-        await this.ffmpeg.deleteFile(this.pathToFile(workingDirectory, file.name))
-      }
-    })
-
-    this.ffmpeg.deleteDir(workingDirectory)
-  }
-
-  private async buildWorkingDirectory(): Promise<string> {
-    // use a UUID for the directory so that we don't interfere with other running ffmpeg processes.
-    const workingDirectory = window.crypto.randomUUID().replaceAll('-', '')
-    await this.ffmpeg.createDir(workingDirectory);
-    return workingDirectory
-  }
-
-  private pathToFile(path: string, filename: string) {
-    return `${path}/${filename}`
+    const progress = total ? completed / total : 1;
+    const elapsedSeconds = Math.max(0, (performance.now() - startedAt) / 1000);
+    callback(phase, Math.min(progress, 0.999), elapsedSeconds);
   }
 }
