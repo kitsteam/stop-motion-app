@@ -40,9 +40,9 @@ export class SaveButtonComponent extends BaseComponent {
           const loader = await this.presentLoading({
             message: this.baseService.translate.instant('loader_export_start'),
           });
-          
+
           const progressCallback: ProgressCallback = (state, progress, time) => {
-            loader.message = this.baseService.translate.instant(`encoding_state_${state}`, {progress: this.formatProgress(progress)});
+            loader.message = this.baseService.translate.instant(`encoding_state_${state}`, { progress: this.formatProgress(progress) });
           }
 
           await this.animatorService.save(inputData.filename, type, progressCallback);
@@ -55,41 +55,41 @@ export class SaveButtonComponent extends BaseComponent {
   async onClick(): Promise<void> {
     const frames = await this.animatorService.getFrames().pipe(first()).toPromise();
     if (frames.length) {
-    this.baseService.alertService.presentAlert({
-      header: this.baseService.translate.instant('alert_save_animator_header'),
-      message: this.baseService.translate.instant('alert_save_animator_message'),
-      inputs: [
-        {
-          name: SaveState.draft,
-          type: 'radio',
-          label: this.baseService.translate.instant('labels_save_as_draft'),
-          value: SaveState.draft,
-        },
-        {
-          name: SaveState.gif,
-          type: 'radio',
-          label: this.baseService.translate.instant('labels_save_as_gif'),
-          value: SaveState.gif,
-        },
-        {
-          name: SaveState.video,
-          type: 'radio',
-          label: this.baseService.translate.instant('labels_save_as_video'),
-          value: SaveState.video,
-        },],
-      buttons: [this.baseService.alertService.createCancelButton(), {
-        text: this.baseService.translate.instant('buttons_save'),
-        handler: async (inputData: SaveState) => {
-          if (inputData) {
-            await this.onSave(inputData);
-          } else {
-            this.baseService.toastService.presentToast({
-              message: this.baseService.translate.instant('toast_animator_format_hint')
-            });
+      this.baseService.alertService.presentAlert({
+        header: this.baseService.translate.instant('alert_save_animator_header'),
+        message: this.baseService.translate.instant('alert_save_animator_message'),
+        inputs: [
+          {
+            name: SaveState.draft,
+            type: 'radio',
+            label: this.baseService.translate.instant('labels_save_as_draft'),
+            value: SaveState.draft,
+          },
+          {
+            name: SaveState.gif,
+            type: 'radio',
+            label: this.baseService.translate.instant('labels_save_as_gif'),
+            value: SaveState.gif,
+          },
+          {
+            name: SaveState.video,
+            type: 'radio',
+            label: this.baseService.translate.instant('labels_save_as_video'),
+            value: SaveState.video,
+          },],
+        buttons: [this.baseService.alertService.createCancelButton(), {
+          text: this.baseService.translate.instant('buttons_save'),
+          handler: async (inputData: SaveState) => {
+            if (inputData) {
+              await this.onSave(inputData);
+            } else {
+              this.baseService.toastService.presentToast({
+                message: this.baseService.translate.instant('toast_animator_format_hint')
+              });
+            }
           }
-        }
-      }]
-    });
+        }]
+      });
     } else {
       this.baseService.toastService.presentToast({
         message: this.baseService.translate.instant('toast_animator_save_hint')
@@ -98,8 +98,8 @@ export class SaveButtonComponent extends BaseComponent {
   }
 
   private formatProgress(progress: number) {
-    let value = Math.round(progress*100)
-    // ffmpeg sometimes returns value larger than a 100. This will reduce the accuracy of the progress, but at least up to a 100% there is something to report and users can see progress:
+    let value = Math.round(progress * 100)
+    // Some browsers briefly report values above 100%. Cap them here so the UI never shows "101%" while recording finishes.
     return (value <= 99) ? value : 99;
   }
 }
