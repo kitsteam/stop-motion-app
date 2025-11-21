@@ -42,3 +42,18 @@ yarn test
 
 - [Codec Documentation](docs/CODECS.md) - Information about image, video, and audio codecs used
 - [Third-Party Licenses](THIRD_PARTY_LICENSES.md) - License information for codec-related dependencies
+
+## Chromium setup for unit tests
+
+Karma runs the Angular unit tests inside ChromiumHeadless. If the container or host image does not already provide Chromium, run:
+
+```
+./scripts/setup-chromium.sh
+```
+
+After installation export `CHROMIUM_BIN` so Karma picks up the binary (add this to your shell profile if you run tests frequently):
+
+```
+export CHROMIUM_BIN=$(which chromium)
+npm run test
+```
