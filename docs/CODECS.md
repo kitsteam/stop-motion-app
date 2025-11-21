@@ -26,18 +26,7 @@ this.imageCanvas.toBlob(async (blob: Blob) => {
 
 ### Internal Storage: WebP
 
-All frames are converted to **WebP** format for internal processing:
-
-```typescript
-await this.ffmpeg.exec([
-  "-i", inputPath,
-  "-c:v", "libwebp",
-  "-lossless", "0",
-  "-compression_level", "4",
-  "-quality", "65",
-  outputPath
-]);
-```
+All frames are converted to **WebP** format for internal processing using the browser's Canvas APIs. Frames that arrive as JPEG are decoded via `createImageBitmap`, rendered into an offscreen canvas, and saved back as WebP blobs for consistent downstream handling.
 
 **Rationale:**
 - Better compression than JPEG (25-35% smaller files)
@@ -50,7 +39,7 @@ await this.ffmpeg.exec([
 The application handles mixed JPEG/WebP frames intelligently:
 
 1. **Capture:** Frames are captured as JPEG from canvas
-2. **Storage:** JPEG frames are converted to WebP via FFmpeg for consistency
+2. **Storage:** JPEG frames are converted to WebP via Canvas for consistency
 3. **Export:** All frames are WebP when creating videos or GIFs
 4. **Import:** Loaded frames are stored as WebP internally
 
@@ -69,7 +58,7 @@ This approach ensures:
 All video outputs use the **WebM** container format:
 
 ```typescript
-const result = await this.videoService.createVideo(
+const result = await this.mediaExportService.createVideo(
   this.animator.frameWebpsAndJpegs,
   frameRate,
   this.animator.audioBlob,
@@ -84,27 +73,18 @@ const result = await this.videoService.createVideo(
 - Native HTML5 video element support
 - Good compression ratios
 
-### Video Codec: VP8 (libvpx)
+### Video Codec: VP8 (MediaRecorder)
 
-Video encoding uses **VP8** codec via FFmpeg:
-
-```typescript
-parameters.push(
-  "-vcodec", "libvpx",
-  "-vf", "scale=640:-2,format=yuv420p",
-  outputFileName
-);
-```
+Video encoding uses **VP8** via the browser's native MediaRecorder implementation. The recording pipeline renders frames onto an offscreen canvas, captures a `MediaStream` with `canvas.captureStream(frameRate)`, optionally merges an audio stream, and records with a VP8-capable MIME type (preferring `video/webm;codecs=vp9,opus` and falling back to `video/webm;codecs=vp8,opus`).
 
 **Rationale:**
-- Royalty-free
-- Broad browser support (Chrome 6+, Firefox 4+, Safari 14.1+, Edge 79+)
-- Good balance of quality and file size
-- Hardware acceleration available on most devices
+- Royalty-free and hardware-accelerated in modern browsers
+- Eliminates heavy WASM workers and virtual file systems
+- Seamlessly combines audio/video tracks via `MediaStream`
 
 **Video Processing Options:**
-- Scale to max width of 640px (maintains aspect ratio)
-- YUV 4:2:0 color space (standard for web video)
+- Scale to max width of 640px before rendering
+- YUV 4:2:0 color space is enforced by the browser implementation
 - Configurable frame rate (default: 6 fps for stop motion)
 
 ### Future Consideration: VP9
@@ -137,38 +117,15 @@ this.audioRecorder = new MediaRecorder(this.audioStream, {
 
 ### Storage: WebM/Opus
 
-Regardless of the recorder outcome, audio blobs are converted to **WebM/Opus**:
-
-```typescript
-await this.ffmpeg.exec([
-  "-i", inputAudioPath,
-  "-vn",
-  "-c:a", "libopus",
-  outputPath // .webm
-]);
-```
-
-**Rationale:**
-- Aligns with the WebM-based video pipeline
-- Opus is royalty-free and optimised for voice
+Regardless of the recorder outcome, audio blobs are normalized to **WebM/Opus** via an `AudioContext`. The export service decodes the blob, replays it through a `MediaStreamAudioDestination`, and records the result so downstream consumers always receive an Opus/WebM payload.
 
 ## GIF Export
 
-GIF creation uses FFmpeg with a two-pass palette approach:
-
-```typescript
-const gifParameters = [
-  "-r", `${frameRate}`,
-  "-i", inputPattern,
-  "-vf", `fps=${frameRate},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
-  "-loop", "0",
-  outputFileName
-];
-```
+GIF creation uses the lightweight **gifenc** library. Frames are decoded, resized to a maximum width of 480px, quantized to an indexed palette, and encoded via gifenc's `GifEncoder`. Progress callbacks fire between batches so the UI can stay responsive.
 
 **Features:**
-- Palette generation for optimal colors
-- Lanczos scaling for quality
+- Deterministic palette building and dithering for good quality
+- Runs entirely on the client without WASM payloads
 - Scaled to 480px width for reasonable file size
 - Infinite loop by default
 
@@ -186,25 +143,8 @@ project.zip
 
 **Implementation:**
 - Uses @zip.js/zip.js library
-- Frames are encoded to WebM using webm-writer library
+- Video blobs originate from `MediaRecorder` (via MediaExportService)
 - Audio is stored separately if present
-
-### WebM Draft Format
-
-Draft videos are created using the webm-writer library:
-
-```typescript
-const videoWriter = new WebMWriter({
-  quality: 0.95,
-  frameRate: frameRate,
-  transparent: false
-});
-```
-
-**Rationale:**
-- Fast encoding in browser
-- Compatible with our import pipeline
-- No server-side processing required
 
 ## Browser Compatibility Matrix
 
@@ -238,7 +178,7 @@ The consistent use of WebM and WebP ensures:
 ### Memory Management
 
 1. **Batch Processing:** JPEG→WebP conversion is batched to prevent memory issues
-2. **Streaming:** FFmpeg processes frames in a temporary directory
+2. **Streaming:** MediaRecorder writes directly to in-memory blobs
 3. **Cleanup:** Working directories are cleaned up after processing
 
 ### Processing Time
@@ -256,15 +196,10 @@ Times vary based on:
 
 ## Dependencies
 
-### FFmpeg.wasm
-- **Purpose:** Video/audio encoding, format conversion
-- **License:** MIT (with LGPL FFmpeg libraries)
-- **Version:** 0.12.15
-
-### webm-writer
-- **Purpose:** Draft video creation
-- **License:** WTFPL
-- **Version:** 1.0.0
+### gifenc
+- **Purpose:** GIF encoding
+- **License:** MIT
+- **Version:** 1.0.3
 
 ### webm.js
 - **Purpose:** WebM container decoding
@@ -287,5 +222,4 @@ Times vary based on:
 ## Related Documentation
 
 - [Third-Party Licenses](../THIRD_PARTY_LICENSES.md)
-- [FFmpeg.wasm Documentation](https://ffmpegwasm.netlify.app/)
 - [WebM Container Specification](https://www.webmproject.org/docs/container/)

@@ -4,21 +4,18 @@ This document lists third-party libraries and their licenses used in the StopCli
 
 ## Codec-Related Dependencies
 
-### FFmpeg.wasm (@ffmpeg/ffmpeg)
+### gifenc
 
-**Version:** 0.12.15  
+**Version:** 1.0.3  
 **License:** MIT License  
-**Purpose:** Used for video and audio encoding/decoding, format conversion  
-**Source:** https://github.com/ffmpegwasm/ffmpeg.wasm
-
-FFmpeg.wasm is a pure WebAssembly port of FFmpeg. It enables video & audio record, convert and stream right inside browsers.
+**Purpose:** Generates GIF animations client-side during export  
+**Source:** https://github.com/mattdesl/gifenc  
+**Author:** Matt DesLauriers
 
 **License Text:**
 
 ```
 MIT License
-
-Copyright (c) 2019 Jerome Wu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,34 +34,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
-
-**Note:** FFmpeg.wasm uses libraries from the FFmpeg project under the LGPLv2.1. See https://ffmpeg.org for more information.
-
-### webm-writer
-
-**Version:** 1.0.0  
-**License:** WTFPL (Do What The Fuck You Want To Public License)  
-**Purpose:** Creates WebM videos from Canvas frames for draft saves  
-**Source:** https://github.com/thenickdude/webm-writer-js  
-**Author:** Nicholas Sherlock
-
-**License Text:**
-
-```
-DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-Version 2, December 2004
-
-Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
-
-Everyone is permitted to copy and distribute verbatim or modified
-copies of this license document, and changing it is allowed as long
-as the name is changed.
-
-DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-0. You just DO WHAT THE FUCK YOU WANT TO.
 ```
 
 ### webm.js
@@ -105,7 +74,7 @@ The application uses the following codecs:
 
 ### Video Formats
 - **WebM:** Container format
-- **VP8:** Video codec (via libvpx in FFmpeg)
+- **VP8:** Video codec (via the browser's MediaRecorder implementation)
 - **VP9:** Not currently used but supported by modern browsers
 
 ### Audio Formats
@@ -125,7 +94,7 @@ All third-party licenses are compatible with the GNU Affero General Public Licen
 - **MIT License:** Permissive, GPL-compatible
 - **WTFPL:** Public domain equivalent, GPL-compatible
 - **BSD-0:** Permissive, GPL-compatible
-- **LGPLv2.1 (FFmpeg):** Compatible with AGPL through dynamic linking
+- **MIT License (gifenc):** Permissive and GPL-compatible
 
 ## Additional Dependencies
 

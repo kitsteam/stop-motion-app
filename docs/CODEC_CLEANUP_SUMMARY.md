@@ -17,9 +17,8 @@ The original issue identified the need to:
 ### 1. Documentation Added
 
 #### THIRD_PARTY_LICENSES.md
-Created a comprehensive license file documenting all codec-related dependencies:
-- **FFmpeg.wasm** (MIT/LGPL) - Used for video/audio encoding and format conversion
-- **webm-writer** (WTFPL) - Used for fast draft video creation
+Created a comprehensive license file documenting codec-related dependencies:
+- **gifenc** (MIT) - Used for GIF generation during exports
 - **webm.js** (BSD-0) - Used for WebM container decoding (derived from szager/stop-motion)
 
 All licenses are compatible with the project's AGPL-3.0 license.
@@ -74,7 +73,7 @@ The application now uses a consistent codec strategy:
 #### Image Processing Pipeline
 1. **Capture:** JPEG (quality: 0.8) - Fast canvas encoding
 2. **Internal Storage:** WebP - Better compression, cross-browser consistency
-3. **Video Creation:** WebP - Uniform format for FFmpeg processing
+3. **Video Creation:** WebP - Uniform format for the MediaRecorder pipeline
 
 **Benefits:**
 - No browser-specific code paths
@@ -84,7 +83,7 @@ The application now uses a consistent codec strategy:
 
 #### Video Encoding
 - **Container:** WebM (open, royalty-free)
-- **Video Codec:** VP8 via libvpx (broad browser support)
+- **Video Codec:** VP8/VP9 via MediaRecorder (browser-provided encoders)
 - **Resolution:** Max 640px width (optimized for stop motion)
 - **Color Space:** YUV 4:2:0 (web standard)
 
@@ -94,21 +93,17 @@ The application now uses a consistent codec strategy:
 
 ### 4. Dependencies Review
 
-All three codec-related dependencies are necessary and justified:
+The remaining codec-related dependencies are necessary and justified:
 
 | Dependency | Purpose | License | Justification |
 |------------|---------|---------|---------------|
-| FFmpeg.wasm | Video/audio conversion | MIT/LGPL | Required for final video export and format conversion |
-| webm-writer | Draft video creation | WTFPL | Provides fast, browser-based encoding for project saves |
+| gifenc | GIF export | MIT | Provides optimized, browser-friendly GIF encoding without WASM |
 | webm.js | WebM decoding | BSD-0 | Required for loading saved projects |
 
-**Why keep webm-writer?**
-While FFmpeg could theoretically replace webm-writer, keeping it is justified because:
-- Fast encoding for frequent draft saves
-- Lower memory usage
-- Simpler API for frame-by-frame encoding
-- No WASM overhead
-- Permissive license (WTFPL)
+**Why keep gifenc?**
+- Handles palette generation/dithering consistently across browsers
+- Lightweight (~30kB) and easy to maintain
+- Keeps GIF export entirely client-side without server dependencies
 
 ## Cross-Browser Compatibility
 
