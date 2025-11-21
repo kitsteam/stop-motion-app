@@ -6544,6 +6544,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"gifenc@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "gifenc@npm:1.0.3"
+  checksum: 10c0/34fc6b2c66c305fc556cd2f475154ce2ad68384a52ceb8253b901c8c7d9c63f2c0a5d109ceb3cb46e44c2c6155009920a286cf08a621105863aa43468e345229
+  languageName: node
+  linkType: hard
+
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -10228,6 +10235,7 @@ __metadata:
     bootstrap: "npm:^5.3.8"
     eslint: "npm:9.39.1"
     file-saver: "npm:2.0.5"
+    gifenc: "npm:^1.0.3"
     jasmine-core: "npm:5.12.1"
     jasmine-spec-reporter: "npm:7.0.0"
     karma: "npm:6.4.4"
