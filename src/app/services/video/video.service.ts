@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import { Location, LocationStrategy } from '@angular/common';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
+import { RecordingService } from '@services/recording/recording.service';
 
 
 
@@ -30,68 +30,19 @@ export class VideoService {
     this.loaded = true;
   };
 
-  constructor(private location: Location) { }
+  constructor(private recordingService: RecordingService) { }
 
   public async convertAudio(audioBlob: Blob): Promise<Blob> {
-    if (!this.loaded) {
-      await this.loadFfmpeg();
-    }
-
-    const workingDirectory = await this.buildWorkingDirectory();
-    const inputPath = this.pathToFile(workingDirectory, 'audio');
-    await this.ffmpeg.writeFile(inputPath, await fetchFile(audioBlob));
-
-    const webmOutputPath = this.pathToFile(workingDirectory, 'output.webm');
-
-    let outputBlob: Blob | null = null;
-    try {
-      await this.ffmpeg.exec([
-        '-i', inputPath,
-        '-vn',
-        '-c:a', 'libopus',
-        webmOutputPath
-      ]);
-
-      const fileData = await this.ffmpeg.readFile(webmOutputPath);
-      const audioOutput = fileData instanceof Uint8Array ? fileData : new Uint8Array();
-      outputBlob = new Blob([audioOutput as BlobPart], { type: MimeTypes.audioWebm });
-    } finally {
-      await this.deleteDirectory(workingDirectory);
-    }
-
-    if (!outputBlob) {
-      throw new Error('Audio conversion failed.');
-    }
-
-    return outputBlob;
+    return this.recordingService.convertAudioBlob(audioBlob);
   }
 
   public async createVideo(imageBlobs: Blob[], frameRate: number, audioBlob: Blob | undefined, progressCallback: ProgressCallback) {
-    if (!this.loaded) {
-      await this.loadFfmpeg();
-    }
-
-    // we always use webp - if a jpeg is incoming (e.g. from safari), we'll convert it to webp
-    const workingDirectory = await this.buildWorkingDirectory();
-
-    // write images to the directory in parallel, wait for all images to be stored:
-    await this.storeImagesInFilesystem(imageBlobs, workingDirectory, progressCallback);
-
-    const outputFileName = this.pathToFile(workingDirectory, 'output.webm');
-
-    let parameters = []
-    parameters.push("-r", `${frameRate}`, "-i", this.pathToFile(workingDirectory, `image_%d.webp`));
-
-    if (audioBlob) {
-      parameters.push("-i", this.pathToFile(workingDirectory, 'audio'), "-y", "-acodec", "libopus");
-      await this.ffmpeg.writeFile(this.pathToFile(workingDirectory, 'audio'), await fetchFile(audioBlob));
-    }
-
-    parameters.push("-vcodec", "libvpx", "-vf", "scale=640:-2,format=yuv420p", outputFileName);
-
-    const data = await this.executeVideoConversion(parameters, outputFileName, progressCallback);
-    await this.deleteDirectory(workingDirectory);
-    return new Blob([data as BlobPart], { type: 'video/webm' });
+    return this.recordingService.createVideoFromFrames({
+      frames: imageBlobs,
+      frameRate,
+      audioBlob,
+      progressCallback
+    });
   }
 
   public async createGif(imageBlobs: Blob[], frameRate: number, progressCallback: ProgressCallback): Promise<Blob> {
