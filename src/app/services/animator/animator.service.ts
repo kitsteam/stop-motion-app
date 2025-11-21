@@ -14,8 +14,9 @@ import { ProgressCallback } from '@pages/animator/components/save-button/save-bu
 @Injectable({
   providedIn: 'root'
 })
-/*
- * Anitmoar services provides interface to the Animator class, tracks events and will be used to communicate between components
+/**
+ * High-level façade around {@link Animator} that coordinates camera/audio state and exposes
+ * export helpers for the UI. It also tracks shared observables consumed by multiple components.
  */
 export class AnimatorService {
 
@@ -52,12 +53,12 @@ export class AnimatorService {
   }
 
   removeFrames(index: number) {
-    // remove from visible frames:
+    // Remove the thumbnail so the UI reflects the new sequence immediately.
     const frames = this.frames.getValue();
     frames.splice(index, 1);
     this.frames.next(frames);
 
-    // also remove from framesWebp:
+    // Keep the backing frame store in sync with the UI selection.
     const frameWebpsAndJpegs = this.animator.frameWebpsAndJpegs;
     frameWebpsAndJpegs.splice(index, 1)
     this.animator.frameWebpsAndJpegs = frameWebpsAndJpegs;
@@ -106,12 +107,12 @@ export class AnimatorService {
   }
 
   public async toggleCamera(layoutOptions: LayoutOptions) {
-    // TODO maybe add another state to isStreaming, like isPlaying
+    // TODO: introduce a dedicated "switching" status once the state machine is expanded.
     this.cameraStatus.next(await this.animator.toggleCamera(layoutOptions) ? CameraStatus.isStreaming : CameraStatus.hasPaused);
   }
 
   public async togglePlay() {
-    // TODO maybe add another state to isStreaming, like isPlaying
+    // TODO: differentiate between playback and live preview states when UX requires it.
     this.cameraStatus.next(CameraStatus.hasPaused);
     await this.animator.togglePlay();
     this.cameraStatus.next(CameraStatus.isStreaming);
@@ -182,7 +183,7 @@ export class AnimatorService {
   }
 
   public async load(filepath: string): Promise<any> {
-    // before loading a new file clear all current data
+    // Clear the existing project before loading new data from disk.
     this.clear();
     await this.animator.load(filepath);
     this.frames.next(this.animator.frames);
@@ -212,7 +213,7 @@ export class AnimatorService {
   }
 
   private async startCamera(layoutOptions: LayoutOptions): Promise<void> {
-    // Everything is set up, now connect to camera.
+    // Once the service is initialised hook up the first available camera stream.
     if (window.navigator && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === 'videoinput');

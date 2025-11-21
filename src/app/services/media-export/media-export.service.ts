@@ -22,6 +22,9 @@ interface CanvasContextResult {
     providedIn: 'root'
 })
 export class MediaExportService {
+    /**
+     * Hard limit used when generating GIFs so export sizes remain predictable.
+     */
     private readonly maxGifWidth = 480;
 
     constructor(
@@ -29,10 +32,17 @@ export class MediaExportService {
         @Inject(DOCUMENT) private document: Document
     ) { }
 
+    /**
+     * Normalises an arbitrary audio blob into the preferred WebM/Opus container using RecordingService.
+     */
     public convertAudio(audioBlob: Blob): Promise<Blob> {
         return this.recordingService.convertAudioBlob(audioBlob);
     }
 
+    /**
+     * Combines the provided frame blobs (and optional audio) into a WebM video through the RecordingService.
+     * Progress notifications are proxied to the UI so save-button can surface feedback.
+     */
     public createVideo(
         imageBlobs: Blob[],
         frameRate: number,
@@ -47,6 +57,9 @@ export class MediaExportService {
         });
     }
 
+    /**
+     * Encodes the supplied frame sequence as a GIF using gifenc; keeps the pipeline fully client-side.
+     */
     public async createGif(
         imageBlobs: Blob[],
         frameRate: number,
@@ -104,6 +117,9 @@ export class MediaExportService {
         }
     }
 
+    /**
+     * Calculates the GIF dimensions while preserving the aspect ratio of the incoming frames.
+     */
     private computeGifDimensions(sourceWidth: number, sourceHeight: number): { width: number; height: number } {
         const width = this.maxGifWidth;
         const aspectRatio = sourceWidth > 0 ? sourceHeight / sourceWidth : 1;
@@ -117,6 +133,9 @@ export class MediaExportService {
         return Math.max(2, Math.min(65535, delayHundredths));
     }
 
+    /**
+     * Creates a throw-away canvas used for frame rendering during GIF exports.
+     */
     private createCanvasContext(width: number, height: number): CanvasContextResult {
         const canvas = this.document.createElement('canvas');
         canvas.width = width;
@@ -152,6 +171,9 @@ export class MediaExportService {
         return palette.findIndex(entry => entry.length > 3 && entry[3] === 0);
     }
 
+    /**
+     * Decodes a frame blob into something drawable (ImageBitmap preferred for performance).
+     */
     private async decodeDrawable(blob: Blob): Promise<DrawableImage> {
         const win = this.document.defaultView as (Window & { createImageBitmap?: typeof createImageBitmap }) | null;
         if (win?.createImageBitmap) {
