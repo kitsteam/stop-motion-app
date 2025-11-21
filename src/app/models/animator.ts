@@ -5,12 +5,10 @@ import { BaseService } from '@services/base/base.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
-import * as WebMWriter from 'webm-writer';
 import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { MediaExportService } from '@services/media-export/media-export.service';
-import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 
 declare const webm: any;
 @Injectable({
@@ -522,27 +520,7 @@ export class Animator {
   */
   private async createVideoBlob(): Promise<Blob> {
     const frameRate = await this.getFramerate().pipe(first()).toPromise();
-    const videoWriter = new WebMWriter({
-      quality: 0.95,    // WebM image quality from 0.0 (worst) to 0.99999 (best), 1.00 (VP8L lossless) is not supported
-      fileWriter: null, // FileWriter in order to stream to a file instead of buffering to memory (optional)
-      fd: null,         // Node.js file handle to write to instead of buffering to memory (optional)
-      // You must supply one of:
-      // frameDuration: null, // Duration of frames in milliseconds
-      frameRate,     // Number of frames per second
-      transparent: false,      // True if an alpha channel should be included in the video
-      alphaQuality: undefined, // Allows you to set the quality level of the alpha channel separately.
-      // If not specified this defaults to the same value as `quality`.
-    });
-
-    // Convert all frames to WebP for consistency across browsers
-    const progressCallback: ProgressCallback = (progress, time) => { };
-    const convertedFrames = await this.mediaExportService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
-    for (const frame of convertedFrames) {
-      videoWriter.addFrame(this.uint8ToBase64(frame));
-    }
-
-    const blob = await videoWriter.complete();
-    return blob;
+    return this.mediaExportService.createVideo(this.frameWebpsAndJpegs, frameRate, undefined);
   }
 
   /*
@@ -736,17 +714,5 @@ export class Animator {
     return 1000.0 / this.frameRate.getValue();
   }
 
-  /*
-  * Method is used to convert ArrayBuffer to base64 string
-  */
-  private uint8ToBase64(buffer: ArrayBuffer): string {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return `data:image/webp;base64,${window.btoa(binary)}`;
-  }
 }
 

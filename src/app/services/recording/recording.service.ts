@@ -5,6 +5,8 @@ import { ProgressCallback } from '@pages/animator/components/save-button/save-bu
 
 type RecordingPhase = 'converting_images' | 'creating_video';
 
+type MediaRecorderErrorEvent = Event & { error?: DOMException };
+
 interface CreateVideoOptions {
     frames: Blob[];
     frameRate: number;

@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
 import { applyPalette, quantize, GIFEncoder, GifPalette } from 'gifenc';
-import { MimeTypes } from '@enums/mime-types.enum';
 import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
 import { RecordingService } from '@services/recording/recording.service';
 
@@ -24,7 +23,6 @@ interface CanvasContextResult {
 })
 export class MediaExportService {
     private readonly maxGifWidth = 480;
-    private readonly jpegToWebpQuality = 0.65;
 
     constructor(
         private recordingService: RecordingService,
@@ -39,7 +37,7 @@ export class MediaExportService {
         imageBlobs: Blob[],
         frameRate: number,
         audioBlob: Blob | undefined,
-        progressCallback: ProgressCallback
+        progressCallback?: ProgressCallback
     ): Promise<Blob> {
         return this.recordingService.createVideoFromFrames({
             frames: imageBlobs,
@@ -52,7 +50,7 @@ export class MediaExportService {
     public async createGif(
         imageBlobs: Blob[],
         frameRate: number,
-        progressCallback: ProgressCallback
+        progressCallback?: ProgressCallback
     ): Promise<Blob> {
         if (!imageBlobs?.length) {
             throw new Error('No frames available for GIF export.');
@@ -98,28 +96,6 @@ export class MediaExportService {
             gifBytes.byteOffset + gifBytes.byteLength
         ) as ArrayBuffer;
         return new Blob([gifBuffer], { type: 'image/gif' });
-    }
-
-    public async convertPotentiallyMixedFrames(
-        potentiallyMixedFrames: any[],
-        progressCallback: ProgressCallback
-    ): Promise<ArrayBuffer[]> {
-        if (!potentiallyMixedFrames?.length) {
-            return [];
-        }
-
-        this.ensureBrowserEnvironment();
-        const startTime = performance.now();
-        const converted: ArrayBuffer[] = [];
-
-        for (let index = 0; index < potentiallyMixedFrames.length; index++) {
-            const frame = this.toBlob(potentiallyMixedFrames[index]);
-            const normalized = await this.ensureWebP(frame);
-            converted.push(await normalized.arrayBuffer());
-            this.reportProgress('converting_images', index + 1, potentiallyMixedFrames.length, progressCallback, startTime);
-        }
-
-        return converted;
     }
 
     private ensureBrowserEnvironment(): void {
@@ -176,31 +152,6 @@ export class MediaExportService {
         return palette.findIndex(entry => entry.length > 3 && entry[3] === 0);
     }
 
-    private ensureWebP(blob: Blob): Promise<Blob> {
-        if (blob.type === MimeTypes.imageWebp) {
-            return Promise.resolve(blob);
-        }
-        return this.convertBlobToFormat(blob, MimeTypes.imageWebp, this.jpegToWebpQuality);
-    }
-
-    private async convertBlobToFormat(blob: Blob, type: string, quality?: number): Promise<Blob> {
-        const drawable = await this.decodeDrawable(blob);
-        const { canvas, ctx } = this.createCanvasContext(drawable.width, drawable.height);
-        this.drawDrawable(ctx, drawable, canvas.width, canvas.height);
-        drawable.dispose();
-        const converted = await this.canvasToBlob(canvas, type, quality);
-        if (!converted) {
-            throw new Error('Canvas conversion failed.');
-        }
-        return converted;
-    }
-
-    private canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> {
-        return new Promise(resolve => {
-            canvas.toBlob(resolve, type, quality);
-        });
-    }
-
     private async decodeDrawable(blob: Blob): Promise<DrawableImage> {
         const win = this.document.defaultView as (Window & { createImageBitmap?: typeof createImageBitmap }) | null;
         if (win?.createImageBitmap) {
@@ -238,19 +189,6 @@ export class MediaExportService {
             image.onerror = (event) => reject(event);
             image.src = src;
         });
-    }
-
-    private toBlob(input: any): Blob {
-        if (input instanceof Blob) {
-            return input;
-        }
-        if (input instanceof ArrayBuffer) {
-            return new Blob([input], { type: MimeTypes.imageWebp });
-        }
-        if (input?.buffer instanceof ArrayBuffer) {
-            return new Blob([input.buffer], { type: MimeTypes.imageWebp });
-        }
-        return new Blob([input], { type: MimeTypes.imageWebp });
     }
 
     private reportProgress(
