@@ -103,8 +103,3 @@
 2. **Audio sync:** Separate render loop + AudioContext latency could drift → synchronize timestamps, optionally leverage `MediaStreamTrackGenerator`.
 3. **GIF quality:** Ensure the chosen JS library handles transparency + dithering adequately.
 4. **Memory pressure:** Large projects could crash the tab → add early checks and user warnings.
-
-## 9. Tentative Timeline
-1. Week 1: Foundational implementation (services, video export happy path).
-2. Week 2: Audio integration, GIF solution, UI changes.
-3. Week 3: Cleanup (dependency removal), tests, QA.
