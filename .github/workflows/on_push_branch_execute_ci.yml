@@ -19,7 +19,7 @@ jobs:
         task: [lint, test:ci, build:prod]
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Enable Corepack
         run: corepack enable
       - name: Setup Node
