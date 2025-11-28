@@ -9,8 +9,7 @@ import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { MediaExportService } from '@services/media-export/media-export.service';
-
-declare const webm: any;
+import { MediaImportService } from '@services/media-import/media-import.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -50,6 +49,7 @@ export class Animator {
     public baseService: BaseService,
     private platform: Platform,
     private mediaExportService: MediaExportService,
+    private mediaImportService: MediaImportService,
   ) {
     this.isAnimatorPlaying = new BehaviorSubject(false);
     this.frameRate = new BehaviorSubject(6.0);
@@ -437,15 +437,23 @@ export class Animator {
   * Method is used to trigger file loading process
   */
   public async load(file: any): Promise<any> {
-    const result = await this.readFile(file);
-    console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
     try {
-      const responseArrayBuffer = await new Response(result[0]).arrayBuffer()
-      await this.decodeFile(responseArrayBuffer);
-      if (result[1]) {
-        console.log('🚀 ~ file: animator.ts ~ line 363 ~ Animator ~ load ~ result[1]', result[1]);
-        this.setAudioSrc(result[1], result[1].type as MimeTypes);
+      const result = await this.mediaImportService.import(file);
+      console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
+      this.frames = result.frames || [];
+      this.frameWebpsAndJpegs = result.frameBlobs || [];
+      this.framesInFlight = 0;
+
+      if (result.frameRate) {
+        this.setFramerate(result.frameRate);
       }
+
+      if (result.audioBlob) {
+        this.setAudioSrc(result.audioBlob, result.audioBlob.type as MimeTypes);
+      } else {
+        this.setAudioSrc(null);
+      }
+
       const lastFrame = this.frames[this.frames.length - 1];
       if (!lastFrame) {
         throw new Error('No video frames decoded from imported file.');
@@ -544,101 +552,6 @@ export class Animator {
   }
 
   /*
-  * Method is used to decode array buffer to single frames, export framerate
-  */
-  private async decodeFile(fileBuffer: ArrayBuffer) {
-    const animator = this;
-    const result = await new Promise((resolve) => {
-      webm.decode(fileBuffer,
-        (width: number, height: number) => {
-          this.setDimensions({
-            width: this.width,
-            height: this.height
-          } as any);
-        },
-        (frameRate: number) => {
-          this.setFramerate(Math.round(frameRate));
-        },
-        animator.addFrameVP8.bind(animator, this.frames.length, resolve),
-        animator.setAudioSrc.bind(animator));
-    });
-    console.log('🚀 ~ file: animator.ts ~ line 507 ~ Animator ~ result ~ result', result);
-    return result;
-  }
-
-  /**
-   * Method is used to read entire zip file
-   */
-  private async readFile(file: any): Promise<Blob[]> {
-    const reader = new zip.ZipReader(new zip.BlobReader(file));
-    const entries = await reader.getEntries();
-    let videoBlob: Blob | null = null;
-    let audioBlob: Blob | null = null;
-
-    for (const entry of entries) {
-      const classification = this.classifyZipEntry(entry, !!videoBlob);
-      if (!classification) {
-        continue;
-      }
-
-      console.log('🚀 ~ file: animator.ts ~ line 496 ~ Animator ~ readFile ~ entry', entry.filename, classification);
-      const blob = await this.readFileEntry(entry, classification.mimeType);
-      if (classification.role === 'video') {
-        videoBlob = blob;
-      } else if (classification.role === 'audio') {
-        audioBlob = blob;
-      }
-    }
-
-    await reader.close();
-
-    if (!videoBlob) {
-      throw new Error('Unable to find video data in imported zip.');
-    }
-
-    const orderedBlobs: Blob[] = audioBlob ? [videoBlob as Blob, audioBlob] : [videoBlob as Blob];
-    console.log('🚀 ~ file: animator.ts ~ line 505 ~ Animator ~ readFile ~ blobs', orderedBlobs);
-    console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frameWebpsAndJpegs', this.frameWebpsAndJpegs);
-    console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frames', this.frames);
-    return orderedBlobs;
-  }
-
-  /*
-  * Method is used to read file inside of zip file
-  */
-  private async readFileEntry(entry: any, mimeType: MimeTypes): Promise<Blob> {
-    return await entry.getData(new zip.BlobWriter(mimeType));
-  }
-
-  private classifyZipEntry(entry: any, hasVideo: boolean): { role: 'video' | 'audio'; mimeType: MimeTypes } | null {
-    if (!entry || entry.directory) {
-      return null;
-    }
-
-    const filename = (entry.filename || '').toLowerCase();
-    if (!filename) {
-      return null;
-    }
-
-    if (filename.includes('video')) {
-      return { role: 'video', mimeType: MimeTypes.video };
-    }
-
-    if (filename.includes('audio')) {
-      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) };
-    }
-
-    if (filename.endsWith('.webm')) {
-      if (!hasVideo) {
-        return { role: 'video', mimeType: MimeTypes.video };
-      }
-      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) };
-    }
-
-    return null;
-  }
-
-  /*
   * Method is used to get proper audio mime type
   */
   private getAudioMimeType(): string {
@@ -684,14 +597,6 @@ export class Animator {
     return 'webm';
   }
 
-  private getAudioMimeTypeFromEntry(filename: string): MimeTypes {
-    const lowerCaseName = (filename || '').toLowerCase();
-    if (lowerCaseName.endsWith('.webm')) {
-      return MimeTypes.audioWebm;
-    }
-    return MimeTypes.audioWebm;
-  }
-
   private getFallbackMimeType(currentMimeType: string): MimeTypes | null {
     const recorderConstructor = (typeof window !== 'undefined') ? (window as any).MediaRecorder : undefined;
     const fallbackCandidates = [
@@ -713,43 +618,6 @@ export class Animator {
       }
     }
     return null;
-  }
-
-  /**
-  * Method is used to add single frames from files after it is loaded
-  */
-  private addFrameVP8(frameOffset: number, callback: any, blob: Blob, index: number) {
-    let blobURL = URL.createObjectURL(blob);
-    const image = new Image();
-    this.framesInFlight++;
-    image.addEventListener('error', (error) => {
-      if (image.getAttribute('triedvp8l')) {
-        console.warn('[Animator] Failed to decode imported frame.', error);
-        this.framesInFlight--;
-        URL.revokeObjectURL(blobURL);
-        if (this.framesInFlight === 0) { callback(); }
-      } else {
-        // image.setAttribute('triedvp8l', true);
-        image.setAttribute('triedvp8l', 'true');
-        URL.revokeObjectURL(blobURL);
-        blob = webm.vp8tovp8l(blob);
-        blobURL = URL.createObjectURL(blob);
-        image.src = blobURL;
-      }
-    });
-
-    image.addEventListener('load', async (evt: any) => {
-      this.frames[frameOffset + index] = image
-
-      this.frameWebpsAndJpegs[frameOffset + index] = await new Promise((resolve, reject) => {
-        resolve(blob);
-      });
-      this.framesInFlight--;
-      URL.revokeObjectURL(blobURL);
-      if (this.framesInFlight === 0) { callback(); }
-    });
-
-    image.src = blobURL;
   }
 
   /*
