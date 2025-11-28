@@ -438,7 +438,7 @@ export class Animator {
   /**
   * Method is used to trigger file loading process
   */
-  public async load(file: any): Promise<any> {
+  public async load(file: Blob): Promise<void> {
     try {
       const { videoBlob, audioBlob } = await this.mediaImportService.import(file);
       this.frames = [];
@@ -453,7 +453,7 @@ export class Animator {
       } else {
         this.setAudioSrc(null);
       }
-
+      debugger
       const lastFrame = this.frames[this.frames.length - 1];
       if (!lastFrame) {
         throw new Error('No video frames decoded from imported file.');

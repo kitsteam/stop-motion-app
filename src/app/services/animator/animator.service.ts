@@ -182,12 +182,11 @@ export class AnimatorService {
     }
   }
 
-  public async load(filepath: string): Promise<any> {
+  public async load(file: Blob): Promise<void> {
     // Clear the existing project before loading new data from disk.
     this.clear();
-    await this.animator.load(filepath);
+    await this.animator.load(file);
     this.frames.next(this.animator.frames);
-    return;
   }
 
   public formatTime(seconds: number) {
