@@ -570,7 +570,9 @@ export class Animator {
         animator.setFramerate(Math.round(frameRate));
       };
 
-      const handleFrame = animator.addFrameVP8.bind(animator, frameOffset, resolve);
+      const handleFrame = (blob: Blob, index: number) => {
+        animator.addFrameVP8(frameOffset, resolve, blob, index);
+      };
 
       try {
         // webm decoder streams metadata followed by per-frame blobs via callbacks
