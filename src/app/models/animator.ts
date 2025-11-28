@@ -10,6 +10,8 @@ import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
 import { MediaExportService } from '@services/media-export/media-export.service';
 import { MediaImportService } from '@services/media-import/media-import.service';
+
+declare const webm: any;
 @Injectable({
   providedIn: 'root'
 })
@@ -438,18 +440,16 @@ export class Animator {
   */
   public async load(file: any): Promise<any> {
     try {
-      const result = await this.mediaImportService.import(file);
-      console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
-      this.frames = result.frames || [];
-      this.frameWebpsAndJpegs = result.frameBlobs || [];
+      const { videoBlob, audioBlob } = await this.mediaImportService.import(file);
+      this.frames = [];
+      this.frameWebpsAndJpegs = [];
       this.framesInFlight = 0;
 
-      if (result.frameRate) {
-        this.setFramerate(result.frameRate);
-      }
+      const buffer = await videoBlob.arrayBuffer();
+      await this.decodeFile(buffer);
 
-      if (result.audioBlob) {
-        this.setAudioSrc(result.audioBlob, result.audioBlob.type as MimeTypes);
+      if (audioBlob) {
+        this.setAudioSrc(audioBlob, audioBlob.type as MimeTypes);
       } else {
         this.setAudioSrc(null);
       }
@@ -462,7 +462,7 @@ export class Animator {
       this.snapshotContext.drawImage(lastFrame, 0, 0, this.width, this.height);
       return;
     } catch (err) {
-      console.log('🚀 ~ file: animator.ts ~ line 370 ~ Animator ~ load ~ err', err);
+      console.error('🚀 ~ file: animator.ts ~ line 370 ~ Animator ~ load ~ err', err);
       return;
     }
   }
@@ -552,6 +552,31 @@ export class Animator {
   }
 
   /*
+  * Method is used to decode array buffer to single frames, export framerate
+  */
+  private async decodeFile(fileBuffer: ArrayBuffer) {
+    const animator = this;
+    return await new Promise((resolve, reject) => {
+      try {
+        webm.decode(fileBuffer,
+          (width: number, height: number) => {
+            this.setDimensions({
+              width: this.width,
+              height: this.height
+            } as any);
+          },
+          (frameRate: number) => {
+            this.setFramerate(Math.round(frameRate));
+          },
+          animator.addFrameVP8.bind(animator, this.frames.length, resolve),
+          () => undefined);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /*
   * Method is used to get proper audio mime type
   */
   private getAudioMimeType(): string {
@@ -618,6 +643,42 @@ export class Animator {
       }
     }
     return null;
+  }
+
+  /**
+  * Method is used to add single frames from files after it is loaded
+  */
+  private addFrameVP8(frameOffset: number, callback: any, blob: Blob, index: number) {
+    let blobURL = URL.createObjectURL(blob);
+    const image = new Image();
+    this.framesInFlight++;
+    image.addEventListener('error', (error) => {
+      if (image.getAttribute('triedvp8l')) {
+        console.error('[Animator] Failed to decode imported frame.', error);
+        this.framesInFlight--;
+        URL.revokeObjectURL(blobURL);
+        if (this.framesInFlight === 0) { callback(); }
+      } else {
+        image.setAttribute('triedvp8l', 'true');
+        URL.revokeObjectURL(blobURL);
+        blob = webm.vp8tovp8l(blob);
+        blobURL = URL.createObjectURL(blob);
+        image.src = blobURL;
+      }
+    });
+
+    image.addEventListener('load', async () => {
+      this.frames[frameOffset + index] = image;
+
+      this.frameWebpsAndJpegs[frameOffset + index] = await new Promise((resolve) => {
+        resolve(blob);
+      });
+      this.framesInFlight--;
+      URL.revokeObjectURL(blobURL);
+      if (this.framesInFlight === 0) { callback(); }
+    });
+
+    image.src = blobURL;
   }
 
   /*
