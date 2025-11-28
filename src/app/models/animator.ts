@@ -433,20 +433,25 @@ export class Animator {
     this.playCanvas.height = this.height;
   }
 
-  /*
- * Method is used to trigger file loading process
- */
+  /**
+  * Method is used to trigger file loading process
+  */
   public async load(file: any): Promise<any> {
     const result = await this.readFile(file);
     console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
     try {
-      await this.decodeFile(await new Response(result[0]).arrayBuffer());
+      const responseArrayBuffer = await new Response(result[0]).arrayBuffer()
+      await this.decodeFile(responseArrayBuffer);
       if (result[1]) {
         console.log('🚀 ~ file: animator.ts ~ line 363 ~ Animator ~ load ~ result[1]', result[1]);
         this.setAudioSrc(result[1], result[1].type as MimeTypes);
       }
+      const lastFrame = this.frames[this.frames.length - 1];
+      if (!lastFrame) {
+        throw new Error('No video frames decoded from imported file.');
+      }
       this.snapshotContext.clearRect(0, 0, this.width, this.height);
-      this.snapshotContext.drawImage(this.frames[this.frames.length - 1], 0, 0, this.width, this.height);
+      this.snapshotContext.drawImage(lastFrame, 0, 0, this.width, this.height);
       return;
     } catch (err) {
       console.log('🚀 ~ file: animator.ts ~ line 370 ~ Animator ~ load ~ err', err);
@@ -561,35 +566,76 @@ export class Animator {
     return result;
   }
 
-  /*
-  * Method is used to read entire zip file
-  */
+  /**
+   * Method is used to read entire zip file
+   */
   private async readFile(file: any): Promise<Blob[]> {
     const reader = new zip.ZipReader(new zip.BlobReader(file));
     const entries = await reader.getEntries();
-    const blobs = await Promise.all(entries.map(async (entry: any, index: number) => {
-      console.log('🚀 ~ file: animator.ts ~ line 496 ~ Animator ~ awaitPromise.all ~ entry', entry);
-      const blob = await this.readFileEntry(entry, index);
-      console.log('🚀 ~ file: animator.ts ~ line 498 ~ Animator ~ awaitPromise.all ~ blob', blob);
-      return blob;
-    }));
-    await reader.close();
-    if (blobs.length > 1 && blobs[0].type !== MimeTypes.video) {
-      // swap array elements if audio is first
-      blobs.unshift(blobs.pop());
+    let videoBlob: Blob | null = null;
+    let audioBlob: Blob | null = null;
+
+    for (const entry of entries) {
+      const classification = this.classifyZipEntry(entry, !!videoBlob);
+      if (!classification) {
+        continue;
+      }
+
+      console.log('🚀 ~ file: animator.ts ~ line 496 ~ Animator ~ readFile ~ entry', entry.filename, classification);
+      const blob = await this.readFileEntry(entry, classification.mimeType);
+      if (classification.role === 'video') {
+        videoBlob = blob;
+      } else if (classification.role === 'audio') {
+        audioBlob = blob;
+      }
     }
-    console.log('🚀 ~ file: animator.ts ~ line 505 ~ Animator ~ readFile ~ blobs', blobs);
+
+    await reader.close();
+
+    if (!videoBlob) {
+      throw new Error('Unable to find video data in imported zip.');
+    }
+
+    const orderedBlobs: Blob[] = audioBlob ? [videoBlob as Blob, audioBlob] : [videoBlob as Blob];
+    console.log('🚀 ~ file: animator.ts ~ line 505 ~ Animator ~ readFile ~ blobs', orderedBlobs);
     console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frameWebpsAndJpegs', this.frameWebpsAndJpegs);
     console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frames', this.frames);
-    return blobs;
+    return orderedBlobs;
   }
 
   /*
   * Method is used to read file inside of zip file
   */
-  private async readFileEntry(entry: any, index: number): Promise<Blob> {
-    const type = (index === 0) ? MimeTypes.video : this.getAudioMimeTypeFromEntry(entry.filename);
-    return await entry.getData(new zip.BlobWriter(type));
+  private async readFileEntry(entry: any, mimeType: MimeTypes): Promise<Blob> {
+    return await entry.getData(new zip.BlobWriter(mimeType));
+  }
+
+  private classifyZipEntry(entry: any, hasVideo: boolean): { role: 'video' | 'audio'; mimeType: MimeTypes } | null {
+    if (!entry || entry.directory) {
+      return null;
+    }
+
+    const filename = (entry.filename || '').toLowerCase();
+    if (!filename) {
+      return null;
+    }
+
+    if (filename.includes('video')) {
+      return { role: 'video', mimeType: MimeTypes.video };
+    }
+
+    if (filename.includes('audio')) {
+      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) };
+    }
+
+    if (filename.endsWith('.webm')) {
+      if (!hasVideo) {
+        return { role: 'video', mimeType: MimeTypes.video };
+      }
+      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) };
+    }
+
+    return null;
   }
 
   /*
@@ -669,7 +715,7 @@ export class Animator {
     return null;
   }
 
-  /*
+  /**
   * Method is used to add single frames from files after it is loaded
   */
   private addFrameVP8(frameOffset: number, callback: any, blob: Blob, index: number) {
@@ -678,10 +724,9 @@ export class Animator {
     this.framesInFlight++;
     image.addEventListener('error', (error) => {
       if (image.getAttribute('triedvp8l')) {
-        console.log(error);
+        console.warn('[Animator] Failed to decode imported frame.', error);
         this.framesInFlight--;
         URL.revokeObjectURL(blobURL);
-        image.src = null;
         if (this.framesInFlight === 0) { callback(); }
       } else {
         // image.setAttribute('triedvp8l', true);
