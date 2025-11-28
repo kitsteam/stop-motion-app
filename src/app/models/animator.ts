@@ -453,7 +453,7 @@ export class Animator {
       } else {
         this.setAudioSrc(null);
       }
-      debugger
+
       const lastFrame = this.frames[this.frames.length - 1];
       if (!lastFrame) {
         throw new Error('No video frames decoded from imported file.');
@@ -554,23 +554,29 @@ export class Animator {
   /*
   * Method is used to decode array buffer to single frames, export framerate
   */
-  private async decodeFile(fileBuffer: ArrayBuffer) {
+  private decodeFile(fileBuffer: ArrayBuffer): Promise<void> {
     const animator = this;
-    return await new Promise((resolve, reject) => {
+    const frameOffset = animator.frames.length;
+
+    return new Promise((resolve, reject) => {
+      const handleDimensions = () => {
+        animator.setDimensions({
+          width: animator.width,
+          height: animator.height
+        } as any);
+      };
+
+      const handleFrameRate = (frameRate: number) => {
+        animator.setFramerate(Math.round(frameRate));
+      };
+
+      const handleFrame = animator.addFrameVP8.bind(animator, frameOffset, resolve);
+
       try {
-        webm.decode(fileBuffer,
-          (width: number, height: number) => {
-            this.setDimensions({
-              width: this.width,
-              height: this.height
-            } as any);
-          },
-          (frameRate: number) => {
-            this.setFramerate(Math.round(frameRate));
-          },
-          animator.addFrameVP8.bind(animator, this.frames.length, resolve),
-          () => undefined);
+        // webm decoder streams metadata followed by per-frame blobs via callbacks
+        webm.decode(fileBuffer, handleDimensions, handleFrameRate, handleFrame, () => undefined);
       } catch (error) {
+        console.error('Error decoding file:', error);
         reject(error);
       }
     });
