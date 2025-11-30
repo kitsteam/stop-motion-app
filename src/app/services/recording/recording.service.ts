@@ -35,7 +35,6 @@ interface AudioRecordingContext {
 })
 export class RecordingService {
     private readonly preferredVideoMimeTypes: string[] = [
-        'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
         MimeTypes.video
     ];
