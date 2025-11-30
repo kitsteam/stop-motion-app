@@ -60,12 +60,6 @@ export class SaveButtonComponent extends BaseComponent {
         message: this.baseService.translate.instant('alert_save_animator_message'),
         inputs: [
           {
-            name: SaveState.draft,
-            type: 'radio',
-            label: this.baseService.translate.instant('labels_save_as_draft'),
-            value: SaveState.draft,
-          },
-          {
             name: SaveState.gif,
             type: 'radio',
             label: this.baseService.translate.instant('labels_save_as_gif'),

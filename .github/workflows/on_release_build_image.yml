@@ -6,7 +6,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "media-recorder-support-import-disabled"]
   release:
     types: [published]
 

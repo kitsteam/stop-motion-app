@@ -110,7 +110,9 @@ export class MediaImportService {
 
     image.addEventListener('error', (error) => {
       if (image.getAttribute('triedvp8l')) {
-        console.warn('[MediaImportService] Failed to decode imported frame.', error);
+        console.warn('[MediaImportService] Failed to decode imported frame.', error.message);
+        console.warn(error);
+        console.error(error.message)
         finalize();
       } else {
         image.setAttribute('triedvp8l', 'true');
