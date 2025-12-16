@@ -2430,29 +2430,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ffmpeg/ffmpeg@npm:0.12.15":
-  version: 0.12.15
-  resolution: "@ffmpeg/ffmpeg@npm:0.12.15"
-  dependencies:
-    "@ffmpeg/types": "npm:^0.12.4"
-  checksum: 10c0/80c44459ca31ec7596d5624572370fd4c6ecf31701c6b23ec52cce85b4bddabaaa68c3ad050adfbba4db3ae4956c5538828690c51e1c258930850fe1a182599e
-  languageName: node
-  linkType: hard
-
-"@ffmpeg/types@npm:^0.12.4":
-  version: 0.12.4
-  resolution: "@ffmpeg/types@npm:0.12.4"
-  checksum: 10c0/8dba8e728a11158fbee94baffd648bf3446ad891506f5e65ffc64f5510e8afc33dffc2dd4abcf2966736fbd7d3c4919e9ce9fcf71f7d22607015caae431b83dd
-  languageName: node
-  linkType: hard
-
-"@ffmpeg/util@npm:0.12.2":
-  version: 0.12.2
-  resolution: "@ffmpeg/util@npm:0.12.2"
-  checksum: 10c0/a1c8ab735762f2b1e3174bf96125feb541be528327843c9719042012381603a17d511d01afd2c8c2e7349453a8001ae6bf1ba8769779d305342e7f42ed704a9d
-  languageName: node
-  linkType: hard
-
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -6544,6 +6521,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"gifenc@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "gifenc@npm:1.0.3"
+  checksum: 10c0/34fc6b2c66c305fc556cd2f475154ce2ad68384a52ceb8253b901c8c7d9c63f2c0a5d109ceb3cb46e44c2c6155009920a286cf08a621105863aa43468e345229
+  languageName: node
+  linkType: hard
+
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -10207,8 +10191,6 @@ __metadata:
     "@angular/platform-browser-dynamic": "npm:18.2.14"
     "@angular/router": "npm:18.2.14"
     "@angular/service-worker": "npm:18.2.14"
-    "@ffmpeg/ffmpeg": "npm:0.12.15"
-    "@ffmpeg/util": "npm:0.12.2"
     "@ionic/angular": "npm:8.7.9"
     "@ionic/angular-toolkit": "npm:12.3.0"
     "@ng-bootstrap/ng-bootstrap": "npm:^17.0.1"
@@ -10228,6 +10210,7 @@ __metadata:
     bootstrap: "npm:^5.3.8"
     eslint: "npm:9.39.1"
     file-saver: "npm:2.0.5"
+    gifenc: "npm:^1.0.3"
     jasmine-core: "npm:5.12.1"
     jasmine-spec-reporter: "npm:7.0.0"
     karma: "npm:6.4.4"
@@ -10240,7 +10223,6 @@ __metadata:
     ts-node: "npm:10.9.2"
     tslib: "npm:2.8.1"
     typescript: "npm:5.5.4"
-    webm-writer: "npm:1.0.0"
     zone.js: "npm:0.15.1"
   languageName: unknown
   linkType: soft
@@ -10936,13 +10918,6 @@ __metadata:
   version: 1.2.2
   resolution: "weak-lru-cache@npm:1.2.2"
   checksum: 10c0/744847bd5b96ca86db1cb40d0aea7e92c02bbdb05f501181bf9c581e82fa2afbda32a327ffbe75749302b8492ab449f1c657ca02410d725f5d412d1e6c607d72
-  languageName: node
-  linkType: hard
-
-"webm-writer@npm:1.0.0":
-  version: 1.0.0
-  resolution: "webm-writer@npm:1.0.0"
-  checksum: 10c0/ea1e2bfee4f59e988bba5b9bc1881962fea57cc66df71b9ae2f18f3aa0032542b7308f43e4a9061ce9a21cfc509e51e3760b5d785d93c0870c3b7f06d54794c0
   languageName: node
   linkType: hard
 

@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { LayoutOptions } from '@interfaces/layout-options.interface';
+import { FrameManifest } from '@interfaces/frame-manifest.interface';
 import { Platform } from '@ionic/angular';
 import { BaseService } from '@services/base/base.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
-import * as WebMWriter from 'webm-writer';
 import * as zip from '@zip.js/zip.js';
 import { MimeTypes } from '@enums/mime-types.enum';
 import { RecorderState } from '@enums/recorder-state.enum';
-import { VideoService } from '@services/video/video.service';
-import { ProgressCallback } from '@pages/animator/components/save-button/save-button.component';
+import { MediaExportService } from '@services/media-export/media-export.service';
+import { MediaImportService } from '@services/media-import/media-import.service';
 
 declare const webm: any;
 @Injectable({
@@ -51,7 +51,8 @@ export class Animator {
     // TODO if possible get rid of injectable again
     public baseService: BaseService,
     private platform: Platform,
-    private videoService: VideoService,
+    private mediaExportService: MediaExportService,
+    private mediaImportService: MediaImportService,
   ) {
     this.isAnimatorPlaying = new BehaviorSubject(false);
     this.frameRate = new BehaviorSubject(6.0);
@@ -435,23 +436,40 @@ export class Animator {
     this.playCanvas.height = this.height;
   }
 
-  /*
- * Method is used to trigger file loading process
- */
-  public async load(file: any): Promise<any> {
-    const result = await this.readFile(file);
-    console.log('🚀 ~ file: animator.ts ~ line 359 ~ Animator ~ load ~ result', result);
+  /**
+  * Method is used to trigger file loading process
+  */
+  public async load(file: Blob): Promise<void> {
     try {
-      await this.decodeFile(await new Response(result[0]).arrayBuffer());
-      if (result[1]) {
-        console.log('🚀 ~ file: animator.ts ~ line 363 ~ Animator ~ load ~ result[1]', result[1]);
-        this.setAudioSrc(result[1], result[1].type as MimeTypes);
+      const { videoBlob, audioBlob, frameManifest, frameBlobs } = await this.mediaImportService.import(file);
+      this.frames = [];
+      this.frameWebpsAndJpegs = [];
+      this.framesInFlight = 0;
+
+      if (frameManifest && frameBlobs?.length) {
+        await this.restoreFramesFromManifest(frameManifest, frameBlobs);
+      } else if (videoBlob) {
+        const buffer = await videoBlob.arrayBuffer();
+        await this.decodeFile(buffer);
+      } else {
+        throw new Error('No frame data found in imported file.');
+      }
+
+      if (audioBlob) {
+        this.setAudioSrc(audioBlob, audioBlob.type as MimeTypes);
+      } else {
+        this.setAudioSrc(null);
+      }
+
+      const lastFrame = this.frames[this.frames.length - 1];
+      if (!lastFrame) {
+        throw new Error('No video frames decoded from imported file.');
       }
       this.snapshotContext.clearRect(0, 0, this.width, this.height);
-      this.snapshotContext.drawImage(this.frames[this.frames.length - 1], 0, 0, this.width, this.height);
+      this.snapshotContext.drawImage(lastFrame, 0, 0, this.width, this.height);
       return;
     } catch (err) {
-      console.log('🚀 ~ file: animator.ts ~ line 370 ~ Animator ~ load ~ err', err);
+      console.error('🚀 ~ file: animator.ts ~ Animator ~ load ~ err', err);
       return;
     }
   }
@@ -460,10 +478,11 @@ export class Animator {
   * Method is used to trigger file saving as draft process
   */
   public async saveDraft(filename: string) {
-    const videoBlob = await this.createVideoBlob();
+    const frameRate = await this.getFramerate().pipe(first()).toPromise();
+    const videoBlob = await this.createVideoBlob(frameRate);
     const audioBlob = (this.audio) ? this.audioBlob : null;
     console.log('🚀 ~ file: animator.ts ~ line 378 ~ Animator ~ save ~ audioBlob', audioBlob);
-    const dataURI = await this.createZipFile(videoBlob, audioBlob);
+    const dataURI = await this.createZipFile(videoBlob, audioBlob, frameRate);
     saveAs(dataURI, filename + '.zip', { autoBom: true });
     URL.revokeObjectURL(dataURI);
     return;
@@ -520,41 +539,24 @@ export class Animator {
   * Method is used to create video blob
   * Depending on platform differnt types of enconding are used
   */
-  private async createVideoBlob(): Promise<Blob> {
-    const frameRate = await this.getFramerate().pipe(first()).toPromise();
-    const videoWriter = new WebMWriter({
-      quality: 0.95,    // WebM image quality from 0.0 (worst) to 0.99999 (best), 1.00 (VP8L lossless) is not supported
-      fileWriter: null, // FileWriter in order to stream to a file instead of buffering to memory (optional)
-      fd: null,         // Node.js file handle to write to instead of buffering to memory (optional)
-      // You must supply one of:
-      // frameDuration: null, // Duration of frames in milliseconds
-      frameRate,     // Number of frames per second
-      transparent: false,      // True if an alpha channel should be included in the video
-      alphaQuality: undefined, // Allows you to set the quality level of the alpha channel separately.
-      // If not specified this defaults to the same value as `quality`.
-    });
-
-    // Convert all frames to WebP for consistency across browsers
-    const progressCallback: ProgressCallback = (progress, time) => { };
-    const convertedFrames = await this.videoService.convertPotentiallyMixedFrames(this.frameWebpsAndJpegs, progressCallback);
-    for (const frame of convertedFrames) {
-      videoWriter.addFrame(this.uint8ToBase64(frame));
-    }
-
-    const blob = await videoWriter.complete();
-    return blob;
+  private async createVideoBlob(frameRate?: number): Promise<Blob> {
+    const resolvedFrameRate = frameRate ?? await this.getFramerate().pipe(first()).toPromise();
+    return this.mediaExportService.createVideo(this.frameWebpsAndJpegs, resolvedFrameRate, undefined);
   }
 
   /*
   * Method is used to create zip file of video and audio (if available)
   */
-  private async createZipFile(videoBlob: Blob, audioBlob: Blob): Promise<string> {
+  private async createZipFile(videoBlob: Blob, audioBlob: Blob | null, frameRate: number): Promise<string> {
     zip.configure({ useWebWorkers: false });
     const zipWriter = new zip.ZipWriter(new zip.Data64URIWriter('application/zip'));
     await zipWriter.add('video.webm', new zip.BlobReader(videoBlob));
     if (audioBlob) {
       const audioFileExtension = this.getAudioFileExtension(audioBlob);
       await zipWriter.add(`audio.${audioFileExtension}`, new zip.BlobReader(audioBlob));
+    }
+    if (this.frameWebpsAndJpegs?.length) {
+      await this.appendFramesToZip(zipWriter, frameRate);
     }
     const dataURI = await zipWriter.close();
     return dataURI;
@@ -563,55 +565,34 @@ export class Animator {
   /*
   * Method is used to decode array buffer to single frames, export framerate
   */
-  private async decodeFile(fileBuffer: ArrayBuffer) {
+  private decodeFile(fileBuffer: ArrayBuffer): Promise<void> {
     const animator = this;
-    const result = await new Promise((resolve) => {
-      webm.decode(fileBuffer,
-        (width: number, height: number) => {
-          this.setDimensions({
-            width: this.width,
-            height: this.height
-          } as any);
-        },
-        (frameRate: number) => {
-          this.setFramerate(Math.round(frameRate));
-        },
-        animator.addFrameVP8.bind(animator, this.frames.length, resolve),
-        animator.setAudioSrc.bind(animator));
+    const frameOffset = animator.frames.length;
+
+    return new Promise((resolve, reject) => {
+      const handleDimensions = () => {
+        animator.setDimensions({
+          width: animator.width,
+          height: animator.height
+        } as any);
+      };
+
+      const handleFrameRate = (frameRate: number) => {
+        animator.setFramerate(Math.round(frameRate));
+      };
+
+      const handleFrame = (blob: Blob, index: number) => {
+        animator.addFrameVP8(frameOffset, resolve, blob, index);
+      };
+
+      try {
+        // webm decoder streams metadata followed by per-frame blobs via callbacks
+        webm.decode(fileBuffer, handleDimensions, handleFrameRate, handleFrame, () => undefined);
+      } catch (error) {
+        console.error('Error decoding file:', error);
+        reject(error);
+      }
     });
-    console.log('🚀 ~ file: animator.ts ~ line 507 ~ Animator ~ result ~ result', result);
-    return result;
-  }
-
-  /*
-  * Method is used to read entire zip file
-  */
-  private async readFile(file: any): Promise<Blob[]> {
-    const reader = new zip.ZipReader(new zip.BlobReader(file));
-    const entries = await reader.getEntries();
-    const blobs = await Promise.all(entries.map(async (entry: any, index: number) => {
-      console.log('🚀 ~ file: animator.ts ~ line 496 ~ Animator ~ awaitPromise.all ~ entry', entry);
-      const blob = await this.readFileEntry(entry, index);
-      console.log('🚀 ~ file: animator.ts ~ line 498 ~ Animator ~ awaitPromise.all ~ blob', blob);
-      return blob;
-    }));
-    await reader.close();
-    if (blobs.length > 1 && blobs[0].type !== MimeTypes.video) {
-      // swap array elements if audio is first
-      blobs.unshift(blobs.pop());
-    }
-    console.log('🚀 ~ file: animator.ts ~ line 505 ~ Animator ~ readFile ~ blobs', blobs);
-    console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frameWebpsAndJpegs', this.frameWebpsAndJpegs);
-    console.log('🚀 ~ file: animator.ts ~ line 531 ~ Animator ~ readFile ~ this.frames', this.frames);
-    return blobs;
-  }
-
-  /*
-  * Method is used to read file inside of zip file
-  */
-  private async readFileEntry(entry: any, index: number): Promise<Blob> {
-    const type = (index === 0) ? MimeTypes.video : this.getAudioMimeTypeFromEntry(entry.filename);
-    return await entry.getData(new zip.BlobWriter(type));
   }
 
   /*
@@ -660,14 +641,6 @@ export class Animator {
     return 'webm';
   }
 
-  private getAudioMimeTypeFromEntry(filename: string): MimeTypes {
-    const lowerCaseName = (filename || '').toLowerCase();
-    if (lowerCaseName.endsWith('.webm')) {
-      return MimeTypes.audioWebm;
-    }
-    return MimeTypes.audioWebm;
-  }
-
   private getFallbackMimeType(currentMimeType: string): MimeTypes | null {
     const recorderConstructor = (typeof window !== 'undefined') ? (window as any).MediaRecorder : undefined;
     const fallbackCandidates = [
@@ -691,22 +664,30 @@ export class Animator {
     return null;
   }
 
-  /*
+  /**
   * Method is used to add single frames from files after it is loaded
   */
+  /**
+   * Adds a VP8 or VP8L frame to the animator, handling decode retries, fallback conversion,
+   * lifecycle tracking, and resolution notification when all frames in flight complete.
+   *
+   * @param frameOffset - Base offset in the frame array to store the decoded image.
+   * @param callback - Invoked when all pending frame decodes initiated together finish.
+   * @param blob - The VP8 (or converted VP8L) frame data to decode.
+   * @param index - Position offset added to `frameOffset` for locating this frame.
+   */
   private addFrameVP8(frameOffset: number, callback: any, blob: Blob, index: number) {
     let blobURL = URL.createObjectURL(blob);
     const image = new Image();
     this.framesInFlight++;
+    // Track decode errors and attempt a VP8L fallback before giving up.
     image.addEventListener('error', (error) => {
       if (image.getAttribute('triedvp8l')) {
-        console.log(error);
+        console.error('[Animator] Failed to decode imported frame.', error);
         this.framesInFlight--;
         URL.revokeObjectURL(blobURL);
-        image.src = null;
         if (this.framesInFlight === 0) { callback(); }
       } else {
-        // image.setAttribute('triedvp8l', true);
         image.setAttribute('triedvp8l', 'true');
         URL.revokeObjectURL(blobURL);
         blob = webm.vp8tovp8l(blob);
@@ -715,18 +696,110 @@ export class Animator {
       }
     });
 
-    image.addEventListener('load', async (evt: any) => {
-      this.frames[frameOffset + index] = image
+    // On successful decode keep both the Image element and the original blob for export.
+    image.addEventListener('load', async () => {
+      this.frames[frameOffset + index] = image;
 
-      this.frameWebpsAndJpegs[frameOffset + index] = await new Promise((resolve, reject) => {
+      this.frameWebpsAndJpegs[frameOffset + index] = await new Promise((resolve) => {
         resolve(blob);
       });
       this.framesInFlight--;
       URL.revokeObjectURL(blobURL);
+      // Resolve once all async decodes that were kicked off together have finished.
       if (this.framesInFlight === 0) { callback(); }
     });
 
     image.src = blobURL;
+  }
+
+  private async appendFramesToZip(zipWriter: zip.ZipWriter<any>, frameRate: number): Promise<void> {
+    if (!this.frameWebpsAndJpegs?.length) {
+      return;
+    }
+
+    const manifest: FrameManifest = {
+      version: 1,
+      width: this.width,
+      height: this.height,
+      frameRate,
+      frames: []
+    };
+
+    for (let index = 0; index < this.frameWebpsAndJpegs.length; index++) {
+      const blob = this.frameWebpsAndJpegs[index];
+      if (!blob) {
+        continue;
+      }
+      const extension = this.getFrameFileExtension(blob);
+      const filename = this.buildFrameFilename(index, extension);
+      manifest.frames.push({ filename, mimeType: blob.type });
+      await zipWriter.add(filename, new zip.BlobReader(blob));
+    }
+
+    if (manifest.frames.length) {
+      await zipWriter.add('frames/manifest.json', new zip.TextReader(JSON.stringify(manifest)));
+    }
+  }
+
+  private getFrameFileExtension(blob: Blob): string {
+    const type = (blob?.type || '').toLowerCase();
+    if (type.includes('jpeg')) {
+      return 'jpg';
+    }
+    if (type.includes('png')) {
+      return 'png';
+    }
+    if (type.includes('webp')) {
+      return 'webp';
+    }
+    return 'dat';
+  }
+
+  private buildFrameFilename(index: number, extension: string): string {
+    const suffix = String(index + 1).padStart(5, '0');
+    return `frames/frame-${suffix}.${extension}`;
+  }
+
+  private async restoreFramesFromManifest(manifest: FrameManifest, frameBlobs: Blob[]): Promise<void> {
+    const expectedFrames = manifest.frames?.length ?? frameBlobs.length;
+    const frameCount = Math.min(expectedFrames, frameBlobs.length);
+    const loaders: Promise<void>[] = [];
+
+    for (let index = 0; index < frameCount; index++) {
+      const blob = frameBlobs[index];
+      if (!blob) {
+        continue;
+      }
+      loaders.push(this.loadFrameFromBlob(blob, index));
+    }
+
+    await Promise.all(loaders);
+
+    if (manifest.width && manifest.height) {
+      this.setDimensions({ width: manifest.width, height: manifest.height } as any);
+    }
+
+    if (manifest.frameRate) {
+      this.setFramerate(manifest.frameRate);
+    }
+  }
+
+  private loadFrameFromBlob(blob: Blob, index: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const blobURL = URL.createObjectURL(blob);
+      image.onload = () => {
+        this.frames[index] = image;
+        this.frameWebpsAndJpegs[index] = blob;
+        URL.revokeObjectURL(blobURL);
+        resolve();
+      };
+      image.onerror = (error) => {
+        URL.revokeObjectURL(blobURL);
+        reject(error);
+      };
+      image.src = blobURL;
+    });
   }
 
   /*
@@ -736,17 +809,5 @@ export class Animator {
     return 1000.0 / this.frameRate.getValue();
   }
 
-  /*
-  * Method is used to convert ArrayBuffer to base64 string
-  */
-  private uint8ToBase64(buffer: ArrayBuffer): string {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return `data:image/webp;base64,${window.btoa(binary)}`;
-  }
 }
 
