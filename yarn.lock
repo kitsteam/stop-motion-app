@@ -414,15 +414,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/common@npm:18.2.14":
-  version: 18.2.14
-  resolution: "@angular/common@npm:18.2.14"
+"@angular/common@npm:19.2.16":
+  version: 19.2.16
+  resolution: "@angular/common@npm:19.2.16"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/core": 18.2.14
+    "@angular/core": 19.2.16
     rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/d8c92608ff839cb1d4a7db560f37173b1ee3ae3ba45f6e0620bad168338a361b82762fd63dc347b29f3e985ce93e4c6e90022db0e47ca921a400b63efdaa9a31
+  checksum: 10c0/c6dd3f30dc794f69312bac111da9e78a254475047c2b98c08f498b1f70c522e1754a06e6c2f0b6228a59a3878246995f0c3b4c89fd352f4a481f12920a7e9f91
   languageName: node
   linkType: hard
 
@@ -10180,7 +10180,7 @@ __metadata:
     "@angular-eslint/template-parser": "npm:18.4.3"
     "@angular/animations": "npm:18.2.14"
     "@angular/cli": "npm:^18.2.21"
-    "@angular/common": "npm:18.2.14"
+    "@angular/common": "npm:19.2.16"
     "@angular/compiler": "npm:18.2.14"
     "@angular/compiler-cli": "npm:18.2.14"
     "@angular/core": "npm:18.2.14"
