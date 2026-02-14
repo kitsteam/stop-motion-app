@@ -463,15 +463,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/core@npm:18.2.14":
-  version: 18.2.14
-  resolution: "@angular/core@npm:18.2.14"
+"@angular/core@npm:21.1.4":
+  version: 21.1.4
+  resolution: "@angular/core@npm:21.1.4"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
+    "@angular/compiler": 21.1.4
     rxjs: ^6.5.3 || ^7.4.0
-    zone.js: ~0.14.10
-  checksum: 10c0/99a3656d0eb60797d2eea5077c9ff7a05a21fca31c143c11cb27720ed1633a2ab6c2acb0f357c9c1f4ca1e8d2482ef9192216cbfc73c705f73eab6f50b289e6c
+    zone.js: ~0.15.0 || ~0.16.0
+  peerDependenciesMeta:
+    "@angular/compiler":
+      optional: true
+    zone.js:
+      optional: true
+  checksum: 10c0/46cae4dca416e71d8b1754e5091049a470c3ee9b69e0979cbb11060dbc5e5279c012c6236b8949151dd43f87087e783e13d62a07f7e5d1d61ad2ef56900dd8d3
   languageName: node
   linkType: hard
 
@@ -10183,7 +10189,7 @@ __metadata:
     "@angular/common": "npm:18.2.14"
     "@angular/compiler": "npm:18.2.14"
     "@angular/compiler-cli": "npm:18.2.14"
-    "@angular/core": "npm:18.2.14"
+    "@angular/core": "npm:21.1.4"
     "@angular/forms": "npm:18.2.14"
     "@angular/language-service": "npm:18.2.14"
     "@angular/localize": "npm:18.2.14"
