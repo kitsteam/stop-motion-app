@@ -10219,7 +10219,7 @@ __metadata:
     karma-jasmine: "npm:5.1.0"
     karma-jasmine-html-reporter: "npm:2.1.0"
     rxjs: "npm:7.8.2"
-    swiper: "npm:12.0.3"
+    swiper: "npm:12.1.2"
     ts-node: "npm:10.9.2"
     tslib: "npm:2.8.1"
     typescript: "npm:5.5.4"
@@ -10339,10 +10339,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"swiper@npm:12.0.3":
-  version: 12.0.3
-  resolution: "swiper@npm:12.0.3"
-  checksum: 10c0/a854531791ba45cb0f6086904a99878fd207b42024820df68fbf64e01c20d542438c023ec4765b223f4dbffabf6858d311ec749bdca4ea4b4a7b74150a010162
+"swiper@npm:12.1.2":
+  version: 12.1.2
+  resolution: "swiper@npm:12.1.2"
+  checksum: 10c0/f2597a67c4d647e367a236735bb7779e2833346b332e6d7b8caf48c6b82da52787959e86f06762983ab82b142958690a0d1b9f6fc5a59170a648949b35cfedd0
   languageName: node
   linkType: hard
 
