@@ -29,6 +29,10 @@ npm-debug.log*
 /plugins
 /www
 
+# pnpm local content-addressable store (created when pnpm can't write to the
+# global store path — see `react-app/` for the React migration toolchain).
+.pnpm-store/
+
 .angular
 .devcontainer
 .nx/*
