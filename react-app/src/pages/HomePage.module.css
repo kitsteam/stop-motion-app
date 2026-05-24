@@ -1,0 +1,192 @@
+/*
+ * HomePage layout
+ *
+ * Two breakpoints, pivoting at Bootstrap's `lg` (992px):
+ *   - <  992px : single column. Fixed-bottom footer with logo + links.
+ *   - >= 992px : split. Fixed 50% gradient panel on the left, content right.
+ *
+ * The gradient panel uses `var(--app-height, 100vh)` instead of `100vh` so
+ * iOS Safari's dynamic toolbar does not bleed the panel under it. The page
+ * component owns the resize listener that keeps `--app-height` in sync.
+ */
+
+.root {
+  position: relative;
+  min-height: var(--app-height, 100vh);
+  background: #ffffff;
+}
+
+/* ---------- shared link styling for the three footer links ---------- */
+
+.footerLink {
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0.5rem;
+}
+
+.footerLink:hover,
+.footerLink:focus {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ---------- desktop left panel ---------- */
+
+.leftPanel {
+  display: none;
+}
+
+.leftLogoLink {
+  display: block;
+  width: 60%;
+  max-width: 360px;
+}
+
+.leftLogo {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.leftFooterLinks {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- content panel ---------- */
+
+.contentPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--app-height, 100vh);
+  padding: 1rem;
+  /* room for the fixed-bottom mobile footer */
+  padding-bottom: 6rem;
+}
+
+.kitsLogo {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+}
+
+.kitsLogo img {
+  height: 2.5rem;
+  width: auto;
+  display: block;
+}
+
+.callToAction {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem 0;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.title {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.bullets li {
+  padding-bottom: 0.5rem;
+}
+
+.cta {
+  margin-top: 1rem;
+  background-color: #00a3d3;
+  border-color: #00a3d3;
+  color: #ffffff;
+}
+
+.cta:hover,
+.cta:focus {
+  background-color: #008fba;
+  border-color: #008fba;
+  color: #ffffff;
+}
+
+.disclaimer {
+  margin-top: 1rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+/* ---------- mobile fixed footer (< 992 px) ---------- */
+
+.mobileFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #00a3d3 0%, #008fba 100%);
+  padding: 0.5rem 1rem;
+}
+
+.mobileFooterLogo {
+  flex: 0 0 auto;
+  width: 3rem;
+}
+
+.mobileFooterLogo img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.mobileFooterLinks {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ---------- desktop split (≥ 992 px) ---------- */
+
+@media (min-width: 992px) {
+  .leftPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: var(--app-height, 100vh);
+    background: linear-gradient(135deg, #00a3d3 0%, #008fba 100%);
+    padding: 2rem 1rem;
+    z-index: 1;
+  }
+
+  .contentPanel {
+    margin-left: 50%;
+    width: 50%;
+    padding-bottom: 1rem; /* no mobile footer to clear */
+  }
+
+  .mobileFooter {
+    display: none;
+  }
+}

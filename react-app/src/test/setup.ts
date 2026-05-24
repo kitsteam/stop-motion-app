@@ -1,7 +1,16 @@
 import '@testing-library/jest-dom/vitest'
+import { afterEach } from 'vitest'
+import { cleanup } from '@testing-library/react'
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import de from '../../public/assets/i18n/de.json'
+
+// Vitest doesn't ship the global afterEach hook that @testing-library/react
+// relies on for auto-cleanup in Jest. Register it here so DOM nodes from
+// one test don't leak into the next.
+afterEach(() => {
+  cleanup()
+})
 
 // Initialise i18next synchronously with the real de.json bundled at test
 // time, so tests track the production translation file (renames will surface
