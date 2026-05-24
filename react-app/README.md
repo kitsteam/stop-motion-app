@@ -43,6 +43,43 @@ pnpm lint         # eslint .
 pnpm preview      # serve the built dist/
 ```
 
+## HTTPS dev server (camera on the LAN)
+
+`pnpm dev` serves over **HTTPS** via `@vitejs/plugin-basic-ssl`, which generates
+a self-signed cert on first boot (cached at
+`react-app/node_modules/.vite/basic-ssl/_cert.pem`), and binds to `0.0.0.0`
+(host `true`) so phones on the same LAN can connect. The browser's
+`getUserMedia` API needs a secure context on any origin other than `localhost`,
+so HTTP would silently break camera access during phone testing.
+
+Vite prints the LAN URL on start, e.g.:
+
+```
+➜  Local:   https://localhost:5173/
+➜  Network: https://192.168.1.42:5173/
+```
+
+### Trusting the cert
+
+The cert is self-signed, so every device has to accept it once:
+
+- **Desktop browser** — open the LAN URL, click through the warning (Chrome:
+  *Advanced → Proceed*; Firefox: *Advanced → Accept the Risk*).
+- **Android / Chrome** — same flow; the warning has a *Continue to site* link.
+- **iOS / Safari** — tap *Show Details → visit this website → Visit Website*.
+  iOS scopes the trust to that hostname and remembers it until the cert
+  expires (1 year by default).
+
+The cert is **for local development only** — do not deploy it.
+
+To force a new cert (e.g. after switching networks so the LAN IP changes),
+delete `react-app/node_modules/.vite/basic-ssl/` and restart `pnpm dev`.
+
+If a device refuses to trust the self-signed cert (corporate MDM, strict
+HSTS), generate a locally-trusted cert with [mkcert](https://github.com/FiloSottile/mkcert)
+and point Vite at it via `server.https = { key, cert }` in `vite.config.ts`
+instead of `basicSsl()`.
+
 ## Path aliases
 
 Mirrors `../tsconfig.json` so framework-agnostic enums, interfaces, and models
