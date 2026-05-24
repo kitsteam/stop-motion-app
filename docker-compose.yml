@@ -4,6 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
+      args:
+        # Set APP_FLAVOR=react in your environment (or in .env) to build the
+        # React dev image instead of the default Angular one.
+        APP_FLAVOR: ${APP_FLAVOR:-angular}
     container_name: stop-motion-app
     stdin_open: true
     ports:
@@ -11,6 +15,8 @@ services:
     volumes:
       - .:/home/node/app
       - node_modules:/home/node/app/node_modules
+      - react_node_modules:/home/node/app/react-app/node_modules
 
 volumes:
   node_modules: # Will be prefixed with stop-motion-app
+  react_node_modules: # Will be prefixed with stop-motion-app
