@@ -1,0 +1,79 @@
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
+import AlertDialog from './AlertDialog'
+import { AlertContext, type AlertContextValue } from './alert-context'
+import type { AlertButton, AlertOptions } from '../services/alert-api'
+
+interface AlertEntry {
+  id: number
+  options: AlertOptions
+  resolve: () => void
+}
+
+interface AlertProviderProps {
+  children: ReactNode
+}
+
+export default function AlertProvider({ children }: AlertProviderProps) {
+  const [queue, setQueue] = useState<AlertEntry[]>([])
+  const nextIdRef = useRef(0)
+  // Track entries currently being resolved so a re-entrant click doesn't
+  // run the handler twice.
+  const resolvingRef = useRef<Set<number>>(new Set())
+
+  const show = useCallback((options: AlertOptions): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      const id = nextIdRef.current++
+      setQueue((prev) => [...prev, { id, options, resolve }])
+    })
+  }, [])
+
+  const current = queue[0]
+
+  const handleResolve = useCallback(
+    async (button: AlertButton, inputValues: Record<string, string>) => {
+      if (!current) return
+      if (resolvingRef.current.has(current.id)) return
+      resolvingRef.current.add(current.id)
+      try {
+        await button.handler?.(inputValues)
+      } catch (err) {
+        // The show()-promise contract is "resolves when a button handler
+        // runs" — surface handler errors via console rather than leaving
+        // an unhandled rejection on the show() promise.
+        console.error('[AlertProvider] button handler threw', err)
+      } finally {
+        current.resolve()
+        setQueue((prev) => prev.filter((entry) => entry.id !== current.id))
+        resolvingRef.current.delete(current.id)
+      }
+    },
+    [current],
+  )
+
+  const value = useMemo<AlertContextValue>(() => ({ show }), [show])
+
+  return (
+    <AlertContext.Provider value={value}>
+      {children}
+      {current && (
+        // `key` forces a remount when the queue head changes so AlertDialog's
+        // useState input seeds re-initialise from the new options.inputs.
+        <AlertDialog
+          key={current.id}
+          header={current.options.header}
+          message={current.options.message}
+          buttons={current.options.buttons}
+          inputs={current.options.inputs}
+          backdropDismiss={current.options.backdropDismiss}
+          onResolve={handleResolve}
+        />
+      )}
+    </AlertContext.Provider>
+  )
+}
