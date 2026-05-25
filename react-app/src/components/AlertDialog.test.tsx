@@ -191,4 +191,82 @@ describe('AlertDialog', () => {
     })
     expect(onResolve).toHaveBeenCalledWith(last, {})
   })
+
+  it('renders a radio input group with the correct number of options', () => {
+    render(
+      <AlertDialog
+        buttons={[{ text: 'OK' }]}
+        inputs={[
+          {
+            name: 'format',
+            type: 'radio',
+            options: [
+              { value: 'a', label: 'A' },
+              { value: 'b', label: 'B' },
+            ],
+            value: 'a',
+          },
+        ]}
+        onResolve={() => {}}
+      />,
+    )
+    const radios = screen.getAllByRole('radio') as HTMLInputElement[]
+    expect(radios).toHaveLength(2)
+    const checkedRadio = radios.find((r) => r.value === 'a')
+    expect(checkedRadio).toBeChecked()
+  })
+
+  it('selecting a radio option and submitting passes the selected value to the handler', () => {
+    const onResolve = vi.fn()
+    const confirmBtn: AlertButton = { text: 'OK' }
+    render(
+      <AlertDialog
+        buttons={[confirmBtn]}
+        inputs={[
+          {
+            name: 'format',
+            type: 'radio',
+            options: [
+              { value: 'a', label: 'A' },
+              { value: 'b', label: 'B' },
+            ],
+            value: 'a',
+          },
+        ]}
+        onResolve={onResolve}
+      />,
+    )
+    const radios = screen.getAllByRole('radio') as HTMLInputElement[]
+    const radioB = radios.find((r) => r.value === 'b')!
+    fireEvent.click(radioB)
+    act(() => {
+      screen.getByRole('button', { name: 'OK' }).click()
+    })
+    expect(onResolve).toHaveBeenCalledWith(confirmBtn, { format: 'b' })
+  })
+
+  it('no radio option selected (input.value omitted) starts with empty selection', () => {
+    const onResolve = vi.fn()
+    const confirmBtn: AlertButton = { text: 'OK' }
+    render(
+      <AlertDialog
+        buttons={[confirmBtn]}
+        inputs={[
+          {
+            name: 'format',
+            type: 'radio',
+            options: [
+              { value: 'a', label: 'A' },
+              { value: 'b', label: 'B' },
+            ],
+          },
+        ]}
+        onResolve={onResolve}
+      />,
+    )
+    act(() => {
+      screen.getByRole('button', { name: 'OK' }).click()
+    })
+    expect(onResolve).toHaveBeenCalledWith(confirmBtn, { format: '' })
+  })
 })

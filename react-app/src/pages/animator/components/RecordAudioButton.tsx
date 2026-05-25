@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import LoadingOverlay from '../../../components/LoadingOverlay'
+import CountdownModal from '../modals/CountdownModal'
 import { useAlert } from '../../../hooks/useAlert'
 import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
@@ -14,13 +15,24 @@ export default function RecordAudioButton() {
   const toast = useToast()
   const { frames } = useAnimatorStore()
   const [converting, setConverting] = useState(false)
+  const [countdownVisible, setCountdownVisible] = useState(false)
+  // Bridges CountdownModal.onComplete back to the awaiting startRecord
+  // promise so the modal → recording chain reads top-to-bottom.
+  const countdownDone = useRef<(() => void) | null>(null)
 
   // Drive the actual record + convert pipeline. The service plays the
   // captured animation through while a MediaRecorder runs in the background
   // and resolves with the audio Blob once playback ends. The conversion step
   // is wrapped in a loading overlay because it can take several seconds for
-  // long clips. Countdown modal integration arrives with #15.
+  // long clips. The 3-second countdown overlay matches the Angular flow.
   const startRecord = async () => {
+    await new Promise<void>((resolve) => {
+      countdownDone.current = resolve
+      setCountdownVisible(true)
+    })
+    setCountdownVisible(false)
+    countdownDone.current = null
+
     const blob = await service.recordAudio()
     if (!blob) return
     setConverting(true)
@@ -77,6 +89,12 @@ export default function RecordAudioButton() {
           alt=""
         />
       </button>
+      <CountdownModal
+        visible={countdownVisible}
+        duration={3}
+        message="loader_record_audio_message"
+        onComplete={() => countdownDone.current?.()}
+      />
       <LoadingOverlay
         visible={converting}
         message={t('loader_record_audio_message')}

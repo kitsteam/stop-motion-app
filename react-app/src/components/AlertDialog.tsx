@@ -112,22 +112,44 @@ export default function AlertDialog({
         )}
         {inputs.length > 0 && (
           <div className={styles.inputs}>
-            {inputs.map((input) => (
-              <label key={input.name} className={styles.inputLabel}>
-                {input.label && <span>{input.label}</span>}
-                <input
-                  type="text"
-                  name={input.name}
-                  value={values[input.name] ?? ''}
-                  placeholder={input.placeholder}
-                  className={styles.input}
-                  onChange={(event) => {
-                    const next = event.target.value
-                    setValues((prev) => ({ ...prev, [input.name]: next }))
-                  }}
-                />
-              </label>
-            ))}
+            {inputs.map((input) =>
+              input.type === 'radio' ? (
+                <div key={input.name} role="radiogroup">
+                  {input.options.map((option) => (
+                    <label key={option.value} className={styles.inputLabel}>
+                      <input
+                        type="radio"
+                        name={input.name}
+                        value={option.value}
+                        checked={values[input.name] === option.value}
+                        onChange={(e) =>
+                          setValues((prev) => ({
+                            ...prev,
+                            [input.name]: e.target.value,
+                          }))
+                        }
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <label key={input.name} className={styles.inputLabel}>
+                  {input.label && <span>{input.label}</span>}
+                  <input
+                    type="text"
+                    name={input.name}
+                    value={values[input.name] ?? ''}
+                    placeholder={input.placeholder}
+                    className={styles.input}
+                    onChange={(event) => {
+                      const next = event.target.value
+                      setValues((prev) => ({ ...prev, [input.name]: next }))
+                    }}
+                  />
+                </label>
+              ),
+            )}
           </div>
         )}
         <div className={styles.buttons}>

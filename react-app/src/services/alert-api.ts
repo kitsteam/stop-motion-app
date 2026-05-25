@@ -6,13 +6,22 @@ export interface AlertButton {
   handler?: (inputValues: Record<string, string>) => void | Promise<void>
 }
 
-export interface AlertInput {
+export interface AlertTextInput {
   name: string
   type: 'text'
   value?: string
   placeholder?: string
   label?: string
 }
+
+export interface AlertRadioInput {
+  name: string
+  type: 'radio'
+  options: Array<{ value: string; label: string }>
+  value?: string
+}
+
+export type AlertInput = AlertTextInput | AlertRadioInput
 
 export interface AlertOptions {
   header?: string

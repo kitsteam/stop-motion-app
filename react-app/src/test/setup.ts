@@ -43,6 +43,19 @@ if (typeof HTMLDialogElement !== 'undefined') {
   }
 }
 
+// JSDOM 29 omits URL.createObjectURL / URL.revokeObjectURL, which the
+// VideoPlayerModal and Thumbnail components rely on for blob previews.
+// Install a lightweight stub so tests can render without erroring; tests
+// can vi.spyOn the stub for assertion if they care about call args.
+if (typeof URL !== 'undefined') {
+  if (typeof URL.createObjectURL !== 'function') {
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+  }
+  if (typeof URL.revokeObjectURL !== 'function') {
+    URL.revokeObjectURL = vi.fn()
+  }
+}
+
 // JSDOM 29 returns null from HTMLCanvasElement.getContext, which breaks
 // components that draw frames (Thumbnail) and any test that spies on
 // drawImage. Install a lightweight stub returning a fresh set of vi.fn()

@@ -58,19 +58,17 @@ describe('AnimatorPage', () => {
     )
   })
 
-  it('mounts the toolbar, the framerate / timer / thumbnails children, and the remaining tabbar slot', () => {
+  it('mounts the toolbar, the framerate / timer / thumbnails children, and the tabbar', () => {
     vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
-    const { container } = renderPage()
+    renderPage()
 
     expect(screen.getByTestId('animator-toolbar')).toBeInTheDocument()
     expect(screen.getByTestId('framerate-slider')).toBeInTheDocument()
     expect(screen.getByTestId('timer')).toBeInTheDocument()
     expect(screen.getByTestId('thumbnails-container')).toBeInTheDocument()
-    expect(
-      container.querySelector('[data-slot="tabbar"]'),
-    ).not.toBeNull()
+    expect(screen.getByTestId('animator-tabbar')).toBeInTheDocument()
   })
 
   it('calls service.init once on mount, threading the three canvas refs', async () => {

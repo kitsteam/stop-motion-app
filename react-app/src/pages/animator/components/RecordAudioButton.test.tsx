@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { useEffect } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import RecordAudioButton from './RecordAudioButton'
 import { ToolbarTestProviders } from '../../../test/animator-test-utils'
@@ -7,6 +8,25 @@ import { createMockAnimatorService } from '../../../test/animator-test-factory'
 function makeFrame(): HTMLImageElement {
   return document.createElement('img')
 }
+
+// Mock CountdownModal to auto-complete immediately when visible. The real
+// Countdown component is exercised by CountdownModal.test.tsx; mocking it
+// here keeps recording-flow tests fast and synchronous, while preserving
+// the contract that recordAudio() is only called after onComplete fires.
+vi.mock('../modals/CountdownModal', () => ({
+  default: function CountdownModalMock({
+    visible,
+    onComplete,
+  }: {
+    visible: boolean
+    onComplete: () => void
+  }) {
+    useEffect(() => {
+      if (visible) onComplete()
+    }, [visible, onComplete])
+    return null
+  },
+}))
 
 beforeEach(() => {
   vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(
@@ -33,7 +53,7 @@ describe('RecordAudioButton', () => {
     expect(service.recordAudio).not.toHaveBeenCalled()
   })
 
-  it('records immediately when frames exist and no audio is present', async () => {
+  it('records (after countdown) when frames exist and no audio is present', async () => {
     const service = createMockAnimatorService({ frames: [makeFrame()] })
     render(
       <ToolbarTestProviders service={service}>

@@ -11,6 +11,7 @@ export interface MockAnimatorModel {
   isAnimatorPlaying$: BehaviorSubject<boolean>
   audio: HTMLAudioElement | null
   setFramerate: (rate: number) => void
+  togglePlay: () => Promise<void>
 }
 
 export interface MockAnimatorOverrides {
@@ -29,6 +30,11 @@ export interface MockAnimatorService
     | 'recordAudio'
     | 'convertAudio'
     | 'clearAudio'
+    | 'capture'
+    | 'save'
+    | 'load'
+    | 'hasMemoryCapacity'
+    | 'togglePlay'
   > {
   cameras$: BehaviorSubject<MediaDeviceInfo[]>
   cameraStatus$: BehaviorSubject<CameraStatus>
@@ -52,6 +58,7 @@ export function createMockAnimatorService(
     setFramerate: vi.fn((rate: number) => {
       if (rate > 0) frameRate$.next(rate)
     }),
+    togglePlay: vi.fn().mockResolvedValue(undefined),
   }
 
   return {
@@ -67,6 +74,11 @@ export function createMockAnimatorService(
     recordAudio: vi.fn().mockResolvedValue(undefined),
     convertAudio: vi.fn().mockResolvedValue(undefined),
     clearAudio: vi.fn(),
+    capture: vi.fn().mockResolvedValue(undefined),
+    save: vi.fn().mockResolvedValue(undefined),
+    load: vi.fn().mockResolvedValue(undefined),
+    hasMemoryCapacity: vi.fn(() => true),
+    togglePlay: vi.fn().mockResolvedValue(undefined),
     removeFrames: vi.fn((index: number) => {
       const current = frames$.getValue()
       if (index < 0 || index >= current.length) return

@@ -9,6 +9,7 @@ import PlayerCanvas from './animator/components/PlayerCanvas'
 import SnapshotCanvas from './animator/components/SnapshotCanvas'
 import Thumbnails from './animator/components/Thumbnails'
 import Timer from './animator/components/Timer'
+import TabBar from './animator/components/TabBar'
 import Toolbar from './animator/components/Toolbar'
 import Video from './animator/components/Video'
 import styles from './AnimatorPage.module.css'
@@ -24,8 +25,6 @@ import styles from './AnimatorPage.module.css'
 // synchronous `destroy()`. On cancellation we run a follow-up `destroy()`
 // once the in-flight init settles.
 //
-// Tabbar slot arrives in PR #15. It renders as an empty placeholder so the
-// page layout is already in its final shape when the children land.
 function AnimatorShell() {
   const service = useAnimator()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -71,7 +70,7 @@ function AnimatorShell() {
       <div className={styles.thumbnails}>
         <Thumbnails />
       </div>
-      <div className={styles.tabbar} data-slot="tabbar" />
+      <div className={styles.tabbar}><TabBar /></div>
       <OrientationOverlay />
     </section>
   )
