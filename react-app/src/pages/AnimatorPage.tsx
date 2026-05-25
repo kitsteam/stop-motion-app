@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from '../hooks/useAnimator'
-import Video from './animator/components/Video'
-import SnapshotCanvas from './animator/components/SnapshotCanvas'
 import PlayerCanvas from './animator/components/PlayerCanvas'
+import SnapshotCanvas from './animator/components/SnapshotCanvas'
+import Toolbar from './animator/components/Toolbar'
+import Video from './animator/components/Video'
 import styles from './AnimatorPage.module.css'
 
 // Inner component sits beneath <AnimatorProvider> so it can pull the service
@@ -17,9 +18,9 @@ import styles from './AnimatorPage.module.css'
 // synchronous `destroy()`. On cancellation we run a follow-up `destroy()`
 // once the in-flight init settles.
 //
-// Toolbar / framerate slider / timer / thumbnails / tabbar slots arrive in
-// PRs #13–#16. They render as empty placeholders here so the page layout is
-// already in its final shape when the children land.
+// Framerate slider / timer / thumbnails / tabbar slots arrive in PRs #14–#16.
+// They render as empty placeholders here so the page layout is already in its
+// final shape when the children land.
 function AnimatorShell() {
   const service = useAnimator()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -49,7 +50,7 @@ function AnimatorShell() {
 
   return (
     <section className={styles.page} data-testid="animator-page">
-      <div className={styles.toolbar} data-slot="toolbar" />
+      <Toolbar />
       <div className={styles.framerateSlider} data-slot="framerate-slider" />
       <div className={styles.canvasContainer}>
         <div data-slot="timer" />

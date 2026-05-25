@@ -5,6 +5,23 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import de from '../../public/assets/i18n/de.json'
 
+// JSDOM 29 omits window.matchMedia. `readLayoutSnapshot` calls it
+// synchronously, which the toolbar invokes inside `switchCamera` /
+// `toggleCamera`. Stub it once so tests don't have to. Default to portrait;
+// individual tests can override via `vi.spyOn(window, 'matchMedia')`.
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query: string): MediaQueryList => ({
+    matches: query.includes('portrait'),
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
 // JSDOM 29 ships HTMLDialogElement but omits showModal/close. Components
 // that rely on modal <dialog> need them present at module-evaluation time
 // so spies and lifecycle calls don't error. Setting attributes mirrors the

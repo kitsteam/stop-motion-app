@@ -1,9 +1,23 @@
 import { StrictMode } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import AlertProvider from '../components/AlertProvider'
 import ToastProvider from '../components/ToastProvider'
 import { AnimatorService } from '../services/animator-service'
 import AnimatorPage from './AnimatorPage'
+
+function renderPage() {
+  return render(
+    <ToastProvider>
+      <AlertProvider>
+        <MemoryRouter>
+          <AnimatorPage />
+        </MemoryRouter>
+      </AlertProvider>
+    </ToastProvider>,
+  )
+}
 
 describe('AnimatorPage', () => {
   afterEach(() => {
@@ -14,11 +28,7 @@ describe('AnimatorPage', () => {
     vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
-    render(
-      <ToastProvider>
-        <AnimatorPage />
-      </ToastProvider>,
-    )
+    renderPage()
 
     expect(screen.getByTestId('animator-page')).toBeInTheDocument()
     expect(screen.getByTestId('animator-video')).toBeInstanceOf(HTMLVideoElement)
@@ -30,17 +40,14 @@ describe('AnimatorPage', () => {
     )
   })
 
-  it('renders empty layout slots for toolbar, framerate, timer, thumbnails, tabbar', () => {
+  it('mounts the toolbar and the remaining layout slots', () => {
     vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
-    const { container } = render(
-      <ToastProvider>
-        <AnimatorPage />
-      </ToastProvider>,
-    )
+    const { container } = renderPage()
 
-    for (const slot of ['toolbar', 'framerate-slider', 'timer', 'thumbnails', 'tabbar']) {
+    expect(screen.getByTestId('animator-toolbar')).toBeInTheDocument()
+    for (const slot of ['framerate-slider', 'timer', 'thumbnails', 'tabbar']) {
       expect(
         container.querySelector(`[data-slot="${slot}"]`),
       ).not.toBeNull()
@@ -53,11 +60,7 @@ describe('AnimatorPage', () => {
       .mockResolvedValue()
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
-    render(
-      <ToastProvider>
-        <AnimatorPage />
-      </ToastProvider>,
-    )
+    renderPage()
 
     await waitFor(() => {
       expect(initSpy).toHaveBeenCalledTimes(1)
@@ -74,11 +77,7 @@ describe('AnimatorPage', () => {
       .spyOn(AnimatorService.prototype, 'destroy')
       .mockImplementation(() => {})
 
-    const { unmount } = render(
-      <ToastProvider>
-        <AnimatorPage />
-      </ToastProvider>,
-    )
+    const { unmount } = renderPage()
     unmount()
 
     expect(destroySpy).toHaveBeenCalledTimes(1)
@@ -100,7 +99,11 @@ describe('AnimatorPage', () => {
     render(
       <StrictMode>
         <ToastProvider>
-          <AnimatorPage />
+          <AlertProvider>
+            <MemoryRouter>
+              <AnimatorPage />
+            </MemoryRouter>
+          </AlertProvider>
         </ToastProvider>
       </StrictMode>,
     )
@@ -122,11 +125,7 @@ describe('AnimatorPage', () => {
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    render(
-      <ToastProvider>
-        <AnimatorPage />
-      </ToastProvider>,
-    )
+    renderPage()
 
     await waitFor(() => {
       expect(errorSpy).toHaveBeenCalledWith(
