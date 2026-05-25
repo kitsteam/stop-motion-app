@@ -1,6 +1,7 @@
 # Specifies intentionally untracked files to ignore when using Git
 # http://git-scm.com/docs/gitignore
 
+# OS / editor cruft
 *~
 *.sw[mnpcod]
 .tmp
@@ -10,30 +11,27 @@
 *.sublime-workspace
 .DS_Store
 Thumbs.db
-UserInterfaceState.xcuserstate
-$RECYCLE.BIN/
 
+# Logs
 *.log
 log.txt
 npm-debug.log*
+pnpm-debug.log*
 
+# Build / dependency dirs
 /.idea
 /coverage
 /dist
+dist-ssr
 /node_modules
+*.local
 
-# pnpm local content-addressable store (created when pnpm can't write to the
-# global store path — see `react-app/` for the React migration toolchain).
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+
+# pnpm local content-addressable store (used when pnpm can't write to the
+# global store path).
 .pnpm-store/
 
 .devcontainer
-.nx/*
-
-# Ignore everything in .yarn except the essential subfolders for Zero-Installs
-.yarn/*
-!.yarn/cache/
-!.yarn/patches/
-!.yarn/plugins/
-!.yarn/releases/
-!.yarn/sdks/
-!.yarn/versions/

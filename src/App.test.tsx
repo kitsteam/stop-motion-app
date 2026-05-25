@@ -14,10 +14,7 @@ describe('App', () => {
     expect(container).toBeInTheDocument()
   })
 
-  // Smoke-test the @enums path alias by importing a shared Angular enum.
-  // Verifies the M0 alias bridge from react-app/ → ../src/app/enums/ works
-  // for both tsc (typecheck) and vite/vitest (runtime resolution).
-  it('resolves shared @enums import from the Angular tree', () => {
+  it('resolves shared @enums import via the path alias', () => {
     expect(CameraStatus.isStreaming).toBe('isStreaming')
   })
 })

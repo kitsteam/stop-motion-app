@@ -19,22 +19,24 @@ RUN corepack prepare pnpm@${PNPM_VERSION} --activate
 
 FROM base AS builder
 
-COPY --chown=node:node react-app/package.json react-app/pnpm-lock.yaml ./react-app/
-RUN pnpm --dir react-app install --frozen-lockfile
+COPY --chown=node:node package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-COPY --chown=node:node react-app ./react-app/
-RUN pnpm --dir react-app run build
+COPY --chown=node:node src ./src
+COPY --chown=node:node public ./public
+COPY --chown=node:node index.html eslint.config.js tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts vitest.config.ts ./
+RUN pnpm run build
 
 
 FROM base AS development
 
-COPY --chown=node:node react-app/package.json react-app/pnpm-lock.yaml ./react-app/
-RUN pnpm --dir react-app install --frozen-lockfile
+COPY --chown=node:node package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 
 FROM ${NGINX_IMAGE} AS production
 
 COPY config/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder --chown=nginx:nginx /home/node/app/react-app/dist /usr/share/nginx/html
+COPY --from=builder --chown=nginx:nginx /home/node/app/dist /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]

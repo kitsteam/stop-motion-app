@@ -8,12 +8,12 @@ services:
     stdin_open: true
     # Vite dev server listens on 5173 inside the container (host: true in
     # vite.config.ts makes it reachable from outside the container).
-    command: pnpm --dir react-app dev
+    command: pnpm dev
     ports:
       - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-5173}:5173"
     volumes:
       - .:/home/node/app
-      - node_modules:/home/node/app/react-app/node_modules
+      - node_modules:/home/node/app/node_modules
 
 volumes:
   node_modules:

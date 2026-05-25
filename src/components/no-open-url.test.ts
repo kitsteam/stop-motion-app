@@ -16,7 +16,7 @@ function walk(dir: string): string[] {
 }
 
 describe('openUrl directive must not reappear in the React tree', () => {
-  it('has zero appOpenUrl / openUrl= references under react-app/src/', () => {
+  it('has zero appOpenUrl / openUrl= references under src/', () => {
     const offenders = walk(SRC_ROOT).filter((file: string) => {
       if (file === SELF) return false
       if (!/\.(ts|tsx|css)$/.test(file)) return false

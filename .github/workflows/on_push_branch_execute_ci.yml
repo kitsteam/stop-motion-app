@@ -15,9 +15,6 @@ jobs:
     strategy:
       matrix:
         task: [lint, test, build]
-    defaults:
-      run:
-        working-directory: react-app
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
@@ -28,6 +25,5 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-          cache-dependency-path: react-app/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ${{ matrix.task }}

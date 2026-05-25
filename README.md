@@ -12,17 +12,15 @@ Inspired by Stop Motion Animator by [szager](https://github.com/szager/stop-moti
 - Web app shipped as a PWA (Workbox via `vite-plugin-pwa`)
 - Production image: nginx (unprivileged) serving the Vite build
 
-The React source lives in [`react-app/`](./react-app). A repo-root move is planned in a follow-up.
-
 ## Local development
 
 ```
 corepack enable
-pnpm --dir react-app install --frozen-lockfile
-pnpm --dir react-app dev        # http://localhost:5173
-pnpm --dir react-app test       # vitest
-pnpm --dir react-app lint
-pnpm --dir react-app build      # outputs to react-app/dist
+pnpm install --frozen-lockfile
+pnpm dev        # http://localhost:5173
+pnpm test       # vitest
+pnpm lint
+pnpm build      # outputs to dist/
 ```
 
 ## Docker
