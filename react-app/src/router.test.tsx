@@ -19,7 +19,7 @@ describe('router', () => {
     expect(screen.getByText('Loslegen')).toBeInTheDocument()
   })
 
-  it('renders the animator page shell at /animator', () => {
+  it('renders the animator page shell at /animator', async () => {
     // The page mounts an <AnimatorProvider> + camera lifecycle on render;
     // jsdom has neither matchMedia nor navigator.mediaDevices, so stubbing
     // the service entry points keeps the route test focused on routing.
@@ -27,7 +27,8 @@ describe('router', () => {
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
     renderAt('/animator')
-    expect(screen.getByTestId('animator-page')).toBeInTheDocument()
+    // AnimatorPage is lazy-loaded; wait for the Suspense boundary to resolve.
+    expect(await screen.findByTestId('animator-page')).toBeInTheDocument()
     expect(screen.getByTestId('animator-video')).toBeInTheDocument()
   })
 

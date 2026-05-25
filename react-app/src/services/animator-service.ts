@@ -123,6 +123,7 @@ export class AnimatorService {
     this.deps.animator.clear()
     this.frames$.next([])
     this.deps.animator.detachStream()
+    this.deps.animator.releaseAudioStream()
   }
 
   public async recordAudio(): Promise<Blob | undefined> {

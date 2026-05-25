@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -25,6 +26,15 @@ export default function AlertProvider({ children }: AlertProviderProps) {
   // Track entries currently being resolved so a re-entrant click doesn't
   // run the handler twice.
   const resolvingRef = useRef<Set<number>>(new Set())
+  // Guard the post-await setQueue: if the provider unmounts while a button
+  // handler is awaiting, skip the state update.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   const show = useCallback((options: AlertOptions): Promise<void> => {
     return new Promise<void>((resolve) => {
@@ -49,7 +59,9 @@ export default function AlertProvider({ children }: AlertProviderProps) {
         console.error('[AlertProvider] button handler threw', err)
       } finally {
         current.resolve()
-        setQueue((prev) => prev.filter((entry) => entry.id !== current.id))
+        if (mountedRef.current) {
+          setQueue((prev) => prev.filter((entry) => entry.id !== current.id))
+        }
         resolvingRef.current.delete(current.id)
       }
     },

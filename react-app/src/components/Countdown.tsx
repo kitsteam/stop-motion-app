@@ -7,7 +7,7 @@ interface CountdownProps {
 }
 
 export default function Countdown({ from, onComplete }: CountdownProps) {
-  const [counter, setCounter] = useState<number | null>(from)
+  const [counter, setCounter] = useState<number>(from)
   // React's "adjusting state on prop change" pattern: reset the counter
   // mid-render when `from` changes, avoiding the extra render an effect
   // would cause. https://react.dev/learn/you-might-not-need-an-effect
@@ -24,21 +24,21 @@ export default function Countdown({ from, onComplete }: CountdownProps) {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setCounter((c) => {
-        if (c === null) return c
-        const next = c - 1
-        if (next <= 0) {
-          window.clearInterval(interval)
-          onCompleteRef.current()
-          return null
-        }
-        return next
-      })
+      // State updater must stay pure: React invokes it twice in dev under
+      // StrictMode to detect impurity. The onComplete call lives in the
+      // effect below, gated on `counter === 0`.
+      setCounter((c) => (c > 0 ? c - 1 : c))
     }, 1000)
     return () => window.clearInterval(interval)
   }, [from])
 
-  if (counter === null) return null
+  useEffect(() => {
+    if (counter === 0) {
+      onCompleteRef.current()
+    }
+  }, [counter])
+
+  if (counter === 0) return null
   return (
     <div className={styles.container}>
       <span className={styles.counter}>{counter}</span>

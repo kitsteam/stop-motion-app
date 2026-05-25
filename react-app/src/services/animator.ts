@@ -252,6 +252,8 @@ export class Animator {
           return false
         }
       }
+      // Stop any stale tracks on the previous stream before requesting a new one.
+      this.detachStream()
       await this.attachStream(this.videoSourceId, layoutOptions)
       return true
     }
@@ -347,9 +349,18 @@ export class Animator {
     }
     this.video.pause()
     const stream = this.video.srcObject as MediaStream
-    stream.getVideoTracks()[0]?.stop()
+    stream.getTracks().forEach((track) => track.stop())
     this.isStreaming = false
     this.video.srcObject = null
+    this.videoStream = null
+  }
+
+  public releaseAudioStream(): void {
+    if (!this.audioStream) {
+      return
+    }
+    this.audioStream.getTracks().forEach((track) => track.stop())
+    this.audioStream = null
   }
 
   isPlaying(): boolean {
