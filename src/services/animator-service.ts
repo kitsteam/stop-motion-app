@@ -1,10 +1,10 @@
-import { BehaviorSubject } from 'rxjs'
 import { saveAs } from 'file-saver'
 import { CameraStatus } from '@enums/camera-status.enum'
 import { FacingMode } from '@enums/facing-mode.enum'
 import { SaveState } from '@enums/save-state'
 import { MimeTypes } from '@enums/mime-types.enum'
 import type { LayoutOptions } from '@interfaces/layout-options.interface'
+import { animatorStore } from '../stores/animator-store'
 import type { Animator } from './animator'
 import type { MediaExportService } from './media-export-service'
 import type { LayoutDep } from './layout-api'
@@ -16,9 +16,8 @@ import type { ProgressCallback } from './types'
 // Differences vs the Angular original:
 //   * No @Injectable. Construct directly with `AnimatorServiceDeps`.
 //   * `BaseService` aggregator removed; layout/translate/toast passed in.
-//   * Public BehaviorSubjects (`cameras$`, `cameraStatus$`, `cameraIsRotated$`,
-//     `frames$`) replace the `getXxx()` observable accessors so the React
-//     `useAnimatorStore()` bridge can subscribe via `useSyncExternalStore`.
+//   * Reactive state lives in the shared Zustand `animatorStore` instead of
+//     RxJS `BehaviorSubject`s — components consume it via `useAnimatorStore()`.
 
 export interface AnimatorServiceDeps {
   animator: Animator
@@ -32,12 +31,12 @@ export class AnimatorService {
   private currentCameraIndex: number | null = null
   private facingMode: FacingMode = FacingMode.user
 
-  public readonly cameras$ = new BehaviorSubject<MediaDeviceInfo[]>([])
-  public readonly cameraIsRotated$ = new BehaviorSubject<boolean>(false)
-  public readonly cameraStatus$ = new BehaviorSubject<CameraStatus>(CameraStatus.notStarted)
-  public readonly frames$ = new BehaviorSubject<HTMLImageElement[]>([])
-
-  constructor(private readonly deps: AnimatorServiceDeps) {}
+  constructor(private readonly deps: AnimatorServiceDeps) {
+    // Each fresh service instance owns the animator-page lifecycle, so the
+    // global store starts from defaults on construction. Idempotent under
+    // StrictMode double-mount.
+    animatorStore.getState().reset()
+  }
 
   public get animator(): Animator {
     return this.deps.animator
@@ -50,13 +49,11 @@ export class AnimatorService {
   }
 
   // The Animator model mutates its frames array in place (push/pop/splice).
-  // BehaviorSubject would re-emit the same array reference; React's
-  // useSyncExternalStore short-circuits on Object.is, so consumers would never
-  // re-render after the first emission. Publishing a fresh snapshot per change
-  // gives the bridge a new identity to compare against. Removed in M6 (#23)
-  // when the model itself is rewritten to immutable state.
+  // Zustand short-circuits state updates that are reference-equal to the
+  // previous value, so publishing a fresh array copy is required for
+  // consumers (e.g. <Thumbnails>) to re-render after a delete.
   private publishFrames(): void {
-    this.frames$.next([...this.deps.animator.frames])
+    animatorStore.getState().setFrames([...this.deps.animator.frames])
   }
 
   public async init(
@@ -65,7 +62,7 @@ export class AnimatorService {
     playerCanvas: HTMLCanvasElement,
   ): Promise<void> {
     const layoutOptions = this.deps.layout.current()
-    const frames = this.frames$.getValue()
+    const frames = animatorStore.getState().frames
     await this.deps.animator.init(
       video,
       snapshotCanvas,
@@ -98,30 +95,38 @@ export class AnimatorService {
 
   public rotateCamera(): void {
     this.deps.animator.rotateCamera()
-    this.cameraIsRotated$.next(!this.cameraIsRotated$.getValue())
+    const { cameraIsRotated, setCameraIsRotated } = animatorStore.getState()
+    setCameraIsRotated(!cameraIsRotated)
   }
 
   public clear(): void {
     this.deps.animator.clear()
-    this.frames$.next([])
+    animatorStore.getState().setFrames([])
   }
 
   public async toggleCamera(layoutOptions: LayoutOptions): Promise<void> {
     // TODO: introduce a dedicated "switching" status once the state machine is expanded.
     const isStreaming = await this.deps.animator.toggleCamera(layoutOptions)
-    this.cameraStatus$.next(isStreaming ? CameraStatus.isStreaming : CameraStatus.hasPaused)
+    animatorStore
+      .getState()
+      .setCameraStatus(isStreaming ? CameraStatus.isStreaming : CameraStatus.hasPaused)
   }
 
   public async togglePlay(): Promise<void> {
     // TODO: differentiate playback vs live-preview states when UX requires it.
-    this.cameraStatus$.next(CameraStatus.hasPaused)
+    const { setCameraStatus } = animatorStore.getState()
+    setCameraStatus(CameraStatus.hasPaused)
     await this.deps.animator.togglePlay()
-    this.cameraStatus$.next(CameraStatus.isStreaming)
+    setCameraStatus(CameraStatus.isStreaming)
   }
 
   public destroy(): void {
+    // Only `frames` is cleared here, not the whole store: tests and the
+    // navigation guard still read `frames` after the page unmounts (to
+    // decide whether to prompt). Frame rate / camera state get a clean
+    // slate when the next `AnimatorService` is constructed.
     this.deps.animator.clear()
-    this.frames$.next([])
+    animatorStore.getState().setFrames([])
     this.deps.animator.detachStream()
     this.deps.animator.releaseAudioStream()
   }
@@ -174,7 +179,7 @@ export class AnimatorService {
     filename = filename.replace(/[^\w\-.]+/g, '')
 
     if (type === SaveState.video) {
-      const frameRate = this.deps.animator.frameRate$.getValue()
+      const frameRate = this.deps.animator.frameRate
       const result = await this.deps.mediaExport.createVideo(
         this.deps.animator.frameWebpsAndJpegs,
         frameRate,
@@ -185,7 +190,7 @@ export class AnimatorService {
       return
     }
     if (type === SaveState.gif) {
-      const frameRate = this.deps.animator.frameRate$.getValue()
+      const frameRate = this.deps.animator.frameRate
       const result = await this.deps.mediaExport.createGif(
         this.deps.animator.frameWebpsAndJpegs,
         frameRate,
@@ -209,8 +214,8 @@ export class AnimatorService {
 
   public async switchCamera(layoutOptions: LayoutOptions): Promise<void> {
     this.deps.animator.detachStream()
-    this.cameraStatus$.next(CameraStatus.hasPaused)
-    const cameras = this.cameras$.getValue()
+    const { setCameraStatus, cameras } = animatorStore.getState()
+    setCameraStatus(CameraStatus.hasPaused)
     const index = this.currentCameraIndex === 0 && !this.deps.layout.isIOS ? 1 : 0
     this.facingMode =
       this.facingMode === FacingMode.user ? FacingMode.environment : FacingMode.user
@@ -221,7 +226,7 @@ export class AnimatorService {
         this.facingMode,
       )
       this.currentCameraIndex = index
-      this.cameraStatus$.next(CameraStatus.isStreaming)
+      setCameraStatus(CameraStatus.isStreaming)
     } catch {
       // fallback if only one camera is available e.g. on desktops
       await this.deps.animator.attachStream(
@@ -230,7 +235,7 @@ export class AnimatorService {
         this.facingMode,
       )
       this.currentCameraIndex = 0
-      this.cameraStatus$.next(CameraStatus.isStreaming)
+      setCameraStatus(CameraStatus.isStreaming)
     }
   }
 
@@ -238,16 +243,17 @@ export class AnimatorService {
     if (window.navigator && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       const devices = await navigator.mediaDevices.enumerateDevices()
       const cameras = devices.filter((d) => d.kind === 'videoinput')
-      this.cameras$.next(cameras)
+      const { setCameras, setCameraStatus } = animatorStore.getState()
+      setCameras(cameras)
       try {
         await this.deps.animator.attachStream(cameras[0]?.deviceId ?? null, layoutOptions)
         this.currentCameraIndex = 0
-        this.cameraStatus$.next(CameraStatus.isStreaming)
+        setCameraStatus(CameraStatus.isStreaming)
       } catch {
         this.deps.toast.show({
           message: this.deps.translate.instant('toast_animator_camera_no_access'),
         })
-        this.cameraStatus$.next(CameraStatus.noPermission)
+        setCameraStatus(CameraStatus.noPermission)
       }
     }
   }

@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 import Timer from './Timer'
 import { ToolbarTestProviders } from '../../../test/animator-test-utils'
 import { createMockAnimatorService } from '../../../test/animator-test-factory'
+import { animatorStore } from '../../../stores/animator-store'
 
 describe('Timer', () => {
   beforeEach(() => {
@@ -43,7 +44,7 @@ describe('Timer', () => {
       </ToolbarTestProviders>,
     )
     act(() => {
-      service.animator.isAnimatorPlaying$.next(true)
+      animatorStore.getState().setIsAnimatorPlaying(true)
     })
     act(() => {
       vi.advanceTimersByTime(1000)
@@ -60,13 +61,13 @@ describe('Timer', () => {
       </ToolbarTestProviders>,
     )
     act(() => {
-      service.animator.isAnimatorPlaying$.next(true)
+      animatorStore.getState().setIsAnimatorPlaying(true)
     })
     act(() => {
       vi.advanceTimersByTime(1000)
     })
     act(() => {
-      service.animator.isAnimatorPlaying$.next(false)
+      animatorStore.getState().setIsAnimatorPlaying(false)
     })
     expect(screen.getByTestId('timer')).toHaveTextContent('00:00/00:02')
   })
@@ -81,7 +82,7 @@ describe('Timer', () => {
     )
     expect(screen.getByTestId('timer')).toHaveTextContent('00:00/00:02')
     act(() => {
-      service.animator.frameRate$.next(3)
+      animatorStore.getState().setFrameRate(3)
     })
     expect(screen.getByTestId('timer')).toHaveTextContent('00:00/00:04')
   })
@@ -97,7 +98,7 @@ describe('Timer', () => {
       </ToolbarTestProviders>,
     )
     act(() => {
-      service.animator.isAnimatorPlaying$.next(true)
+      animatorStore.getState().setIsAnimatorPlaying(true)
     })
     unmount()
     expect(clearIntervalSpy).toHaveBeenCalled()

@@ -1,6 +1,6 @@
+import { useShallow } from 'zustand/react/shallow'
 import type { CameraStatus } from '@enums/camera-status.enum'
-import { useBehaviorSubject } from '../services/rx-store'
-import { useAnimator } from './useAnimator'
+import { animatorStore } from '../stores/animator-store'
 
 export interface AnimatorStoreSnapshot {
   frames: HTMLImageElement[]
@@ -11,29 +11,21 @@ export interface AnimatorStoreSnapshot {
   cameras: MediaDeviceInfo[]
 }
 
-// Reactively read every Animator subject from a single hook call. Each
-// subscription is independent, so React only re-renders consumers whose
-// referenced fields change. Combined snapshot is built per render — cheap
-// because the values themselves are stable BehaviorSubject references.
-//
-// Removed in M6 (issue #23) when the BehaviorSubject bridge is replaced by
-// React state / Zustand. Keep the API name and shape stable until then so
-// dependent PRs (#13–#16) can consume it without churn.
+// Reactive read of the six animator state slices. `useShallow` re-renders
+// the consumer only when one of the referenced fields changes by
+// `Object.is`. Components that care about a single slice can also call
+// `useAnimatorStoreSelector` (or `animatorStore` directly with a custom
+// selector) for narrower invalidation — not used yet because the snapshot
+// surface is small and consumers tend to read multiple fields.
 export function useAnimatorStore(): AnimatorStoreSnapshot {
-  const service = useAnimator()
-  const frames = useBehaviorSubject(service.frames$)
-  const frameRate = useBehaviorSubject(service.animator.frameRate$)
-  const isAnimatorPlaying = useBehaviorSubject(service.animator.isAnimatorPlaying$)
-  const cameraStatus = useBehaviorSubject(service.cameraStatus$)
-  const cameraIsRotated = useBehaviorSubject(service.cameraIsRotated$)
-  const cameras = useBehaviorSubject(service.cameras$)
-
-  return {
-    frames,
-    frameRate,
-    isAnimatorPlaying,
-    cameraStatus,
-    cameraIsRotated,
-    cameras,
-  }
+  return animatorStore(
+    useShallow((s) => ({
+      frames: s.frames,
+      frameRate: s.frameRate,
+      isAnimatorPlaying: s.isAnimatorPlaying,
+      cameraStatus: s.cameraStatus,
+      cameraIsRotated: s.cameraIsRotated,
+      cameras: s.cameras,
+    })),
+  )
 }

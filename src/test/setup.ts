@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import { animatorStore } from '../stores/animator-store'
 import de from '../../public/assets/i18n/de.json'
 
 // JSDOM 29 omits window.matchMedia. `readLayoutSnapshot` calls it
@@ -85,6 +86,14 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 // one test don't leak into the next.
 afterEach(() => {
   cleanup()
+})
+
+// The animator store is a module singleton. `AnimatorService` resets it on
+// construction and `createMockAnimatorService` does the same, so tests that
+// go through either path already start clean. Reset here as well so future
+// tests that touch the store without those entry points stay isolated.
+beforeEach(() => {
+  animatorStore.getState().reset()
 })
 
 // Initialise i18next synchronously with the real de.json bundled at test

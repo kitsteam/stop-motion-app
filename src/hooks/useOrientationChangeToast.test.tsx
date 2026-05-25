@@ -6,6 +6,7 @@ import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from './useAnimator'
 import { useOrientationChangeToast } from './useOrientationChangeToast'
 import type { AnimatorService } from '../services/animator-service'
+import { animatorStore } from '../stores/animator-store'
 
 // ─── matchMedia mock (copied from useLayout.test.ts) ─────────────────────────
 
@@ -115,15 +116,14 @@ describe('useOrientationChangeToast', () => {
   })
 
   it('shows a danger toast when orientation flips with frames present', async () => {
-    let captured: AnimatorService | undefined
     render(
       <Wrapper>
-        <Probe onService={(svc) => { captured = svc }} />
+        <Probe />
       </Wrapper>,
     )
 
     act(() => {
-      captured!.frames$.next([new Image()])
+      animatorStore.getState().setFrames([new Image()])
     })
 
     act(() => {

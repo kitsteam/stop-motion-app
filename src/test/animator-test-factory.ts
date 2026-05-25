@@ -1,15 +1,13 @@
-import { BehaviorSubject } from 'rxjs'
 import { vi } from 'vitest'
-import { CameraStatus } from '@enums/camera-status.enum'
+import { animatorStore } from '../stores/animator-store'
 import type { AnimatorService } from '../services/animator-service'
 
 // Lightweight stand-in for the Animator model inside tests. Only the surface
-// the toolbar buttons touch is mocked: BehaviorSubject hooks and `.audio` for
-// the re-record dialog.
+// the toolbar buttons touch is mocked: a `setFramerate` mock that mirrors the
+// real model (plain field + store update) and `audio` for the re-record dialog.
 export interface MockAnimatorModel {
-  frameRate$: BehaviorSubject<number>
-  isAnimatorPlaying$: BehaviorSubject<boolean>
   audio: HTMLAudioElement | null
+  frameRate: number
   setFramerate: (rate: number) => void
   togglePlay: () => Promise<void>
 }
@@ -36,36 +34,38 @@ export interface MockAnimatorService
     | 'hasMemoryCapacity'
     | 'togglePlay'
   > {
-  cameras$: BehaviorSubject<MediaDeviceInfo[]>
-  cameraStatus$: BehaviorSubject<CameraStatus>
-  cameraIsRotated$: BehaviorSubject<boolean>
-  frames$: BehaviorSubject<HTMLImageElement[]>
   animator: MockAnimatorModel
   removeFrames: (index: number) => void
   formatTime: (seconds: number) => string
 }
 
+// Resets the global Zustand store and seeds it with the supplied overrides.
+// Component tests rely on this so each `it()` starts from a known state with
+// `useAnimatorStore()` reflecting the expected initial values.
 export function createMockAnimatorService(
   overrides: MockAnimatorOverrides = {},
 ): MockAnimatorService {
-  const frameRate$ = new BehaviorSubject<number>(6)
-  const frames$ = new BehaviorSubject<HTMLImageElement[]>(overrides.frames ?? [])
+  animatorStore.getState().reset()
+  if (overrides.frames) {
+    animatorStore.getState().setFrames(overrides.frames)
+  }
+  if (overrides.cameras) {
+    animatorStore.getState().setCameras(overrides.cameras)
+  }
 
   const animator: MockAnimatorModel = {
-    frameRate$,
-    isAnimatorPlaying$: new BehaviorSubject<boolean>(false),
     audio: overrides.audio ?? null,
+    frameRate: 6,
     setFramerate: vi.fn((rate: number) => {
-      if (rate > 0) frameRate$.next(rate)
+      if (rate > 0) {
+        animator.frameRate = rate
+        animatorStore.getState().setFrameRate(rate)
+      }
     }),
     togglePlay: vi.fn().mockResolvedValue(undefined),
   }
 
   return {
-    cameras$: new BehaviorSubject<MediaDeviceInfo[]>(overrides.cameras ?? []),
-    cameraStatus$: new BehaviorSubject<CameraStatus>(CameraStatus.notStarted),
-    cameraIsRotated$: new BehaviorSubject<boolean>(false),
-    frames$,
     animator,
     switchCamera: vi.fn().mockResolvedValue(undefined),
     toggleCamera: vi.fn().mockResolvedValue(undefined),
@@ -80,11 +80,11 @@ export function createMockAnimatorService(
     hasMemoryCapacity: vi.fn(() => true),
     togglePlay: vi.fn().mockResolvedValue(undefined),
     removeFrames: vi.fn((index: number) => {
-      const current = frames$.getValue()
+      const current = animatorStore.getState().frames
       if (index < 0 || index >= current.length) return
       const next = current.slice()
       next.splice(index, 1)
-      frames$.next(next)
+      animatorStore.getState().setFrames(next)
     }),
     formatTime: vi.fn(
       (seconds: number) =>

@@ -1,10 +1,10 @@
 import type { LayoutOptions } from '@interfaces/layout-options.interface'
 import type { FrameManifest } from '@interfaces/frame-manifest.interface'
-import { BehaviorSubject } from 'rxjs'
 import { saveAs } from 'file-saver'
 import * as zip from '@zip.js/zip.js'
 import { MimeTypes } from '@enums/mime-types.enum'
 import { RecorderState } from '@enums/recorder-state.enum'
+import { animatorStore } from '../stores/animator-store'
 import type { MediaExportService } from './media-export-service'
 import type { MediaImportService } from './media-import-service'
 import type { LayoutDep } from './layout-api'
@@ -40,11 +40,19 @@ export interface AnimatorDeps {
 //   * `BaseService` dependency split: toast/translate/layout/media services
 //     are passed directly instead of being aggregated through `BaseService`.
 //   * `Platform` reads (`is('ios')`, `is('android')`) come from `deps.layout`.
-//   * `BehaviorSubject` state (`frameRate$`, `isAnimatorPlaying$`) is exposed
-//     as `public readonly` so React components can bridge them through
-//     `useAnimatorStore()` (M4 scaffold; removed in M6 — issue #23).
-//   * `getFramerate()` / `getIsPlaying()` observable accessors dropped —
-//     React consumers read `frameRate$.getValue()` directly.
+//   * Reactive state (`frameRate`, `isAnimatorPlaying`) lives in the shared
+//     Zustand `animatorStore`. The model also keeps a plain `frameRate`
+//     mirror field because synchronous hot-path reads (`frameTimeout()`
+//     called once per frame, plus `saveDraft`/`createVideoBlob` on export)
+//     should not hop through the React store. Playback state is read via
+//     `isPlaying()` from `this.playTimer`, so no mirror is kept for it —
+//     the store is the single source of truth there.
+//
+// Mirror contract: `setFramerate()` is the only writer for `frameRate`;
+// it updates both the field and the store in lockstep. Never call
+// `animatorStore.setFrameRate()` directly from outside the model — the
+// mirror would drift and `frameTimeout()` / video export would diverge
+// from what the UI shows.
 export class Animator {
   audio: HTMLAudioElement | null = null
   audioBlob: Blob | null = null
@@ -74,8 +82,7 @@ export class Animator {
   imageCanvas: HTMLCanvasElement | null = null
   context: CanvasRenderingContext2D | null = null
 
-  public readonly isAnimatorPlaying$ = new BehaviorSubject<boolean>(false)
-  public readonly frameRate$ = new BehaviorSubject<number>(6.0)
+  public frameRate = 6.0
 
   constructor(private readonly deps: AnimatorDeps) {}
 
@@ -269,7 +276,8 @@ export class Animator {
 
   public setFramerate(frameRate: number): void {
     if (frameRate > 0) {
-      this.frameRate$.next(frameRate)
+      this.frameRate = frameRate
+      animatorStore.getState().setFrameRate(frameRate)
     }
   }
 
@@ -302,7 +310,7 @@ export class Animator {
     this.zeroPlayTime = performance.now()
     this.playTimer = setTimeout(this.playFrame.bind(this), this.frameTimeout(), 1)
     await this.playAudio(noAudio)
-    this.isAnimatorPlaying$.next(true)
+    animatorStore.getState().setIsAnimatorPlaying(true)
   }
 
   async playAudio(noAudio: boolean): Promise<void> {
@@ -337,7 +345,7 @@ export class Animator {
     if (this.isStreaming) {
       void this.video?.play()
     }
-    this.isAnimatorPlaying$.next(false)
+    animatorStore.getState().setIsAnimatorPlaying(false)
     if (cb) {
       cb()
     }
@@ -499,7 +507,7 @@ export class Animator {
   }
 
   public async saveDraft(filename: string): Promise<void> {
-    const frameRate = this.frameRate$.getValue()
+    const frameRate = this.frameRate
     const videoBlob = await this.createVideoBlob(frameRate)
     const audioBlob = this.audio ? this.audioBlob : null
     const dataURI = await this.createZipFile(videoBlob, audioBlob, frameRate)
@@ -545,7 +553,7 @@ export class Animator {
   }
 
   private async createVideoBlob(frameRate?: number): Promise<Blob> {
-    const resolvedFrameRate = frameRate ?? this.frameRate$.getValue()
+    const resolvedFrameRate = frameRate ?? this.frameRate
     return this.deps.mediaExport.createVideo(
       this.frameWebpsAndJpegs,
       resolvedFrameRate,
@@ -809,6 +817,6 @@ export class Animator {
   }
 
   private frameTimeout(): number {
-    return 1000.0 / this.frameRate$.getValue()
+    return 1000.0 / this.frameRate
   }
 }

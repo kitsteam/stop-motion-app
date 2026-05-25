@@ -23,6 +23,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import Thumbnails from './Thumbnails'
 import { ToolbarTestProviders } from '../../../test/animator-test-utils'
 import { createMockAnimatorService } from '../../../test/animator-test-factory'
+import { animatorStore } from '../../../stores/animator-store'
 
 function makeFrame(): HTMLImageElement {
   return document.createElement('img')
@@ -94,7 +95,12 @@ describe('Thumbnails', () => {
     )
 
     await act(async () => {
-      service.frames$.next([makeFrame(), makeFrame(), makeFrame(), makeFrame()])
+      animatorStore.getState().setFrames([
+        makeFrame(),
+        makeFrame(),
+        makeFrame(),
+        makeFrame(),
+      ])
     })
 
     // Wait for the setTimeout(0) inside the effect to fire.

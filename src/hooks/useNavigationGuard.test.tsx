@@ -8,6 +8,7 @@ import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from './useAnimator'
 import { useNavigationGuard } from './useNavigationGuard'
 import { AnimatorService } from '../services/animator-service'
+import { animatorStore } from '../stores/animator-store'
 import type { ReactNode } from 'react'
 
 // Spy on AnimatorService lifecycle so camera init doesn't fail in JSDOM.
@@ -102,11 +103,10 @@ describe('useNavigationGuard', () => {
   })
 
   it('opens the alert dialog with German strings when frames exist', async () => {
-    let captured: AnimatorService | undefined
-    renderGuard((svc) => { captured = svc })
+    renderGuard()
 
     act(() => {
-      captured!.frames$.next([new Image()])
+      animatorStore.getState().setFrames([new Image()])
     })
 
     fireEvent.click(screen.getByText('leave'))
@@ -130,7 +130,7 @@ describe('useNavigationGuard', () => {
     const clearSpy = vi.spyOn(captured!, 'clear')
 
     act(() => {
-      captured!.frames$.next([new Image()])
+      animatorStore.getState().setFrames([new Image()])
     })
 
     fireEvent.click(screen.getByText('leave'))
@@ -156,7 +156,7 @@ describe('useNavigationGuard', () => {
     const clearSpy = vi.spyOn(captured!, 'clear')
 
     act(() => {
-      captured!.frames$.next([new Image()])
+      animatorStore.getState().setFrames([new Image()])
     })
 
     fireEvent.click(screen.getByText('leave'))
@@ -176,11 +176,10 @@ describe('useNavigationGuard', () => {
   })
 
   it('calls event.preventDefault() on beforeunload when frames exist', () => {
-    let captured: AnimatorService | undefined
-    renderGuard((svc) => { captured = svc })
+    renderGuard()
 
     act(() => {
-      captured!.frames$.next([new Image()])
+      animatorStore.getState().setFrames([new Image()])
     })
 
     const ev = new Event('beforeunload', { cancelable: true })

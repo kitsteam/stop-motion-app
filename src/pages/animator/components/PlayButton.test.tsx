@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import PlayButton from './PlayButton'
 import { ToolbarTestProviders } from '../../../test/animator-test-utils'
 import { createMockAnimatorService } from '../../../test/animator-test-factory'
+import { animatorStore } from '../../../stores/animator-store'
 
 describe('PlayButton', () => {
   it('calls service.togglePlay on click', async () => {
@@ -29,7 +30,7 @@ describe('PlayButton', () => {
     expect(button).toHaveAttribute('aria-pressed', 'false')
 
     act(() => {
-      service.animator.isAnimatorPlaying$.next(true)
+      animatorStore.getState().setIsAnimatorPlaying(true)
     })
     await waitFor(() => {
       expect(button).toHaveAttribute('aria-pressed', 'true')
