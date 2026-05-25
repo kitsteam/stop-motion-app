@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
@@ -41,6 +41,30 @@ if (typeof HTMLDialogElement !== 'undefined') {
       this.removeAttribute('open')
     }
   }
+}
+
+// JSDOM 29 returns null from HTMLCanvasElement.getContext, which breaks
+// components that draw frames (Thumbnail) and any test that spies on
+// drawImage. Install a lightweight stub returning a fresh set of vi.fn()
+// stubs each call so individual tests can assert against them.
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = function getContext(
+    this: HTMLCanvasElement,
+  ) {
+    return {
+      canvas: this,
+      drawImage: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      getImageData: vi.fn(),
+      putImageData: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
+    } as unknown as CanvasRenderingContext2D
+  } as unknown as typeof HTMLCanvasElement.prototype.getContext
 }
 
 // Vitest doesn't ship the global afterEach hook that @testing-library/react

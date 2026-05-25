@@ -7,6 +7,20 @@ import ToastProvider from '../components/ToastProvider'
 import { AnimatorService } from '../services/animator-service'
 import AnimatorPage from './AnimatorPage'
 
+// AnimatorPage transitively renders <Thumbnails>, which imports swiper/react
+// and its CSS bundle. Both hit DOM APIs jsdom does not provide. Mock them so
+// the page test stays focused on layout and lifecycle. Only `children` is
+// forwarded — Swiper-only props would otherwise warn about unknown DOM attrs.
+vi.mock('swiper/swiper-bundle.css', () => ({}))
+vi.mock('swiper/react', () => ({
+  Swiper: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="swiper-container">{children}</div>
+  ),
+  SwiperSlide: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="swiper-slide">{children}</div>
+  ),
+}))
+
 // useNavigationGuard calls useBlocker which requires a Data Router context.
 // createMemoryRouter provides that; the legacy <MemoryRouter> does not.
 function renderPage() {
@@ -44,18 +58,19 @@ describe('AnimatorPage', () => {
     )
   })
 
-  it('mounts the toolbar and the remaining layout slots', () => {
+  it('mounts the toolbar, the framerate / timer / thumbnails children, and the remaining tabbar slot', () => {
     vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
     vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
 
     const { container } = renderPage()
 
     expect(screen.getByTestId('animator-toolbar')).toBeInTheDocument()
-    for (const slot of ['framerate-slider', 'timer', 'thumbnails', 'tabbar']) {
-      expect(
-        container.querySelector(`[data-slot="${slot}"]`),
-      ).not.toBeNull()
-    }
+    expect(screen.getByTestId('framerate-slider')).toBeInTheDocument()
+    expect(screen.getByTestId('timer')).toBeInTheDocument()
+    expect(screen.getByTestId('thumbnails-container')).toBeInTheDocument()
+    expect(
+      container.querySelector('[data-slot="tabbar"]'),
+    ).not.toBeNull()
   })
 
   it('calls service.init once on mount, threading the three canvas refs', async () => {

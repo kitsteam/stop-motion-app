@@ -3,9 +3,12 @@ import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from '../hooks/useAnimator'
 import { useNavigationGuard } from '../hooks/useNavigationGuard'
 import { useOrientationChangeToast } from '../hooks/useOrientationChangeToast'
+import FramerateSlider from './animator/components/FramerateSlider'
 import OrientationOverlay from './animator/components/OrientationOverlay'
 import PlayerCanvas from './animator/components/PlayerCanvas'
 import SnapshotCanvas from './animator/components/SnapshotCanvas'
+import Thumbnails from './animator/components/Thumbnails'
+import Timer from './animator/components/Timer'
 import Toolbar from './animator/components/Toolbar'
 import Video from './animator/components/Video'
 import styles from './AnimatorPage.module.css'
@@ -21,9 +24,8 @@ import styles from './AnimatorPage.module.css'
 // synchronous `destroy()`. On cancellation we run a follow-up `destroy()`
 // once the in-flight init settles.
 //
-// Framerate slider / timer / thumbnails / tabbar slots arrive in PRs #14–#16.
-// They render as empty placeholders here so the page layout is already in its
-// final shape when the children land.
+// Tabbar slot arrives in PR #15. It renders as an empty placeholder so the
+// page layout is already in its final shape when the children land.
 function AnimatorShell() {
   const service = useAnimator()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -57,14 +59,18 @@ function AnimatorShell() {
   return (
     <section className={styles.page} data-testid="animator-page">
       <Toolbar />
-      <div className={styles.framerateSlider} data-slot="framerate-slider" />
+      <div className={styles.framerateSlider}>
+        <FramerateSlider />
+      </div>
       <div className={styles.canvasContainer}>
-        <div data-slot="timer" />
+        <Timer />
         <Video ref={videoRef} />
         <SnapshotCanvas ref={snapshotCanvasRef} />
         <PlayerCanvas ref={playerCanvasRef} />
       </div>
-      <div className={styles.thumbnails} data-slot="thumbnails" />
+      <div className={styles.thumbnails}>
+        <Thumbnails />
+      </div>
       <div className={styles.tabbar} data-slot="tabbar" />
       <OrientationOverlay />
     </section>

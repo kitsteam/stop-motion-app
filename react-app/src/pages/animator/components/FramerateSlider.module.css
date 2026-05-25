@@ -1,0 +1,30 @@
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.range {
+  flex: 1;
+  padding-top: 0;
+  padding-bottom: 0;
+  accent-color: rgba(255, 255, 255, 0.8);
+}
+
+.range::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.range::-moz-range-track {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.label {
+  text-align: right;
+  color: #fff;
+  font-weight: 400;
+  z-index: 9;
+  position: relative;
+  font-size: 12px;
+  margin: 0;
+}

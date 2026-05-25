@@ -10,6 +10,7 @@ export interface MockAnimatorModel {
   frameRate$: BehaviorSubject<number>
   isAnimatorPlaying$: BehaviorSubject<boolean>
   audio: HTMLAudioElement | null
+  setFramerate: (rate: number) => void
 }
 
 export interface MockAnimatorOverrides {
@@ -34,22 +35,30 @@ export interface MockAnimatorService
   cameraIsRotated$: BehaviorSubject<boolean>
   frames$: BehaviorSubject<HTMLImageElement[]>
   animator: MockAnimatorModel
+  removeFrames: (index: number) => void
+  formatTime: (seconds: number) => string
 }
 
 export function createMockAnimatorService(
   overrides: MockAnimatorOverrides = {},
 ): MockAnimatorService {
+  const frameRate$ = new BehaviorSubject<number>(6)
+  const frames$ = new BehaviorSubject<HTMLImageElement[]>(overrides.frames ?? [])
+
   const animator: MockAnimatorModel = {
-    frameRate$: new BehaviorSubject<number>(8),
+    frameRate$,
     isAnimatorPlaying$: new BehaviorSubject<boolean>(false),
     audio: overrides.audio ?? null,
+    setFramerate: vi.fn((rate: number) => {
+      if (rate > 0) frameRate$.next(rate)
+    }),
   }
 
   return {
     cameras$: new BehaviorSubject<MediaDeviceInfo[]>(overrides.cameras ?? []),
     cameraStatus$: new BehaviorSubject<CameraStatus>(CameraStatus.notStarted),
     cameraIsRotated$: new BehaviorSubject<boolean>(false),
-    frames$: new BehaviorSubject<HTMLImageElement[]>(overrides.frames ?? []),
+    frames$,
     animator,
     switchCamera: vi.fn().mockResolvedValue(undefined),
     toggleCamera: vi.fn().mockResolvedValue(undefined),
@@ -58,5 +67,16 @@ export function createMockAnimatorService(
     recordAudio: vi.fn().mockResolvedValue(undefined),
     convertAudio: vi.fn().mockResolvedValue(undefined),
     clearAudio: vi.fn(),
+    removeFrames: vi.fn((index: number) => {
+      const current = frames$.getValue()
+      if (index < 0 || index >= current.length) return
+      const next = current.slice()
+      next.splice(index, 1)
+      frames$.next(next)
+    }),
+    formatTime: vi.fn(
+      (seconds: number) =>
+        new Date(Math.round(seconds) * 1000).toISOString().substr(14, 5),
+    ),
   }
 }
