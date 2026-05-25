@@ -7,15 +7,14 @@ import AlertProvider from '../components/AlertProvider'
 import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from './useAnimator'
 import { useNavigationGuard } from './useNavigationGuard'
-import { AnimatorService } from '../services/animator-service'
+import type { AnimatorAPI } from '../components/animator-context'
 import { animatorStore } from '../stores/animator-store'
 import type { ReactNode } from 'react'
 
-// Spy on AnimatorService lifecycle so camera init doesn't fail in JSDOM.
+// JSDOM has no navigator.mediaDevices, so useCameraStream's mount effect
+// short-circuits and the behavior hooks idle out — no service spying needed.
+// Stub showModal so AlertDialog <dialog> doesn't error in JSDOM.
 beforeEach(() => {
-  vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
-  vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
-  // Stub showModal so AlertDialog <dialog> doesn't error in JSDOM.
   vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(
     function (this: HTMLDialogElement) {
       this.setAttribute('open', '')
@@ -26,7 +25,7 @@ beforeEach(() => {
 // ─── Test components ─────────────────────────────────────────────────────────
 
 interface ProbeProps {
-  onService?: (service: AnimatorService) => void
+  onService?: (service: AnimatorAPI) => void
 }
 
 // Inner probe: calls the hook and exposes a "leave" link + a service ref.
@@ -64,7 +63,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 // Build a router with two routes: /animator (guard probe) and / (plain marker).
-function buildRouter(onService?: (svc: AnimatorService) => void) {
+function buildRouter(onService?: (svc: AnimatorAPI) => void) {
   const routes = [
     {
       path: '/animator',
@@ -78,7 +77,7 @@ function buildRouter(onService?: (svc: AnimatorService) => void) {
   return createMemoryRouter(routes, { initialEntries: ['/animator'] })
 }
 
-function renderGuard(onService?: (svc: AnimatorService) => void) {
+function renderGuard(onService?: (svc: AnimatorAPI) => void) {
   const router = buildRouter(onService)
   render(
     <Shell>
@@ -124,7 +123,7 @@ describe('useNavigationGuard', () => {
   })
 
   it('"Ja" calls service.clear() then completes navigation', async () => {
-    let captured: AnimatorService | undefined
+    let captured: AnimatorAPI | undefined
     renderGuard((svc) => { captured = svc })
 
     const clearSpy = vi.spyOn(captured!, 'clear')
@@ -150,7 +149,7 @@ describe('useNavigationGuard', () => {
   })
 
   it('"Nein" keeps the user on /animator; clear() is not called', async () => {
-    let captured: AnimatorService | undefined
+    let captured: AnimatorAPI | undefined
     renderGuard((svc) => { captured = svc })
 
     const clearSpy = vi.spyOn(captured!, 'clear')

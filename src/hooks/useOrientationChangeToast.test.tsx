@@ -5,7 +5,7 @@ import ToastProvider from '../components/ToastProvider'
 import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from './useAnimator'
 import { useOrientationChangeToast } from './useOrientationChangeToast'
-import type { AnimatorService } from '../services/animator-service'
+import type { AnimatorAPI } from '../components/animator-context'
 import { animatorStore } from '../stores/animator-store'
 
 // ─── matchMedia mock (copied from useLayout.test.ts) ─────────────────────────
@@ -59,7 +59,7 @@ afterEach(() => {
 // ─── Provider wrappers ───────────────────────────────────────────────────────
 
 interface ProbeProps {
-  onService?: (service: AnimatorService) => void
+  onService?: (service: AnimatorAPI) => void
 }
 
 function Probe({ onService }: ProbeProps) {

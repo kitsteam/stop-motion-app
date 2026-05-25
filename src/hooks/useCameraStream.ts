@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useReducer, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { CameraStatus } from '@enums/camera-status.enum'
 import { FacingMode } from '@enums/facing-mode.enum'
+import { useAnimatorRefs } from '../components/animator-refs-context'
 import { useLayout } from './useLayout'
-
-export interface UseCameraStreamOptions {
-  videoRef: RefObject<HTMLVideoElement | null>
-}
 
 export interface UseCameraStreamApi {
   status: CameraStatus
@@ -115,8 +112,8 @@ function stopStream(stream: MediaStream | null): void {
   stream.getTracks().forEach((track) => track.stop())
 }
 
-export function useCameraStream(options: UseCameraStreamOptions): UseCameraStreamApi {
-  const { videoRef } = options
+export function useCameraStream(): UseCameraStreamApi {
+  const { videoRef } = useAnimatorRefs()
   const layout = useLayout()
   const [state, dispatch] = useReducer(reducer, initialState)
 

@@ -1,18 +1,15 @@
-import type { Ref } from 'react'
+import { useAnimatorRefs } from '../../../components/animator-refs-context'
 import styles from './SnapshotCanvas.module.css'
 
-interface SnapshotCanvasProps {
-  ref?: Ref<HTMLCanvasElement>
-}
-
-// Onion-skin overlay sitting on top of the live preview. The Animator model
-// draws into the underlying 2D context after every capture so the next frame
-// can be lined up against the previous one. React never paints into this
-// canvas — it only owns the element lifecycle and hands the ref upstream.
-export default function SnapshotCanvas({ ref }: SnapshotCanvasProps) {
+// Onion-skin overlay sitting on top of the live preview. useFrameCapture draws
+// the most recent frame into the underlying 2D context after every capture so
+// the next frame can be lined up against the previous one. React never paints
+// into this canvas — it only owns the element lifecycle.
+export default function SnapshotCanvas() {
+  const { snapshotCanvasRef } = useAnimatorRefs()
   return (
     <canvas
-      ref={ref}
+      ref={snapshotCanvasRef}
       className={styles.canvas}
       data-testid="animator-snapshot-canvas"
     />

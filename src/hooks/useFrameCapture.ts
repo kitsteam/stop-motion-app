@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useReducer, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { useAnimatorRefs } from '../components/animator-refs-context'
 
 export interface UseFrameCaptureOptions {
-  videoRef: RefObject<HTMLVideoElement | null>
-  snapshotCanvasRef: RefObject<HTMLCanvasElement | null>
   width: number
   height: number
   isRotated: boolean
@@ -14,6 +13,8 @@ export interface UseFrameCaptureApi {
   capture: () => Promise<void>
   undo: () => void
   clear: () => void
+  removeAt: (index: number) => void
+  loadFrames: (frames: HTMLImageElement[], blobs: Blob[]) => void
 }
 
 interface State {
@@ -24,6 +25,8 @@ interface State {
 type Action =
   | { type: 'push'; image: HTMLImageElement; blob: Blob }
   | { type: 'pop' }
+  | { type: 'removeAt'; index: number }
+  | { type: 'load'; frames: HTMLImageElement[]; blobs: Blob[] }
   | { type: 'reset' }
 
 const initialState: State = { frames: [], frameBlobs: [] }
@@ -41,6 +44,17 @@ function reducer(state: State, action: Action): State {
         frames: state.frames.slice(0, -1),
         frameBlobs: state.frameBlobs.slice(0, -1),
       }
+    case 'removeAt':
+      if (action.index < 0 || action.index >= state.frames.length) return state
+      return {
+        frames: [...state.frames.slice(0, action.index), ...state.frames.slice(action.index + 1)],
+        frameBlobs: [
+          ...state.frameBlobs.slice(0, action.index),
+          ...state.frameBlobs.slice(action.index + 1),
+        ],
+      }
+    case 'load':
+      return { frames: action.frames, frameBlobs: action.blobs }
     case 'reset':
       if (state.frames.length === 0 && state.frameBlobs.length === 0) return state
       return initialState
@@ -103,7 +117,8 @@ function imageFromBlob(blob: Blob): Promise<HTMLImageElement> {
 }
 
 export function useFrameCapture(options: UseFrameCaptureOptions): UseFrameCaptureApi {
-  const { videoRef, snapshotCanvasRef, width, height, isRotated } = options
+  const { width, height, isRotated } = options
+  const { videoRef, snapshotCanvasRef } = useAnimatorRefs()
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const offscreenRef = useRef<OffscreenCacheEntry | null>(null)
@@ -166,6 +181,14 @@ export function useFrameCapture(options: UseFrameCaptureOptions): UseFrameCaptur
     dispatch({ type: 'reset' })
   }, [])
 
+  const removeAt = useCallback((index: number) => {
+    dispatch({ type: 'removeAt', index })
+  }, [])
+
+  const loadFrames = useCallback((frames: HTMLImageElement[], blobs: Blob[]) => {
+    dispatch({ type: 'load', frames, blobs })
+  }, [])
+
   // Onion-skin: redraw the snapshot canvas whenever the frame stack changes.
   useEffect(() => {
     const canvas = snapshotCanvasRef.current
@@ -187,5 +210,7 @@ export function useFrameCapture(options: UseFrameCaptureOptions): UseFrameCaptur
     capture,
     undo,
     clear,
+    removeAt,
+    loadFrames,
   }
 }

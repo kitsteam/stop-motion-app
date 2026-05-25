@@ -7,10 +7,10 @@ import { useAnimator } from './useAnimator'
 import { useAnimatorStore } from './useAnimatorStore'
 import { animatorStore } from '../stores/animator-store'
 import { CameraStatus } from '@enums/camera-status.enum'
-import type { AnimatorService } from '../services/animator-service'
+import type { AnimatorAPI } from '../components/animator-context'
 
 interface ProbeProps {
-  onService?: (service: AnimatorService) => void
+  onService?: (service: AnimatorAPI) => void
 }
 
 function Probe({ onService }: ProbeProps) {
@@ -40,14 +40,14 @@ function Wrapper({ children }: { children: ReactNode }) {
 }
 
 const mountProbe = () => {
-  let captured: AnimatorService | undefined
+  let captured: AnimatorAPI | undefined
   render(
     <Wrapper>
       <Probe onService={(svc) => { captured = svc }} />
     </Wrapper>,
   )
   if (!captured) {
-    throw new Error('AnimatorService never published through onService')
+    throw new Error('Animator API never published through onService')
   }
   return captured
 }
@@ -74,22 +74,16 @@ describe('useAnimatorStore', () => {
   it('re-renders when frameRate changes via the animator setter', () => {
     const service = mountProbe()
     act(() => {
-      service.animator.setFramerate(24)
+      service.setFramerate(24)
     })
     expect(screen.getByTestId('rate').textContent).toBe('24')
   })
 
-  // The Animator model holds plain `frameRate` / `isAnimatorPlaying` fields
-  // for synchronous hot-path reads (e.g. frameTimeout()) and mirrors them to
-  // the store via setFramerate / startPlay / endPlay. If those two surfaces
-  // drift, video export rate and the playback UI disagree. Guard the
-  // invariant here so a future contributor can't silently break it.
-  it('keeps animator.frameRate in sync with the store after setFramerate', () => {
+  it('mirrors setFramerate into the shared store', () => {
     const service = mountProbe()
     act(() => {
-      service.animator.setFramerate(18)
+      service.setFramerate(18)
     })
-    expect(service.animator.frameRate).toBe(18)
     expect(animatorStore.getState().frameRate).toBe(18)
   })
 
@@ -117,61 +111,16 @@ describe('useAnimatorStore', () => {
     expect(screen.getByTestId('rotated').textContent).toBe('true')
   })
 
-  // Regression: AnimatorService used to splice frames in place and re-emit the
-  // same array reference, which Zustand short-circuits via Object.is. This
-  // caused the thumbnail strip to freeze after the first delete. removeFrames
-  // publishes a fresh array copy via publishFrames().
-  it('re-renders after removeFrames mutates the frames array', () => {
-    const service = mountProbe()
-    act(() => {
-      service.animator.frames.push(new Image(), new Image(), new Image())
-      service.animator.frameWebpsAndJpegs.push(
-        new Blob(),
-        new Blob(),
-        new Blob(),
-      )
-      // Seed the published view from the model so the store starts in a
-      // known state with three frames.
-      animatorStore.getState().setFrames([...service.animator.frames])
-    })
-    expect(screen.getByTestId('frames').textContent).toBe('3')
-
-    act(() => {
-      service.removeFrames(1)
-    })
-    expect(screen.getByTestId('frames').textContent).toBe('2')
-    expect(service.animator.frames.length).toBe(2)
-    expect(service.animator.frameWebpsAndJpegs.length).toBe(2)
-  })
-
-  it('re-renders after undoCapture pops a frame from the model', () => {
-    const service = mountProbe()
-    // Single-frame setup so undoCapture takes the empty branch where the
-    // snapshot canvas redraw is optional-chained (snapshotContext is null
-    // pre-init); the publishFrames() path is what we want to exercise here.
-    act(() => {
-      service.animator.frames.push(new Image())
-      service.animator.frameWebpsAndJpegs.push(new Blob())
-      animatorStore.getState().setFrames([...service.animator.frames])
-    })
-    expect(screen.getByTestId('frames').textContent).toBe('1')
-
-    act(() => {
-      service.undoCapture()
-    })
-    expect(screen.getByTestId('frames').textContent).toBe('0')
-  })
-
-  it('resets the store between AnimatorService instances', () => {
+  it('resets the store between page-scoped composer instances', () => {
     const first = mountProbe()
     act(() => {
       animatorStore.getState().setFrames([new Image(), new Image()])
-      first.animator.setFramerate(15)
+      first.setFramerate(15)
     })
     expect(screen.getByTestId('frames').textContent).toBe('2')
     expect(screen.getByTestId('rate').textContent).toBe('15')
 
-    // A second mount creates a new AnimatorService, which resets the store.
+    // A second mount creates a new composer, which resets the store.
     mountProbe()
     const probes = screen.getAllByTestId('frames')
     const rates = screen.getAllByTestId('rate')

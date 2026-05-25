@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import { useAnimator } from '../../../hooks/useAnimator'
-import { readLayoutSnapshot } from '../../../services/layout-api'
 import styles from './ToolbarButton.module.css'
 
 export default function ToggleButton() {
@@ -8,7 +7,7 @@ export default function ToggleButton() {
   const service = useAnimator()
 
   const onClick = () => {
-    void service.toggleCamera(readLayoutSnapshot())
+    void service.toggleCamera()
   }
 
   return (

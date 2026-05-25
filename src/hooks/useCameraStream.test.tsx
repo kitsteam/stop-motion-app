@@ -1,8 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { CameraStatus } from '@enums/camera-status.enum'
 import { FacingMode } from '@enums/facing-mode.enum'
+import {
+  AnimatorRefsContext,
+  useAnimatorRefs,
+  type AnimatorRefs,
+} from '../components/animator-refs-context'
 import { useCameraStream } from './useCameraStream'
 
 interface FakeTrack {
@@ -50,12 +55,25 @@ function useVideoEl() {
   return useRef(el)
 }
 
-function renderCamera() {
-  return renderHook(() => {
+function makeWrapper(): ({ children }: { children: ReactNode }) => ReactElement {
+  return function Wrapper({ children }: { children: ReactNode }) {
     const videoRef = useVideoEl()
-    const api = useCameraStream({ videoRef })
-    return { videoRef, api }
-  })
+    const snapshotCanvasRef = useRef<HTMLCanvasElement>(null)
+    const playerCanvasRef = useRef<HTMLCanvasElement>(null)
+    const refs: AnimatorRefs = { videoRef, snapshotCanvasRef, playerCanvasRef }
+    return <AnimatorRefsContext.Provider value={refs}>{children}</AnimatorRefsContext.Provider>
+  }
+}
+
+function renderCamera() {
+  return renderHook(
+    () => {
+      const refs = useAnimatorRefs()
+      const api = useCameraStream()
+      return { api, videoRef: refs.videoRef }
+    },
+    { wrapper: makeWrapper() },
+  )
 }
 
 describe('useCameraStream', () => {
@@ -333,6 +351,11 @@ describe('useCameraStream', () => {
       IS_ANDROID: false,
     }))
     vi.resetModules()
+    // Re-import the context AFTER resetModules so the wrapper and the
+    // hook share the same fresh context instance; otherwise useContext()
+    // inside the freshly re-imported hook reads from a different context
+    // object than the wrapper provides.
+    const refsModule = await import('../components/animator-refs-context')
     const { useCameraStream: useCameraStreamIOS } = await import('./useCameraStream')
 
     const enumerateDevices = vi.fn().mockResolvedValue([cameraDevice('cam0')])
@@ -343,12 +366,25 @@ describe('useCameraStream', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 400 })
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 })
 
-    const { result } = renderHook(() => {
-      const [el] = useState<HTMLVideoElement>(() => document.createElement('video'))
-      const videoRef = useRef(el)
-      const api = useCameraStreamIOS({ videoRef })
-      return { api }
-    })
+    const FreshWrapper = ({ children }: { children: ReactNode }) => {
+      const videoRef = useVideoEl()
+      const snapshotCanvasRef = useRef<HTMLCanvasElement>(null)
+      const playerCanvasRef = useRef<HTMLCanvasElement>(null)
+      const refs = { videoRef, snapshotCanvasRef, playerCanvasRef }
+      return (
+        <refsModule.AnimatorRefsContext.Provider value={refs}>
+          {children}
+        </refsModule.AnimatorRefsContext.Provider>
+      )
+    }
+
+    const { result } = renderHook(
+      () => {
+        const api = useCameraStreamIOS()
+        return { api }
+      },
+      { wrapper: FreshWrapper },
+    )
 
     await waitFor(() => expect(result.current.api.status).toBe(CameraStatus.isStreaming))
 

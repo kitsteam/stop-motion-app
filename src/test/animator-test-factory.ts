@@ -1,43 +1,21 @@
 import { vi } from 'vitest'
+import { CameraStatus } from '@enums/camera-status.enum'
 import { animatorStore } from '../stores/animator-store'
-import type { AnimatorService } from '../services/animator-service'
+import type { AnimatorAPI } from '../components/animator-context'
 
-// Lightweight stand-in for the Animator model inside tests. Only the surface
-// the toolbar buttons touch is mocked: a `setFramerate` mock that mirrors the
-// real model (plain field + store update) and `audio` for the re-record dialog.
-export interface MockAnimatorModel {
-  audio: HTMLAudioElement | null
-  frameRate: number
-  setFramerate: (rate: number) => void
-  togglePlay: () => Promise<void>
-}
+// Lightweight stand-in for the page-scoped Animator API inside tests. Only the
+// surface the toolbar buttons touch is mocked. Tests can read state through
+// `useAnimatorStore()` because the factory primes the same Zustand store the
+// real composer mirrors to.
 
 export interface MockAnimatorOverrides {
   cameras?: MediaDeviceInfo[]
   frames?: HTMLImageElement[]
-  audio?: HTMLAudioElement | null
+  hasAudio?: boolean
+  frameRate?: number
 }
 
-export interface MockAnimatorService
-  extends Pick<
-    AnimatorService,
-    | 'switchCamera'
-    | 'toggleCamera'
-    | 'undoCapture'
-    | 'clear'
-    | 'recordAudio'
-    | 'convertAudio'
-    | 'clearAudio'
-    | 'capture'
-    | 'save'
-    | 'load'
-    | 'hasMemoryCapacity'
-    | 'togglePlay'
-  > {
-  animator: MockAnimatorModel
-  removeFrames: (index: number) => void
-  formatTime: (seconds: number) => string
-}
+export type MockAnimatorService = AnimatorAPI
 
 // Resets the global Zustand store and seeds it with the supplied overrides.
 // Component tests rely on this so each `it()` starts from a known state with
@@ -52,33 +30,26 @@ export function createMockAnimatorService(
   if (overrides.cameras) {
     animatorStore.getState().setCameras(overrides.cameras)
   }
-
-  const animator: MockAnimatorModel = {
-    audio: overrides.audio ?? null,
-    frameRate: 6,
-    setFramerate: vi.fn((rate: number) => {
-      if (rate > 0) {
-        animator.frameRate = rate
-        animatorStore.getState().setFrameRate(rate)
-      }
-    }),
-    togglePlay: vi.fn().mockResolvedValue(undefined),
+  if (typeof overrides.frameRate === 'number') {
+    animatorStore.getState().setFrameRate(overrides.frameRate)
   }
 
+  const setFramerateMock = vi.fn((rate: number) => {
+    if (rate > 0) animatorStore.getState().setFrameRate(rate)
+  })
+
   return {
-    animator,
-    switchCamera: vi.fn().mockResolvedValue(undefined),
-    toggleCamera: vi.fn().mockResolvedValue(undefined),
-    undoCapture: vi.fn(),
-    clear: vi.fn(),
-    recordAudio: vi.fn().mockResolvedValue(undefined),
-    convertAudio: vi.fn().mockResolvedValue(undefined),
-    clearAudio: vi.fn(),
+    frames: overrides.frames ?? [],
+    frameBlobs: [],
+    frameRate: overrides.frameRate ?? 6,
+    isAnimatorPlaying: false,
+    cameraStatus: CameraStatus.notStarted,
+    cameraIsRotated: false,
+    cameras: overrides.cameras ?? [],
+    audioBlob: null,
+    hasAudio: overrides.hasAudio ?? false,
     capture: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    load: vi.fn().mockResolvedValue(undefined),
-    hasMemoryCapacity: vi.fn(() => true),
-    togglePlay: vi.fn().mockResolvedValue(undefined),
+    undoCapture: vi.fn(),
     removeFrames: vi.fn((index: number) => {
       const current = animatorStore.getState().frames
       if (index < 0 || index >= current.length) return
@@ -86,6 +57,18 @@ export function createMockAnimatorService(
       next.splice(index, 1)
       animatorStore.getState().setFrames(next)
     }),
+    clear: vi.fn(),
+    hasMemoryCapacity: vi.fn(() => true),
+    toggleCamera: vi.fn().mockResolvedValue(undefined),
+    switchCamera: vi.fn().mockResolvedValue(undefined),
+    rotateCamera: vi.fn(),
+    recordAudio: vi.fn().mockResolvedValue(undefined),
+    convertAudio: vi.fn().mockResolvedValue(undefined),
+    clearAudio: vi.fn(),
+    togglePlay: vi.fn().mockResolvedValue(undefined),
+    setFramerate: setFramerateMock,
+    save: vi.fn().mockResolvedValue(undefined),
+    load: vi.fn().mockResolvedValue(undefined),
     formatTime: vi.fn(
       (seconds: number) =>
         new Date(Math.round(seconds) * 1000).toISOString().substr(14, 5),

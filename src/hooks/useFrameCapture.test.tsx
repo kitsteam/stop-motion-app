@@ -1,6 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactElement, type ReactNode } from 'react'
+import {
+  AnimatorRefsContext,
+  useAnimatorRefs,
+  type AnimatorRefs,
+} from '../components/animator-refs-context'
 import { useFrameCapture } from './useFrameCapture'
 
 interface OffscreenCtxStub {
@@ -75,40 +80,46 @@ interface HarnessOptions {
   videoHasSource?: boolean
 }
 
+function makeWrapper(
+  videoHasSource: boolean,
+): ({ children }: { children: ReactNode }) => ReactElement {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    const [videoEl] = useState<HTMLVideoElement>(() => {
+      const v = document.createElement('video')
+      if (videoHasSource) {
+        Object.defineProperty(v, 'srcObject', { configurable: true, value: {} })
+      }
+      return v
+    })
+    const [snapshotEl] = useState<HTMLCanvasElement>(() => {
+      const canvas = document.createElement('canvas')
+      const stableCtx = freshOffscreenCtx() as unknown as CanvasRenderingContext2D
+      canvas.getContext = (() => stableCtx) as unknown as HTMLCanvasElement['getContext']
+      return canvas
+    })
+    const videoRef = useRef(videoEl)
+    const snapshotCanvasRef = useRef(snapshotEl)
+    const playerCanvasRef = useRef<HTMLCanvasElement>(null)
+    const refs: AnimatorRefs = { videoRef, snapshotCanvasRef, playerCanvasRef }
+    return <AnimatorRefsContext.Provider value={refs}>{children}</AnimatorRefsContext.Provider>
+  }
+}
+
 function useHarness(opts: HarnessOptions) {
-  // Lazily build the DOM nodes once. Using useState's initializer keeps the
-  // setup off the render path so the react-hooks/refs lint rule doesn't fire.
-  const [videoEl] = useState<HTMLVideoElement>(() => {
-    const v = document.createElement('video')
-    if (opts.videoHasSource !== false) {
-      Object.defineProperty(v, 'srcObject', { configurable: true, value: {} })
-    }
-    return v
-  })
-  const [snapshotEl] = useState<HTMLCanvasElement>(() => {
-    const canvas = document.createElement('canvas')
-    // setup.ts's prototype stub returns a fresh vi.fn() set on every
-    // getContext call, which makes test assertions unreliable. Pin a
-    // singleton context on this canvas instance so the hook and test
-    // observe the same recorder.
-    const stableCtx = freshOffscreenCtx() as unknown as CanvasRenderingContext2D
-    canvas.getContext = (() => stableCtx) as unknown as HTMLCanvasElement['getContext']
-    return canvas
-  })
-  const videoRef = useRef(videoEl)
-  const snapshotCanvasRef = useRef(snapshotEl)
+  const refs = useAnimatorRefs()
   const api = useFrameCapture({
-    videoRef,
-    snapshotCanvasRef,
     width: opts.width ?? 320,
     height: opts.height ?? 240,
     isRotated: opts.isRotated ?? false,
   })
-  return { api, snapshotCanvasRef }
+  return { api, snapshotCanvasRef: refs.snapshotCanvasRef }
 }
 
 function renderHarness(opts: HarnessOptions = {}) {
-  return renderHook((props: HarnessOptions) => useHarness(props), { initialProps: opts })
+  return renderHook((props: HarnessOptions) => useHarness(props), {
+    initialProps: opts,
+    wrapper: makeWrapper(opts.videoHasSource !== false),
+  })
 }
 
 describe('useFrameCapture', () => {

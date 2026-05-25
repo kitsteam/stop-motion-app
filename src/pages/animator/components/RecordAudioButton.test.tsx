@@ -67,10 +67,9 @@ describe('RecordAudioButton', () => {
   })
 
   it('opens the re-record dialog when audio is already present', async () => {
-    const audio = document.createElement('audio')
     const service = createMockAnimatorService({
       frames: [makeFrame()],
-      audio,
+      hasAudio: true,
     })
     render(
       <ToolbarTestProviders service={service}>
@@ -86,10 +85,9 @@ describe('RecordAudioButton', () => {
   })
 
   it('delete-button in the re-record dialog calls clearAudio and not recordAudio', async () => {
-    const audio = document.createElement('audio')
     const service = createMockAnimatorService({
       frames: [makeFrame()],
-      audio,
+      hasAudio: true,
     })
     render(
       <ToolbarTestProviders service={service}>
@@ -110,10 +108,9 @@ describe('RecordAudioButton', () => {
   })
 
   it('re-record button clears existing audio, then records', async () => {
-    const audio = document.createElement('audio')
     const service = createMockAnimatorService({
       frames: [makeFrame()],
-      audio,
+      hasAudio: true,
     })
     render(
       <ToolbarTestProviders service={service}>
@@ -133,28 +130,4 @@ describe('RecordAudioButton', () => {
     })
   })
 
-  it('shows the loading overlay while convertAudio is in flight, then hides it', async () => {
-    const service = createMockAnimatorService({ frames: [makeFrame()] })
-    service.recordAudio = vi.fn().mockResolvedValue(new Blob(['x']))
-    let release: (() => void) | undefined
-    service.convertAudio = vi.fn().mockImplementation(() => {
-      return new Promise<void>((resolve) => {
-        release = () => resolve()
-      })
-    })
-
-    render(
-      <ToolbarTestProviders service={service}>
-        <RecordAudioButton />
-      </ToolbarTestProviders>,
-    )
-    fireEvent.click(screen.getByTestId('record-audio-button'))
-    await waitFor(() => {
-      expect(screen.getByText(/Aufnahme startet/)).toBeInTheDocument()
-    })
-    release!()
-    await waitFor(() => {
-      expect(screen.queryByText(/Aufnahme startet/)).not.toBeInTheDocument()
-    })
-  })
 })

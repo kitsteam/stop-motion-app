@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
-import { layoutAPI, readLayoutSnapshot } from '../../../services/layout-api'
+import { layoutAPI } from '../../../services/layout-api'
 import styles from './ToolbarButton.module.css'
 
 export default function CameraSelectButton() {
@@ -11,7 +11,7 @@ export default function CameraSelectButton() {
   const disabled = cameras.length <= 1 && !layoutAPI.isIOS
 
   const onClick = () => {
-    void service.switchCamera(readLayoutSnapshot())
+    void service.switchCamera()
   }
 
   return (

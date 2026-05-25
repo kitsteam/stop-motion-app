@@ -1,18 +1,13 @@
-import type { Ref } from 'react'
+import { useAnimatorRefs } from '../../../components/animator-refs-context'
 import styles from './PlayerCanvas.module.css'
 
-interface PlayerCanvasProps {
-  ref?: Ref<HTMLCanvasElement>
-}
-
-// Playback surface. The Animator model copies the current frame's image into
-// this canvas while looping the captured sequence. The "is-playing" pulse
-// animation from the Angular template arrives with the playback hook in
-// M6 (#22) — for now the element only carries layout styles.
-export default function PlayerCanvas({ ref }: PlayerCanvasProps) {
+// Playback surface. usePlayback copies the current frame's image into this
+// canvas while looping the captured sequence.
+export default function PlayerCanvas() {
+  const { playerCanvasRef } = useAnimatorRefs()
   return (
     <canvas
-      ref={ref}
+      ref={playerCanvasRef}
       className={styles.canvas}
       data-testid="animator-player-canvas"
     />

@@ -16,7 +16,7 @@ export default function FramerateSlider() {
   const deferredRate = useDeferredValue(frameRate)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    service.animator.setFramerate(Number(e.target.value))
+    service.setFramerate(Number(e.target.value))
   }
 
   return (

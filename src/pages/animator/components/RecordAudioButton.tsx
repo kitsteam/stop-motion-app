@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import LoadingOverlay from '../../../components/LoadingOverlay'
 import CountdownModal from '../modals/CountdownModal'
 import { useAlert } from '../../../hooks/useAlert'
 import { useAnimator } from '../../../hooks/useAnimator'
@@ -14,17 +13,15 @@ export default function RecordAudioButton() {
   const alert = useAlert()
   const toast = useToast()
   const { frames } = useAnimatorStore()
-  const [converting, setConverting] = useState(false)
   const [countdownVisible, setCountdownVisible] = useState(false)
   // Bridges CountdownModal.onComplete back to the awaiting startRecord
   // promise so the modal → recording chain reads top-to-bottom.
   const countdownDone = useRef<(() => void) | null>(null)
 
-  // Drive the actual record + convert pipeline. The service plays the
-  // captured animation through while a MediaRecorder runs in the background
-  // and resolves with the audio Blob once playback ends. The conversion step
-  // is wrapped in a loading overlay because it can take several seconds for
-  // long clips. The 3-second countdown overlay matches the Angular flow.
+  // Click → 3-second countdown → start recording. A second click while
+  // recording stops the recorder; the useAudioRecording hook surfaces the
+  // captured blob as `service.audioBlob` automatically, so no manual
+  // conversion step is needed.
   const startRecord = async () => {
     await new Promise<void>((resolve) => {
       countdownDone.current = resolve
@@ -33,14 +30,7 @@ export default function RecordAudioButton() {
     setCountdownVisible(false)
     countdownDone.current = null
 
-    const blob = await service.recordAudio()
-    if (!blob) return
-    setConverting(true)
-    try {
-      await service.convertAudio(blob)
-    } finally {
-      setConverting(false)
-    }
+    await service.recordAudio()
   }
 
   const onClick = () => {
@@ -48,7 +38,7 @@ export default function RecordAudioButton() {
       toast.show({ message: t('toast_animator_record_audio_hint') })
       return
     }
-    if (service.animator.audio) {
+    if (service.hasAudio) {
       void alert.show({
         header: t('alert_record_audio_animator_header'),
         message: t('alert_record_audio_animator_message'),
@@ -94,10 +84,6 @@ export default function RecordAudioButton() {
         duration={3}
         message="loader_record_audio_message"
         onComplete={() => countdownDone.current?.()}
-      />
-      <LoadingOverlay
-        visible={converting}
-        message={t('loader_record_audio_message')}
       />
     </>
   )

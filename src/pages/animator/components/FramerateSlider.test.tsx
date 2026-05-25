@@ -27,7 +27,7 @@ describe('FramerateSlider', () => {
     )
     const slider = screen.getByTestId('framerate-slider')
     fireEvent.change(slider, { target: { value: '10' } })
-    expect(service.animator.setFramerate).toHaveBeenCalledWith(10)
+    expect(service.setFramerate).toHaveBeenCalledWith(10)
     expect(screen.getByText('FPS: 10')).toBeInTheDocument()
   })
 

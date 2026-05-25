@@ -1,6 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactElement, type ReactNode } from 'react'
+import {
+  AnimatorRefsContext,
+  useAnimatorRefs,
+  type AnimatorRefs,
+} from '../components/animator-refs-context'
 import { usePlayback } from './usePlayback'
 
 interface CanvasCtxStub {
@@ -36,25 +41,39 @@ interface HarnessOpts {
   height?: number
 }
 
+function makeWrapper(): ({ children }: { children: ReactNode }) => ReactElement {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    const [canvas] = useState<HTMLCanvasElement>(() => {
+      const el = document.createElement('canvas')
+      const ctx = freshCtx() as unknown as CanvasRenderingContext2D
+      el.getContext = (() => ctx) as unknown as HTMLCanvasElement['getContext']
+      return el
+    })
+    const videoRef = useRef<HTMLVideoElement>(null)
+    const snapshotCanvasRef = useRef<HTMLCanvasElement>(null)
+    const playerCanvasRef = useRef(canvas)
+    const refs: AnimatorRefs = { videoRef, snapshotCanvasRef, playerCanvasRef }
+    return <AnimatorRefsContext.Provider value={refs}>{children}</AnimatorRefsContext.Provider>
+  }
+}
+
 function useHarness(opts: HarnessOpts) {
-  const [canvas] = useState<HTMLCanvasElement>(() => {
-    const el = document.createElement('canvas')
-    // Pin a singleton context so tests can assert against drawImage/clearRect;
-    // setup.ts's prototype stub returns a fresh fn set on every getContext call.
-    const ctx = freshCtx() as unknown as CanvasRenderingContext2D
-    el.getContext = (() => ctx) as unknown as HTMLCanvasElement['getContext']
-    return el
-  })
-  const playerCanvasRef = useRef(canvas)
+  const refs = useAnimatorRefs()
   const api = usePlayback({
     frames: opts.frames ?? [],
     frameRate: opts.frameRate ?? 6,
-    playerCanvasRef,
     audioBlob: opts.audioBlob ?? null,
     width: opts.width ?? 320,
     height: opts.height ?? 240,
   })
-  return { api, playerCanvasRef }
+  return { api, playerCanvasRef: refs.playerCanvasRef }
+}
+
+function renderHarness(opts: HarnessOpts) {
+  return renderHook((props: HarnessOpts) => useHarness(props), {
+    initialProps: opts,
+    wrapper: makeWrapper(),
+  })
 }
 
 function makeImage(): HTMLImageElement {
@@ -87,13 +106,13 @@ describe('usePlayback', () => {
   })
 
   it('starts with isPlaying=false and currentIndex=0', () => {
-    const { result } = renderHook(() => useHarness({}))
+    const { result } = renderHarness({})
     expect(result.current.api.isPlaying).toBe(false)
     expect(result.current.api.currentIndex).toBe(0)
   })
 
   it('start() with no frames is a no-op', async () => {
-    const { result } = renderHook(() => useHarness({ frames: [] }))
+    const { result } = renderHarness({ frames: [] })
     await act(async () => {
       await result.current.api.start()
     })
@@ -103,7 +122,7 @@ describe('usePlayback', () => {
 
   it('start() draws frame 0, sets isPlaying, schedules rAF', async () => {
     const frames = [makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, frameRate: 10 }))
+    const { result } = renderHarness({ frames, frameRate: 10 })
     const ctx = result.current.playerCanvasRef.current!.getContext(
       '2d',
     ) as unknown as CanvasCtxStub
@@ -118,7 +137,7 @@ describe('usePlayback', () => {
 
   it('rAF tick advances currentIndex at the framerate cadence', async () => {
     const frames = [makeImage(), makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, frameRate: 10 }))
+    const { result } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -135,7 +154,7 @@ describe('usePlayback', () => {
 
   it('reaching the last frame auto-stops playback', async () => {
     const frames = [makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, frameRate: 10 }))
+    const { result } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -152,7 +171,7 @@ describe('usePlayback', () => {
 
   it('stop() mid-playback cancels rAF and resets isPlaying', async () => {
     const frames = [makeImage(), makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, frameRate: 10 }))
+    const { result } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -165,10 +184,7 @@ describe('usePlayback', () => {
 
   it('changing frameRate adjusts the tick interval on the next tick', async () => {
     const frames = [makeImage(), makeImage(), makeImage(), makeImage()]
-    const { result, rerender } = renderHook(
-      (opts: HarnessOpts) => useHarness(opts),
-      { initialProps: { frames, frameRate: 10 } },
-    )
+    const { result, rerender } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -195,7 +211,7 @@ describe('usePlayback', () => {
       .mockResolvedValue(undefined as unknown as void)
     const frames = [makeImage(), makeImage()]
     const blob = new Blob(['x'], { type: 'audio/webm' })
-    const { result } = renderHook(() => useHarness({ frames, audioBlob: blob }))
+    const { result } = renderHarness({ frames, audioBlob: blob })
     await act(async () => {
       await result.current.api.start()
     })
@@ -207,7 +223,7 @@ describe('usePlayback', () => {
       .spyOn(HTMLAudioElement.prototype, 'play')
       .mockResolvedValue(undefined as unknown as void)
     const frames = [makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, audioBlob: null }))
+    const { result } = renderHarness({ frames, audioBlob: null })
     await act(async () => {
       await result.current.api.start()
     })
@@ -221,7 +237,7 @@ describe('usePlayback', () => {
       .mockRejectedValue(new Error('autoplay blocked'))
     const frames = [makeImage(), makeImage()]
     const blob = new Blob(['x'], { type: 'audio/webm' })
-    const { result } = renderHook(() => useHarness({ frames, audioBlob: blob }))
+    const { result } = renderHarness({ frames, audioBlob: blob })
     await act(async () => {
       await result.current.api.start()
     })
@@ -232,7 +248,7 @@ describe('usePlayback', () => {
 
   it('a second start() while playing is a no-op', async () => {
     const frames = [makeImage(), makeImage(), makeImage()]
-    const { result } = renderHook(() => useHarness({ frames, frameRate: 10 }))
+    const { result } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -245,10 +261,7 @@ describe('usePlayback', () => {
 
   it('frames cleared mid-play: rAF tick stops without drawing undefined', async () => {
     const frames = [makeImage(), makeImage(), makeImage()]
-    const { result, rerender } = renderHook(
-      (opts: HarnessOpts) => useHarness(opts),
-      { initialProps: { frames, frameRate: 10 } },
-    )
+    const { result, rerender } = renderHarness({ frames, frameRate: 10 })
     await act(async () => {
       await result.current.api.start()
     })
@@ -274,9 +287,7 @@ describe('usePlayback', () => {
     )
     const frames = [makeImage(), makeImage()]
     const blob = new Blob(['x'], { type: 'audio/webm' })
-    const { result, unmount } = renderHook(() =>
-      useHarness({ frames, audioBlob: blob }),
-    )
+    const { result, unmount } = renderHarness({ frames, audioBlob: blob })
     await act(async () => {
       await result.current.api.start()
     })

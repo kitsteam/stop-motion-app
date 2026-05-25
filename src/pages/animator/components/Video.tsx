@@ -1,20 +1,15 @@
-import type { Ref } from 'react'
+import { useAnimatorRefs } from '../../../components/animator-refs-context'
 import styles from './Video.module.css'
 
-interface VideoProps {
-  ref?: Ref<HTMLVideoElement>
-}
-
-// Live camera preview surface. The element is detached from React state —
-// the Animator model writes the MediaStream into `video.srcObject` directly
-// via the ref handed up to <AnimatorPage>. Camera-status visibility, rotation
-// animation, and "no permission" placeholder land with the toolbar PR (#13).
-//
-// `muted` is required for autoplay to succeed under modern browser policies.
-export default function Video({ ref }: VideoProps) {
+// Live camera preview surface. The element is detached from React state — the
+// camera-stream hook writes the MediaStream into `video.srcObject` directly via
+// the ref pulled from <AnimatorRefsContext>. `muted` is required for autoplay
+// to succeed under modern browser policies.
+export default function Video() {
+  const { videoRef } = useAnimatorRefs()
   return (
     <video
-      ref={ref}
+      ref={videoRef}
       className={styles.video}
       autoPlay
       playsInline

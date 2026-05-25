@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAnimatorRefs } from '../components/animator-refs-context'
 
 export interface UsePlaybackOptions {
   frames: HTMLImageElement[]
   frameRate: number
-  playerCanvasRef: RefObject<HTMLCanvasElement | null>
   audioBlob: Blob | null
   width: number
   height: number
@@ -30,7 +30,8 @@ function drawFrame(
 }
 
 export function usePlayback(options: UsePlaybackOptions): UsePlaybackApi {
-  const { frames, frameRate, playerCanvasRef, audioBlob, width, height } = options
+  const { frames, frameRate, audioBlob, width, height } = options
+  const { playerCanvasRef } = useAnimatorRefs()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)

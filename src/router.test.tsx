@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { routes } from './router'
-import { AnimatorService } from './services/animator-service'
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
@@ -20,12 +19,10 @@ describe('router', () => {
   })
 
   it('renders the animator page shell at /animator', async () => {
-    // The page mounts an <AnimatorProvider> + camera lifecycle on render;
-    // jsdom has neither matchMedia nor navigator.mediaDevices, so stubbing
-    // the service entry points keeps the route test focused on routing.
-    vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
-    vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
-
+    // useCameraStream's mount effect checks for navigator.mediaDevices and
+    // bails when it's missing; jsdom has neither matchMedia nor mediaDevices,
+    // so the hook stays in the notStarted state and the page renders without
+    // ever touching getUserMedia.
     renderAt('/animator')
     // AnimatorPage is lazy-loaded; wait for the Suspense boundary to resolve.
     expect(await screen.findByTestId('animator-page')).toBeInTheDocument()
