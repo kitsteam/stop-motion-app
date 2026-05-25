@@ -1,19 +1,23 @@
 import { StrictMode } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import AlertProvider from '../components/AlertProvider'
 import ToastProvider from '../components/ToastProvider'
 import { AnimatorService } from '../services/animator-service'
 import AnimatorPage from './AnimatorPage'
 
+// useNavigationGuard calls useBlocker which requires a Data Router context.
+// createMemoryRouter provides that; the legacy <MemoryRouter> does not.
 function renderPage() {
+  const router = createMemoryRouter(
+    [{ path: '/animator', Component: AnimatorPage }],
+    { initialEntries: ['/animator'] },
+  )
   return render(
     <ToastProvider>
       <AlertProvider>
-        <MemoryRouter>
-          <AnimatorPage />
-        </MemoryRouter>
+        <RouterProvider router={router} />
       </AlertProvider>
     </ToastProvider>,
   )
@@ -96,13 +100,15 @@ describe('AnimatorPage', () => {
       .spyOn(AnimatorService.prototype, 'destroy')
       .mockImplementation(() => {})
 
+    const router = createMemoryRouter(
+      [{ path: '/animator', Component: AnimatorPage }],
+      { initialEntries: ['/animator'] },
+    )
     render(
       <StrictMode>
         <ToastProvider>
           <AlertProvider>
-            <MemoryRouter>
-              <AnimatorPage />
-            </MemoryRouter>
+            <RouterProvider router={router} />
           </AlertProvider>
         </ToastProvider>
       </StrictMode>,
@@ -133,5 +139,14 @@ describe('AnimatorPage', () => {
         expect.any(Error),
       )
     })
+  })
+
+  it('renders the orientation overlay markup as part of the page', () => {
+    vi.spyOn(AnimatorService.prototype, 'init').mockResolvedValue()
+    vi.spyOn(AnimatorService.prototype, 'destroy').mockImplementation(() => {})
+
+    renderPage()
+
+    expect(screen.getByTestId('orientation-overlay')).toBeInTheDocument()
   })
 })

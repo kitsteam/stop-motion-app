@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import AnimatorProvider from '../components/AnimatorProvider'
 import { useAnimator } from '../hooks/useAnimator'
+import { useNavigationGuard } from '../hooks/useNavigationGuard'
+import { useOrientationChangeToast } from '../hooks/useOrientationChangeToast'
+import OrientationOverlay from './animator/components/OrientationOverlay'
 import PlayerCanvas from './animator/components/PlayerCanvas'
 import SnapshotCanvas from './animator/components/SnapshotCanvas'
 import Toolbar from './animator/components/Toolbar'
@@ -26,6 +29,9 @@ function AnimatorShell() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const snapshotCanvasRef = useRef<HTMLCanvasElement>(null)
   const playerCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  useNavigationGuard()
+  useOrientationChangeToast()
 
   useEffect(() => {
     let cancelled = false
@@ -60,6 +66,7 @@ function AnimatorShell() {
       </div>
       <div className={styles.thumbnails} data-slot="thumbnails" />
       <div className={styles.tabbar} data-slot="tabbar" />
+      <OrientationOverlay />
     </section>
   )
 }
