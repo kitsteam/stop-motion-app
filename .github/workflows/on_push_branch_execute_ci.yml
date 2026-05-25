@@ -3,20 +3,21 @@ name: frontend_on_push_branch_execute_ci_cd
 on:
   push:
     branches: [main, react-migration]
-  # See https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#onpushpull_requestbranchestags
   pull_request:
-    # Only branches and tags on the base are evaluated
     branches: [main, react-migration]
 
 env:
   NODE_VERSION: "22.20"
 
 jobs:
-  yarn_tasks:
+  pnpm_tasks:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        task: [lint, test:ci, build:prod]
+        task: [lint, test, build]
+    defaults:
+      run:
+        working-directory: react-app
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
@@ -26,6 +27,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
-      - run: yarn install --immutable
-      - run: yarn ${{ matrix.task }}
+          cache: "pnpm"
+          cache-dependency-path: react-app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run ${{ matrix.task }}

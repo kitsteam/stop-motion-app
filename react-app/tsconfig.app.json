@@ -19,26 +19,15 @@
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    /* `erasableSyntaxOnly` disabled during the M0–M4 coexistence window because
-       the Angular tree reached via the `@enums/@models/...` aliases uses TS
-       enums, which are not erasable. Re-enable at M5 once the Angular tree is
-       removed. */
+    /* The shared enums use TS `enum` syntax, which is not erasable. Keep this
+       off until they are converted to `as const` objects (out of scope here). */
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
 
-    /* Path aliases — mirror the Angular tsconfig.json paths.
-       During M0–M4 coexistence the React app reaches up into the Angular src/
-       tree so framework-agnostic enums, interfaces, and models can be shared.
-       TS 6 resolves `paths` relative to this file when `baseUrl` is omitted. */
+    /* Path aliases — resolved relative to this file when baseUrl is omitted. */
     "paths": {
-      "@components/*":  ["../src/app/components/*"],
-      "@environment/*": ["../src/environments/*"],
-      "@enums/*":       ["../src/app/enums/*"],
-      "@interfaces/*":  ["../src/app/interfaces/*"],
-      "@models/*":      ["../src/app/models/*"],
-      "@pages/*":       ["../src/app/pages/*"],
-      "@pipes/*":       ["../src/app/pipes/*"],
-      "@services/*":    ["../src/app/services/*"]
+      "@enums/*":      ["./src/enums/*"],
+      "@interfaces/*": ["./src/interfaces/*"]
     }
   },
   "include": ["src"]

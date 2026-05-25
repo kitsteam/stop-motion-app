@@ -1,59 +1,45 @@
 # StopClip - Stop Motion App
 
-The [StopClip App](https://kits.blog/) is built with the Ionic framework.
+[StopClip](https://kits.blog/) is a client-side PWA for creating stop-motion animations. Capture, encoding, and export all happen in the browser; there is no backend.
 
-This software was inspired by Stop Motion Animator, a web app developed by [szager](https://github.com/szager/stop-motion). We use components of the BSD0 licensed code.
+Inspired by Stop Motion Animator by [szager](https://github.com/szager/stop-motion) (BSD-0). This is a fork of the [kits GitLab repository](https://gitlab.com/kits-apps/stop-motion-app).
 
-This is a fork of the [kits GitLab repository](https://gitlab.com/kits-apps/stop-motion-app).
+## Stack
 
-## Prerequirements
+- React 19 + TypeScript, built with Vite
+- pnpm (via Corepack) on Node 22
+- Vitest for unit tests; Playwright (planned) for E2E
+- Web app shipped as a PWA (Workbox via `vite-plugin-pwa`)
+- Production image: nginx (unprivileged) serving the Vite build
 
-- Ionic CLI 7.x.x
-- Node 20.x.x
+The React source lives in [`react-app/`](./react-app). A repo-root move is planned in a follow-up.
 
-## Main tasks
-
-Task automation is based on yarn scripts and [Ionic scripts](https://ionicframework.com/docs/cli/).
-
-| Tasks      | Description                                                     |
-| ---------- | --------------------------------------------------------------- |
-| yarn start | Run development server on `http://localhost:4200/` (by default) |
-| yarn test  | Run tests                                                       |
-
-## Docker setup
-
-You can use the provided `docker-compose.yml` to start and develop the application:
+## Local development
 
 ```
-# Start the container:
-docker compose up -d
+corepack enable
+pnpm --dir react-app install --frozen-lockfile
+pnpm --dir react-app dev        # http://localhost:5173
+pnpm --dir react-app test       # vitest
+pnpm --dir react-app lint
+pnpm --dir react-app build      # outputs to react-app/dist
+```
 
-# Access the container:
+## Docker
+
+```
+# Dev — Vite dev server on host port 5173
+docker compose up -d
 docker compose exec app bash
 
-# Start the application:
-yarn start
-
-# Test the application:
-yarn test
+# Production — nginx serving the built React app on host port 8080
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+Override `DOCKER_COMPOSE_APP_PORT_PUBLISHED` in `.env` to change the published port.
 
 ## Documentation
 
-- [Codec Documentation](docs/CODECS.md) - Information about image, video, and audio codecs used
-- [Third-Party Licenses](THIRD_PARTY_LICENSES.md) - License information for codec-related dependencies
-
-## Chromium setup for unit tests
-
-Karma runs the Angular unit tests inside ChromiumHeadless. If the container or host image does not already provide Chromium, run:
-
-```
-./scripts/setup-chromium.sh
-```
-
-After installation export `CHROMIUM_BIN` so Karma picks up the binary (add this to your shell profile if you run tests frequently):
-
-```
-export CHROMIUM_BIN=$(which chromium)
-npm run test
-```
+- [Codec Documentation](docs/CODECS.md) — image, video, and audio codecs used
+- [Third-Party Licenses](THIRD_PARTY_LICENSES.md) — codec-related dependencies
+- [React Migration Plan](docs/migration-react.md) — phased plan for the React port
