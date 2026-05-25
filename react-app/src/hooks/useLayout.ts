@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { IS_ANDROID, IS_IOS } from '../services/user-agent'
 
 export interface LayoutAPI {
   width: number
@@ -8,17 +9,6 @@ export interface LayoutAPI {
   isIOS: boolean
   isAndroid: boolean
 }
-
-// Parsed once at module load — the user-agent is stable for the lifetime of
-// the document, so re-parsing per render or per hook call is wasted work.
-const UA = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-const IS_IOS =
-  /iPad|iPhone|iPod/.test(UA) ||
-  // iPadOS 13+ reports itself as Mac; touch capability disambiguates.
-  (UA.includes('Mac') &&
-    typeof document !== 'undefined' &&
-    'ontouchend' in document)
-const IS_ANDROID = /Android/i.test(UA)
 
 interface Viewport {
   width: number
