@@ -4,9 +4,5 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-      args:
-        # Set APP_FLAVOR=react to ship the React production build instead of
-        # the default Angular one. The nginx runtime is flavor-agnostic.
-        APP_FLAVOR: ${APP_FLAVOR:-angular}
     ports:
       - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-8080}:8080"

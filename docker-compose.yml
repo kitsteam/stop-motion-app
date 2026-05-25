@@ -4,19 +4,16 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
-      args:
-        # Set APP_FLAVOR=react in your environment (or in .env) to build the
-        # React dev image instead of the default Angular one.
-        APP_FLAVOR: ${APP_FLAVOR:-angular}
     container_name: stop-motion-app
     stdin_open: true
+    # Vite dev server listens on 5173 inside the container (host: true in
+    # vite.config.ts makes it reachable from outside the container).
+    command: pnpm --dir react-app dev
     ports:
-      - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-4200}:4200"
+      - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-5173}:5173"
     volumes:
       - .:/home/node/app
-      - node_modules:/home/node/app/node_modules
-      - react_node_modules:/home/node/app/react-app/node_modules
+      - node_modules:/home/node/app/react-app/node_modules
 
 volumes:
-  node_modules: # Will be prefixed with stop-motion-app
-  react_node_modules: # Will be prefixed with stop-motion-app
+  node_modules:
