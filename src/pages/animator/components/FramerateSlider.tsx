@@ -3,13 +3,6 @@ import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
 import styles from './FramerateSlider.module.css'
 
-// The slider is a fully store-driven controlled input. onChange immediately
-// calls setFramerate, which pushes to frameRate$ via the mock/real service.
-// useSyncExternalStore (inside useAnimatorStore) re-renders synchronously with
-// the new value, so the input stays in sync without local state or effects.
-// External changes (e.g. draft load) are handled the same way: frameRate$
-// emits, useSyncExternalStore fires, the component re-renders with the new
-// value — no useEffect needed.
 export default function FramerateSlider() {
   const service = useAnimator()
   const { frameRate } = useAnimatorStore()

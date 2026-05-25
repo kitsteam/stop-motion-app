@@ -15,10 +15,6 @@ interface WrapProps {
   initialEntries?: string[]
 }
 
-// Wraps a unit under test in the same provider stack `<AnimatorPage>` sits
-// inside at runtime: Toast → Alert → MemoryRouter (so `useNavigate` works) →
-// `<AnimatorRefsContext.Provider>` (so any hook reading refs still mounts) →
-// `<AnimatorContext.Provider>` carrying the mocked service.
 export function ToolbarTestProviders({
   service,
   children,

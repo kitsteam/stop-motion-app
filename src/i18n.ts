@@ -2,7 +2,7 @@ import i18next from 'i18next'
 import HttpBackend from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
 
-export const DEFAULT_LANGUAGE = 'de'
+const DEFAULT_LANGUAGE = 'de'
 
 export const i18nInitPromise = i18next
   .use(HttpBackend)
@@ -21,5 +21,3 @@ export const i18nInitPromise = i18next
       useSuspense: false,
     },
   })
-
-export default i18next

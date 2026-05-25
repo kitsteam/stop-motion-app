@@ -35,21 +35,11 @@ interface AnimatorProviderProps {
   children: ReactNode
 }
 
-// Composes the four behavior hooks plus the export/import services into the
-// page-scoped `AnimatorAPI` and exposes it via two contexts:
-// - `<AnimatorRefsContext>` carries the three stable canvas refs that the
-//   behavior hooks (and the canvas components themselves) read via context.
-// - `<AnimatorContext>` carries the composed API surface consumed via
-//   `useAnimator()`.
-//
-// The composition runs inside `<AnimatorComposer>` so the four hooks land
-// beneath `<AnimatorRefsContext>` and can resolve refs synchronously.
 export default function AnimatorProvider({ children }: AnimatorProviderProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const snapshotCanvasRef = useRef<HTMLCanvasElement>(null)
   const playerCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Identity-stable so the `useMemo` inside <AnimatorComposer> never invalidates.
   const refs = useMemo<AnimatorRefs>(
     () => ({ videoRef, snapshotCanvasRef, playerCanvasRef }),
     [],
@@ -73,6 +63,9 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
   const mediaImport = useMemo(() => new MediaImportService(), [])
   const toast = useMemo(() => createToastAPI(toastCtx.show), [toastCtx.show])
 
+  const frameRate = animatorStore((s) => s.frameRate)
+  const setFrameRateInStore = animatorStore((s) => s.setFrameRate)
+
   const camera = useCameraStream()
   const audio = useAudioRecording()
   const frameCapture = useFrameCapture({
@@ -82,17 +75,14 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
   })
   const playback = usePlayback({
     frames: frameCapture.frames,
-    frameRate: animatorStore((s) => s.frameRate),
+    frameRate,
     audioBlob: audio.audioBlob,
     width: layout.width,
     height: layout.height,
   })
 
-  const frameRate = animatorStore((s) => s.frameRate)
-  const setFrameRateInStore = animatorStore((s) => s.setFrameRate)
-
-  // Mirror live hook state into the Zustand store so the existing
-  // `useAnimatorStore()` selector keeps working unchanged.
+  // Mirror live hook state into the Zustand store so `useAnimatorStore()`
+  // selectors stay in sync.
   useEffect(() => {
     animatorStore.getState().setFrames(frameCapture.frames)
   }, [frameCapture.frames])
@@ -110,12 +100,10 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
   }, [playback.isPlaying])
 
   // Reset the store once on mount so a fresh page lifecycle starts from
-  // defaults regardless of previous in-app navigation. Matches the previous
-  // AnimatorService constructor behavior; the existing mirror effects keep
-  // the store in sync from here on out.
+  // defaults regardless of previous in-app navigation.
   useEffect(() => {
     animatorStore.getState().reset()
-     
+
   }, [])
 
   const setFramerate = useCallback(
@@ -129,10 +117,6 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     () => frameCapture.frames.length < FRAME_LIMIT,
     [frameCapture.frames.length],
   )
-
-  const capture = frameCapture.capture
-  const undoCapture = frameCapture.undo
-  const removeFrames = frameCapture.removeAt
 
   const clear = useCallback(() => {
     if (playback.isPlaying) playback.stop()
@@ -148,23 +132,10 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     await playback.start()
   }, [playback])
 
-  const toggleCamera = useCallback(async (): Promise<void> => {
-    await camera.toggle()
-  }, [camera])
-
-  const switchCamera = useCallback(async (): Promise<void> => {
-    await camera.switchCamera()
-  }, [camera])
-
-  const rotateCamera = camera.rotate
-
-  const recordAudio = useCallback(async (): Promise<Blob | undefined> => {
-    // Existing button semantics: clicking while recording stops; clicking
-    // while idle starts. The returned blob (from the previous shape) is
-    // unused by current callers; we keep the signature for API parity.
+  const recordAudio = useCallback(async (): Promise<void> => {
     if (audio.status === AudioRecorderStatus.recording) {
       audio.stop()
-      return undefined
+      return
     }
     try {
       await audio.start()
@@ -172,24 +143,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
       console.error('[useAnimator] recordAudio failed', err)
       toast.show({ message: translateApi.instant('toast_animator_audio_no_access') })
     }
-    return undefined
   }, [audio, toast])
-
-  const convertAudio = useCallback(
-    async (blob: Blob): Promise<void> => {
-      // Round-trip the recorded audio through the export service so the
-      // playback element receives a normalised WebM/Opus blob whose MIME
-      // matches `MimeTypes.audioWebm`. Result is published via the
-      // useAudioRecording stop-handler implicit blob — no extra wiring
-      // needed beyond resolving the export promise.
-      await mediaExport.convertAudio(blob)
-    },
-    [mediaExport],
-  )
-
-  const clearAudio = useCallback(() => {
-    audio.clear()
-  }, [audio])
 
   const save = useCallback(
     async (
@@ -241,19 +195,16 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     async (file: Blob): Promise<void> => {
       try {
         clear()
-        const draft = await loadDraftZip(file, mediaImport)
-        frameCapture.loadFrames(draft.frames, draft.frameBlobs)
-        if (draft.frameRate && draft.frameRate > 0) {
-          setFrameRateInStore(draft.frameRate)
+        const { frames, frameBlobs, frameRate: importedRate } = await loadDraftZip(
+          file,
+          mediaImport,
+        )
+        // Imported audio is currently dropped — useAudioRecording has no slot
+        // to inject a blob back in; users can re-record over the loaded draft.
+        frameCapture.loadFrames(frames, frameBlobs)
+        if (importedRate && importedRate > 0) {
+          setFrameRateInStore(importedRate)
         }
-        // `audio.clear()` was just called by `clear()`. The new audio blob
-        // surfaces through useAudioRecording state on the next recording
-        // session; we currently have no slot to inject an imported audio
-        // blob back into the hook. Future work: extend useAudioRecording
-        // with a `setRecorded(blob)` slot. The save path still picks up
-        // imported audio because it reads `audio.audioBlob`, which only
-        // works after the user records new audio over the imported draft.
-        void draft.audioBlob
       } catch (err) {
         console.error('[useAnimator] load failed', err)
       }
@@ -269,26 +220,17 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
 
   const api = useMemo<AnimatorAPI>(
     () => ({
-      frames: frameCapture.frames,
-      frameBlobs: frameCapture.frameBlobs,
-      frameRate,
-      isAnimatorPlaying: playback.isPlaying,
-      cameraStatus: camera.status,
-      cameraIsRotated: camera.isRotated,
-      cameras: camera.cameras,
-      audioBlob: audio.audioBlob,
       hasAudio: audio.audioBlob !== null,
-      capture,
-      undoCapture,
-      removeFrames,
+      capture: frameCapture.capture,
+      undoCapture: frameCapture.undo,
+      removeFrames: frameCapture.removeAt,
       clear,
       hasMemoryCapacity,
-      toggleCamera,
-      switchCamera,
-      rotateCamera,
+      toggleCamera: camera.toggle,
+      switchCamera: camera.switchCamera,
+      rotateCamera: camera.rotate,
       recordAudio,
-      convertAudio,
-      clearAudio,
+      clearAudio: audio.clear,
       togglePlay,
       setFramerate,
       save,
@@ -297,29 +239,21 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     }),
     [
       audio.audioBlob,
-      camera.cameras,
-      camera.isRotated,
-      camera.status,
-      capture,
+      audio.clear,
+      camera.rotate,
+      camera.switchCamera,
+      camera.toggle,
       clear,
-      clearAudio,
-      convertAudio,
       formatTime,
-      frameCapture.frameBlobs,
-      frameCapture.frames,
-      frameRate,
+      frameCapture.capture,
+      frameCapture.removeAt,
+      frameCapture.undo,
       hasMemoryCapacity,
       load,
-      playback.isPlaying,
       recordAudio,
-      removeFrames,
-      rotateCamera,
       save,
       setFramerate,
-      switchCamera,
-      toggleCamera,
       togglePlay,
-      undoCapture,
     ],
   )
 

@@ -3,10 +3,6 @@ import type { GifPalette } from 'gifenc'
 import type { ProgressCallback } from './types'
 import type { RecordingService } from './recording-service'
 
-// Ported from src/app/services/media-export/media-export.service.ts.
-// Same logic; instantiated manually with the RecordingService and an
-// optional document (defaults to the global) instead of via Angular DI.
-
 type ProgressPhase = 'converting_images' | 'creating_video'
 
 interface DrawableImage {
@@ -28,10 +24,6 @@ export class MediaExportService {
     private readonly recordingService: RecordingService,
     private readonly document: Document = globalThis.document,
   ) {}
-
-  public convertAudio(audioBlob: Blob): Promise<Blob> {
-    return this.recordingService.convertAudioBlob(audioBlob)
-  }
 
   public createVideo(
     imageBlobs: Blob[],

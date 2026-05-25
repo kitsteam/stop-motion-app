@@ -18,10 +18,6 @@ export default function RecordAudioButton() {
   // promise so the modal → recording chain reads top-to-bottom.
   const countdownDone = useRef<(() => void) | null>(null)
 
-  // Click → 3-second countdown → start recording. A second click while
-  // recording stops the recorder; the useAudioRecording hook surfaces the
-  // captured blob as `service.audioBlob` automatically, so no manual
-  // conversion step is needed.
   const startRecord = async () => {
     await new Promise<void>((resolve) => {
       countdownDone.current = resolve

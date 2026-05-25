@@ -1,12 +1,6 @@
 import { vi } from 'vitest'
-import { CameraStatus } from '@enums/camera-status.enum'
 import { animatorStore } from '../stores/animator-store'
 import type { AnimatorAPI } from '../components/animator-context'
-
-// Lightweight stand-in for the page-scoped Animator API inside tests. Only the
-// surface the toolbar buttons touch is mocked. Tests can read state through
-// `useAnimatorStore()` because the factory primes the same Zustand store the
-// real composer mirrors to.
 
 export interface MockAnimatorOverrides {
   cameras?: MediaDeviceInfo[]
@@ -17,9 +11,9 @@ export interface MockAnimatorOverrides {
 
 export type MockAnimatorService = AnimatorAPI
 
-// Resets the global Zustand store and seeds it with the supplied overrides.
-// Component tests rely on this so each `it()` starts from a known state with
-// `useAnimatorStore()` reflecting the expected initial values.
+// Resets the global Zustand store and seeds it with the supplied overrides
+// so each test starts from a known state and `useAnimatorStore()` reflects
+// the expected initial values.
 export function createMockAnimatorService(
   overrides: MockAnimatorOverrides = {},
 ): MockAnimatorService {
@@ -39,14 +33,6 @@ export function createMockAnimatorService(
   })
 
   return {
-    frames: overrides.frames ?? [],
-    frameBlobs: [],
-    frameRate: overrides.frameRate ?? 6,
-    isAnimatorPlaying: false,
-    cameraStatus: CameraStatus.notStarted,
-    cameraIsRotated: false,
-    cameras: overrides.cameras ?? [],
-    audioBlob: null,
     hasAudio: overrides.hasAudio ?? false,
     capture: vi.fn().mockResolvedValue(undefined),
     undoCapture: vi.fn(),
@@ -63,7 +49,6 @@ export function createMockAnimatorService(
     switchCamera: vi.fn().mockResolvedValue(undefined),
     rotateCamera: vi.fn(),
     recordAudio: vi.fn().mockResolvedValue(undefined),
-    convertAudio: vi.fn().mockResolvedValue(undefined),
     clearAudio: vi.fn(),
     togglePlay: vi.fn().mockResolvedValue(undefined),
     setFramerate: setFramerateMock,

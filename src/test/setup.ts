@@ -6,9 +6,8 @@ import { initReactI18next } from 'react-i18next'
 import { animatorStore } from '../stores/animator-store'
 import de from '../../public/assets/i18n/de.json'
 
-// JSDOM 29 omits window.matchMedia. `readLayoutSnapshot` calls it
-// synchronously, which the toolbar invokes inside `switchCamera` /
-// `toggleCamera`. Stub it once so tests don't have to. Default to portrait;
+// JSDOM 29 omits window.matchMedia. `useLayout` calls it synchronously on
+// mount. Stub it once so tests don't have to. Default to portrait;
 // individual tests can override via `vi.spyOn(window, 'matchMedia')`.
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   window.matchMedia = (query: string): MediaQueryList => ({

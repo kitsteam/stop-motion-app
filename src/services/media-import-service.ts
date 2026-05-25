@@ -2,9 +2,6 @@ import * as zip from '@zip.js/zip.js'
 import { MimeTypes } from '@enums/mime-types.enum'
 import type { FrameManifest } from '@interfaces/frame-manifest.interface'
 
-// Ported from src/app/services/media-import/media-import.service.ts.
-// No Angular DI; instantiate directly inside <AnimatorProvider>.
-
 export interface MediaImportResult {
   videoBlob: Blob | null
   audioBlob: Blob | null
@@ -56,7 +53,7 @@ export class MediaImportService {
       const blob = (await entry.getData(new zip.BlobWriter(classification.mimeType))) as Blob
       if (classification.role === 'video') {
         videoBlob = blob
-      } else if (classification.role === 'audio') {
+      } else {
         audioBlob = blob
       }
     }
@@ -100,25 +97,17 @@ export class MediaImportService {
     }
 
     if (baseName === 'audio.webm' || baseName.includes('audio')) {
-      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) }
+      return { role: 'audio', mimeType: MimeTypes.audioWebm }
     }
 
     if (baseName.endsWith('.webm')) {
       if (!hasVideo) {
         return { role: 'video', mimeType: MimeTypes.video }
       }
-      return { role: 'audio', mimeType: this.getAudioMimeTypeFromEntry(entry.filename) }
+      return { role: 'audio', mimeType: MimeTypes.audioWebm }
     }
 
     return null
-  }
-
-  private getAudioMimeTypeFromEntry(filename: string): MimeTypes {
-    const lowerCaseName = (filename || '').toLowerCase()
-    if (lowerCaseName.endsWith('.webm')) {
-      return MimeTypes.audioWebm
-    }
-    return MimeTypes.audioWebm
   }
 
   private getFrameMimeTypeFromEntry(filename: string): string {

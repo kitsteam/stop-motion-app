@@ -1,4 +1,4 @@
-export interface FrameManifestEntry {
+interface FrameManifestEntry {
     filename: string;
     mimeType?: string;
 }

@@ -1,4 +1,4 @@
-export type AlertButtonRole = 'cancel'
+type AlertButtonRole = 'cancel'
 
 export interface AlertButton {
   text: string
@@ -6,7 +6,7 @@ export interface AlertButton {
   handler?: (inputValues: Record<string, string>) => void | Promise<void>
 }
 
-export interface AlertTextInput {
+interface AlertTextInput {
   name: string
   type: 'text'
   value?: string
@@ -14,7 +14,7 @@ export interface AlertTextInput {
   label?: string
 }
 
-export interface AlertRadioInput {
+interface AlertRadioInput {
   name: string
   type: 'radio'
   options: Array<{ value: string; label: string }>

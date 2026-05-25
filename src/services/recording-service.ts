@@ -1,13 +1,6 @@
 import { MimeTypes } from '@enums/mime-types.enum'
 import type { ProgressCallback } from './types'
 
-// Ported from src/app/services/recording/recording.service.ts (M4 / issue #11).
-// Differences vs the Angular original:
-//   * No @Injectable / @Inject(DOCUMENT). The browser `document` is reached
-//     through a constructor argument that defaults to the global, so tests
-//     can inject a fake document if needed.
-//   * Pure TypeScript class — instantiate manually inside <AnimatorProvider>.
-
 type RecordingPhase = 'converting_images' | 'creating_video'
 type MediaRecorderErrorEvent = Event & { error?: DOMException }
 
@@ -38,10 +31,6 @@ export class RecordingService {
   private readonly preferredVideoMimeTypes: string[] = [
     'video/webm;codecs=vp8,opus',
     MimeTypes.video,
-  ]
-  private readonly preferredAudioMimeTypes: string[] = [
-    MimeTypes.audioWebm,
-    MimeTypes.audioWebmContainer,
   ]
 
   constructor(private readonly document: Document = globalThis.document) {}
@@ -102,45 +91,6 @@ export class RecordingService {
     audioContext?.stop()
 
     return blob
-  }
-
-  public async convertAudioBlob(
-    audioBlob: Blob,
-    mimeType: string = MimeTypes.audioWebm,
-  ): Promise<Blob> {
-    if (!audioBlob) {
-      throw new Error('No audio blob supplied for conversion.')
-    }
-
-    this.ensureBrowserEnvironment()
-
-    if (this.isDesiredAudioType(audioBlob.type, mimeType)) {
-      return audioBlob
-    }
-
-    const audioContext = await this.createAudioRecordingContext(audioBlob)
-    if (!audioContext) {
-      console.warn(
-        '[RecordingService] Falling back to original audio blob due to missing AudioContext support.',
-      )
-      return audioBlob
-    }
-
-    const recorder = this.createRecorder(audioContext.stream, {
-      preferredMimeType: mimeType,
-      fallbackMimeTypes: this.preferredAudioMimeTypes,
-    })
-    const recordingPromise = this.collectRecording(recorder, mimeType ?? MimeTypes.audioWebm)
-
-    recorder.start()
-    audioContext.start()
-
-    await audioContext.finished.catch(() => undefined)
-
-    recorder.stop()
-    audioContext.stop()
-
-    return recordingPromise
   }
 
   private ensureBrowserEnvironment(): void {
@@ -372,15 +322,5 @@ export class RecordingService {
   private getFrameInterval(frameRate: number): number {
     const safeRate = Math.max(1, frameRate || 1)
     return 1000 / safeRate
-  }
-
-  private isDesiredAudioType(blobType: string | undefined, preferred: string): boolean {
-    if (!blobType) {
-      return false
-    }
-    if (preferred && blobType === preferred) {
-      return true
-    }
-    return this.preferredAudioMimeTypes.includes(blobType as MimeTypes)
   }
 }
