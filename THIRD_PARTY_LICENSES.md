@@ -2,6 +2,8 @@
 
 This document lists third-party libraries and their licenses used in the StopClip application, with a focus on codec-related dependencies.
 
+The original Stop Motion Animator by [szager](https://github.com/szager/stop-motion) (BSD-0) inspired this project; no szager-authored code remains in the current React rewrite, but the attribution is preserved here for historical reference.
+
 ## Codec-Related Dependencies
 
 ### gifenc
@@ -36,33 +38,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### webm.js
+### FiraSans
 
-**License:** BSD Zero Clause License (BSD-0)  
-**Purpose:** WebM container format decoder for loading saved projects  
-**Source:** https://github.com/szager/stop-motion  
-**Author:** szager
+Bundled under `public/assets/kits/font/firasans/`.
 
-This code is derived from the Stop Motion Animator project by szager, which is licensed under BSD-0.
-
-**License Text:**
-
-```
-BSD Zero Clause License
-
-Copyright (c) szager
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-```
+**License:** SIL Open Font License, Version 1.1  
+**Source:** https://github.com/mozilla/Fira  
+**License file:** `public/assets/kits/font/firasans/SIL Open Font License.txt`
 
 ## Image and Video Codecs
 
@@ -74,8 +56,7 @@ The application uses the following codecs:
 
 ### Video Formats
 - **WebM:** Container format
-- **VP8:** Video codec (via the browser's MediaRecorder implementation)
-- **VP9:** Not currently used but supported by modern browsers
+- **VP8:** Video codec via the browser's MediaRecorder implementation, forced per [ADR 0001](docs/adr/0001-force-vp8-exports.md)
 
 ### Audio Formats
 - **Opus:** Audio codec in the WebM container
@@ -92,10 +73,8 @@ All codecs used are supported by modern browsers:
 All third-party licenses are compatible with the GNU Affero General Public License v3 (AGPL-3.0) under which this project is licensed:
 
 - **MIT License:** Permissive, GPL-compatible
-- **WTFPL:** Public domain equivalent, GPL-compatible
-- **BSD-0:** Permissive, GPL-compatible
-- **MIT License (gifenc):** Permissive and GPL-compatible
+- **SIL Open Font License 1.1:** GPL-compatible for embedded fonts
 
 ## Additional Dependencies
 
-For a complete list of all dependencies and their licenses, please refer to the `package.json` file and run `yarn licenses list`.
+For a complete list of dependencies and their licenses, refer to `package.json` and run `pnpm licenses list`.

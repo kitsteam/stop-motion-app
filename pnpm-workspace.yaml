@@ -1,0 +1,11 @@
+# 7-day quarantine on newly published versions; mitigates fast-revoked malicious releases.
+# Mirrored by Dependabot cooldown.default-days: 7 in .github/dependabot.yml.
+minimumReleaseAge: 10080
+
+# pnpm 10 disables install scripts by default for transitive deps; allowBuilds is the explicit allowlist.
+allowBuilds:
+  esbuild: true              # bundled by Vite; needs to extract its native binary
+  core-js: false             # transitive; no build script needed for browser bundle
+
+# Transitive-dep CVE pins, add entries as `pnpm audit` surfaces them.
+overrides: {}

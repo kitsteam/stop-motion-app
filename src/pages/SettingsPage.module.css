@@ -13,12 +13,21 @@
 }
 
 .section {
-  padding: var(--space-4) 0;
+  padding: var(--space-4) 0.75rem;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .column {
+    max-width: 33.3333%;
+    margin: 0 auto;
+  }
 }
 
 .listHeadline {
   font-size: var(--text-lg);
-  /* 300, not 400 — matches the FiraSans Light glyphs the legacy loaded. */
+  /* 300 to match the FiraSans Light glyphs registered in src/index.css. */
   font-weight: 300;
   margin: var(--space-4) 0;
   padding-left: var(--space-4);

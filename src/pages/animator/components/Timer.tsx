@@ -9,7 +9,7 @@ export default function Timer() {
 
   // Elapsed seconds since playback started. Reset mid-render when
   // isAnimatorPlaying transitions to false (React "adjust state on prop
-  // change" pattern — avoids calling setState inside an effect body).
+  // change" pattern: avoids calling setState inside an effect body).
   const [currentSecond, setCurrentSecond] = useState<number>(0)
   const [prevIsPlaying, setPrevIsPlaying] = useState<boolean>(false)
   if (prevIsPlaying !== isAnimatorPlaying) {
@@ -48,7 +48,7 @@ export default function Timer() {
         intervalRef.current = null
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: totalSeconds is captured at play start; matches Angular's behavior where mid-playback frameRate changes do not restart the timer interval
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: totalSeconds is captured at play start so mid-playback frameRate changes do not restart the timer interval
   }, [isAnimatorPlaying])
 
   return (

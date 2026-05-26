@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**StopClip** — a client-side-only PWA for creating stop-motion animations. All capture, encoding, and export happens in the browser; there is no backend. German is the only shipped locale.
+**StopClip**: a client-side-only PWA for creating stop-motion animations. All capture, encoding, and export happens in the browser; there is no backend. German is the only shipped locale.
 
 Forked from the kits GitLab repo, originally inspired by [szager/stop-motion](https://github.com/szager/stop-motion) (BSD-0). Licensed AGPL-3.0.
 
@@ -14,13 +14,11 @@ Forked from the kits GitLab repo, originally inspired by [szager/stop-motion](ht
 - **react-router-dom 7** for routing
 - **react-i18next** + `i18next-http-backend` (loads `public/assets/i18n/de.json`)
 - **Bootstrap 5** CSS for layout primitives (no Bootstrap JS)
-- **RxJS** still ships behind a `useSyncExternalStore` bridge for the Animator state surface; M6 will replace it with `useState`/`useReducer` (+ optionally Zustand)
-- **pnpm** (via Corepack) on **Node 22**
+- **Zustand** for the Animator state store (`src/stores/animator-store.ts`)
+- **pnpm 10.33.4** (via Corepack) on **Node 24**
 - **Vitest** + Testing Library + jsdom for unit tests
 - **vite-plugin-pwa** (Workbox) for the service worker and web app manifest
-- Media stack: native **MediaRecorder** (VP8/VP9 + Opus in WebM), **gifenc**, **@zip.js/zip.js**, **file-saver**, **Swiper** for the thumbnail carousel
-
-> The Angular/Ionic tier was removed in M5 (issue #19), and the React app was moved to the repo root in M5 (issue #20). The React app is now the only production artifact. See [`docs/migration-react.md`](docs/migration-react.md) for the full migration plan and the remaining M6 work (extract hooks, remove the RxJS bridge, drop `AnimatorService`).
+- Media stack: native **MediaRecorder** (VP8 + Opus in WebM, see ADR 0001), **gifenc**, **@zip.js/zip.js**, **file-saver**, **Swiper** for the thumbnail carousel
 
 ## Running the app
 
@@ -44,19 +42,6 @@ pnpm test:watch    # vitest watch mode
 - Test files use Vitest's default `*.test.ts` / `*.test.tsx` suffix.
 - Component tests use `@testing-library/react` + `@testing-library/jest-dom`, running in jsdom.
 
-### Docker
-
-```bash
-# Dev — Vite dev server, host port 5173 (override via DOCKER_COMPOSE_APP_PORT_PUBLISHED)
-docker compose up -d
-docker compose exec app bash
-
-# Production — nginx-unprivileged serving dist/ on host port 8080
-docker compose -f docker-compose.prod.yml up -d
-```
-
-The Dockerfile is multi-stage: `builder` runs `pnpm install --frozen-lockfile` and `pnpm build`; `production` is `nginxinc/nginx-unprivileged` serving `dist/` via `config/nginx/default.conf`.
-
 ## Architecture
 
 ### Module layout
@@ -72,51 +57,54 @@ src/
       AnimatorPage.tsx
       components/              # toolbar buttons, canvases, slider, timer, thumbs, tabbar
       modals/                  # CountdownModal, VideoPlayerModal
-  components/                  # shared: Header, Spinner, Countdown, Toast, AlertDialog, LoadingOverlay
-  hooks/                       # useAnimator, useAnimatorStore, useAlert, useToast, useLayout,
-                               # useNavigationGuard, useOrientationChangeToast, useServiceWorker
-  services/                    # animator-service, media-export-service, media-import-service,
-                               # recording-service, alert-api, toast-api, translate-api,
-                               # animator.ts (the Animator model), rx-store.ts (BehaviorSubject bridge)
+  components/                  # shared: Header, Spinner, Countdown, Toast, AlertDialog,
+                               # LoadingOverlay, AnimatorProvider, AnimatorRefsContext
+  hooks/                       # useAnimator, useAnimatorStore, useCameraStream,
+                               # useFrameCapture, usePlayback, useAudioRecording,
+                               # useAlert, useToast, useLayout, useNavigationGuard,
+                               # useOrientationChangeToast, useServiceWorker
+  services/                    # media-export-service, media-import-service, recording-service,
+                               # draft-export, draft-import, alert-api, toast-api, translate-api
+  stores/                      # animator-store (Zustand)
+  enums/, interfaces/, types/
   test/                        # vitest setup
-  types/
-  assets/
 ```
 
 ### Data flow
 
-The Animator page is the only stateful surface. Today the flow is still:
+The Animator page is the only stateful surface. The provider composes the camera, frame-capture, playback, and audio hooks, and mirrors their state into a Zustand store so components can subscribe to slices without re-rendering on unrelated changes:
 
 ```
-UI event → useAnimator → AnimatorService façade → Animator model → BehaviorSubject
-        → useSyncExternalStore bridge (rx-store.ts) → components re-render
+UI event → useAnimator (context API) → useCameraStream / useFrameCapture /
+           usePlayback / useAudioRecording → animator-store (Zustand)
+        → useAnimatorStore selectors → components re-render
 ```
 
-- **`Animator` (`services/animator.ts`)** owns the canvases, `MediaStream`, `MediaRecorder` instances (video + audio), `frames[]` / `frameWebpsAndJpegs[]`, framerate, audio blob, and orientation/rotation state. This is the framework-agnostic core kept from the Angular era.
-- **`AnimatorService` (`services/animator-service.ts`)** is a thin façade exposing `init`, `capture`, `undoCapture`, `togglePlay`, `toggleCamera`, `switchCamera`, `rotateCamera`, `recordAudio`, `clearAudio`, `save`, `load`, `destroy`, plus `BehaviorSubject`s for `cameras`, `cameraStatus`, `cameraIsRotated`, `frames`. **A 360-frame cap** is enforced via `hasMemoryCapacity()`.
-- **`rx-store.ts`** adapts RxJS `BehaviorSubject`s to React via `useSyncExternalStore` — this is the temporary bridge that M6 will dismantle.
-- **`useAnimatorStore`** is the React-facing hook that selects slices of the AnimatorService state.
-
-M6 will dissolve the façade: `useAnimator` will compose `useCameraStream` + `useFrameCapture` + `usePlayback` + `useAudioRecording`, refs will move into an `<AnimatorRefsContext>`, and `AnimatorService` + the RxJS bridge will be deleted.
+- **`AnimatorProvider`** (`components/AnimatorProvider.tsx`) holds the three canvas/video refs in `AnimatorRefsContext` and composes the feature hooks into a single `AnimatorAPI` exposed via `AnimatorContext`. **A 360-frame cap** is enforced via `hasMemoryCapacity()`.
+- **`animator-store`** (`stores/animator-store.ts`) is the single source of truth for state shared across components: `frames`, `cameras`, `cameraStatus`, `cameraIsRotated`, `isAnimatorPlaying`, `frameRate`.
+- **`useAnimator`** returns the `AnimatorAPI` (capture, undo, save, load, togglePlay, …). **`useAnimatorStore`** is the slice selector hook over the Zustand store.
 
 ### Media services
 
 Split by concern; all return Promises that resolve to `Blob`s.
 
-- **`media-export-service.ts`** — builds WebM video via canvas `captureStream(frameRate)` piped through `MediaRecorder` (prefers `video/webm;codecs=vp9,opus`, falls back to vp8). Builds GIFs via gifenc (downscaled to 480px). Normalizes audio to WebM/Opus through an `AudioContext` → `MediaStreamAudioDestination` → `MediaRecorder` round-trip.
-- **`media-import-service.ts`** — reads ZIP drafts via `@zip.js/zip.js`: extracts `video.webm` + optional `audio.webm`, then demuxes the video back into individual frame images.
-- **`recording-service.ts`** — wraps `MediaRecorder` setup, state transitions, and codec selection.
-- **`useServiceWorker`** — subscribes to Workbox `onNeedRefresh` / `onOfflineReady` and shows the "new version, reload?" prompt.
+- **`media-export-service.ts`**: builds WebM video via canvas `captureStream(frameRate)` piped through `MediaRecorder` (VP8 + Opus only, per ADR 0001). Builds GIFs via gifenc (downscaled to 480px). Normalizes audio to WebM/Opus through an `AudioContext` → `MediaStreamAudioDestination` → `MediaRecorder` round-trip.
+- **`recording-service.ts`**: wraps `MediaRecorder` setup, state transitions, and codec selection.
+- **`media-import-service.ts`**: reads ZIP drafts via `@zip.js/zip.js`: extracts `video.webm` + optional `audio.webm`, plus the `frames/manifest.json` index and the individual frame blobs.
+- **`draft-export.ts` / `draft-import.ts`**: orchestrate the round-trip between the in-memory frame list and the on-disk zip.
+- **`useServiceWorker`**: subscribes to Workbox `onNeedRefresh` / `onOfflineReady` and shows the "new version, reload?" prompt.
 
-See `docs/CODECS.md` for the full codec rationale (JPEG capture → WebP storage; VP8/VP9 video; Opus audio; ZIP drafts with `video.webm` + `audio.webm`). The "force VP8" decision is recorded in `docs/adr/0001-force-vp8-exports.md`.
+See `docs/CODECS.md` for the full codec rationale and `docs/adr/0001-force-vp8-exports.md` for the VP8-only decision.
 
 ### Draft project format
 
-A "draft" save is a `.zip` containing `video.webm` and (if present) `audio.webm` — **not** individual frame files. Loading a draft demuxes the video back into frames.
+A "draft" save is a `.zip` containing:
 
-## Branches
+- `video.webm`: VP8 video rendered from the frame sequence
+- `audio.webm`: optional, Opus audio if the user recorded any
+- `frames/manifest.json` + the individual frame blobs (WebP or JPEG)
 
-`main` carries the legacy Angular code. `react-migration` is the working branch where the React port is being completed per `docs/migration-react.md`. The `react-migration` branch will replace `main` when M6 lands.
+Loading a draft reads the frame manifest and rehydrates each frame as an `HTMLImageElement`; the WebM is not demuxed.
 
 ## Driving the app with agent-browser
 
@@ -124,7 +112,7 @@ A headless Chrome runs in the `chrome` service on this container's docker networ
 
 ### Connect once per session
 
-The dev server is `vite --host` with `@vitejs/plugin-basic-ssl` — self-signed HTTPS on this container's docker IP (not `localhost`, since Chrome sits in another container). Find the IP with `hostname -I`. Then:
+The dev server is `vite --host` with `@vitejs/plugin-basic-ssl`: self-signed HTTPS on this container's docker IP (not `localhost`, since Chrome sits in another container). Find the IP with `hostname -I`. Then:
 
 ```bash
 agent-browser close --all   # tear down any prior session
@@ -135,11 +123,11 @@ agent-browser set viewport 800 1200   # portrait; landscape <681px trips Orienta
 agent-browser open https://<container-ip>:5173/animator
 ```
 
-`--init-script` registers via Chrome's `Page.addScriptToEvaluateOnNewDocument`, so it re-runs on every navigation and reload — install once, forget. Flags passed to `connect` only apply when the daemon (re)starts; if `--ignore-https-errors ignored: daemon already running` appears, `agent-browser close --all` first.
+`--init-script` registers via Chrome's `Page.addScriptToEvaluateOnNewDocument`, so it re-runs on every navigation and reload: install once, forget. Flags passed to `connect` only apply when the daemon (re)starts; if `--ignore-https-errors ignored: daemon already running` appears, `agent-browser close --all` first.
 
 ### Get past the cert warning
 
-`net::ERR_CERT_AUTHORITY_INVALID` lands on the Chrome warning page. Click through programmatically — never fall back to disabling HTTPS in `vite.config.ts`, the camera APIs require a secure context:
+`net::ERR_CERT_AUTHORITY_INVALID` lands on the Chrome warning page. Click through programmatically: never fall back to disabling HTTPS in `vite.config.ts`, the camera APIs require a secure context:
 
 ```bash
 agent-browser snapshot -i        # find Advanced ref
@@ -175,22 +163,22 @@ agent-browser eval "
 # concatenate, base64 -d to disk.
 ```
 
-`eval` truncates very long results — chunk the base64 rather than returning the whole string at once.
+`eval` truncates very long results: chunk the base64 rather than returning the whole string at once.
 
 ### React state and controlled inputs
 
-The slider is a controlled `<input type="range">`. Setting `.value = '10'` and dispatching `'input'` does not trigger React's onChange because React tracks the previous value via a property descriptor. Use `agent-browser fill @ref 10` instead — it goes through the native `HTMLInputElement.prototype.value` setter that React's tracker hooks.
+The slider is a controlled `<input type="range">`. Setting `.value = '10'` and dispatching `'input'` does not trigger React's onChange because React tracks the previous value via a property descriptor. Use `agent-browser fill @ref 10` instead: it goes through the native `HTMLInputElement.prototype.value` setter that React's tracker hooks.
 
 ### Test IDs to know
 
-Stable hooks on key elements: `animator-page`, `animator-toolbar`, `animator-tabbar`, `animator-video`, `animator-snapshot-canvas`, `animator-player-canvas`, `framerate-slider`, `timer`, `thumbnails-container`, `thumbnail-{N}`, and per-button (`capture-button`, `play-button` not set — index into the tabbar instead, `save-button`, `load-button`, `clear-button`, `settings-button`, `camera-select-button`, `undo-button`, `record-audio-button`).
+Stable hooks on key elements: `animator-page`, `animator-toolbar`, `animator-tabbar`, `animator-video`, `animator-snapshot-canvas`, `animator-player-canvas`, `framerate-slider`, `timer`, `thumbnails-container`, `thumbnail-{N}`, and per-button (`capture-button`, `play-button` not set: index into the tabbar instead, `save-button`, `load-button`, `clear-button`, `settings-button`, `camera-select-button`, `undo-button`, `record-audio-button`).
 
 `PlayButton` lacks a `data-testid`; use `document.querySelectorAll('[data-testid=animator-tabbar] button')[0]` (Play is the first child of TabBar).
 
 ### Common gotchas
 
-- **`--init-script ignored`** — daemon was already running. Run `agent-browser close --all`, then reconnect with the flag.
-- **`Chrome not found` on auto-launch** — the daemon got cleared. `agent-browser connect http://chrome:9222` again (don't forget `--init-script`).
-- **`Element not found: @eN`** — refs go stale after every page change. Re-snapshot.
-- **Orientation overlay covers the page** — viewport is landscape and height ≤ 680px. Use `set viewport 800 1200` (portrait) for tests.
-- **Camera switch doesn't appear to change anything** — the fake camera returns the same stream regardless of `deviceId`. The app logic *did* call `getUserMedia` with the new `sourceId`; verify by wrapping `getUserMedia` and inspecting the constraints array.
+- **`--init-script ignored`**: daemon was already running. Run `agent-browser close --all`, then reconnect with the flag.
+- **`Chrome not found` on auto-launch**: the daemon got cleared. `agent-browser connect http://chrome:9222` again (don't forget `--init-script`).
+- **`Element not found: @eN`**: refs go stale after every page change. Re-snapshot.
+- **Orientation overlay covers the page**: viewport is landscape and height ≤ 680px. Use `set viewport 800 1200` (portrait) for tests.
+- **Camera switch doesn't appear to change anything**: the fake camera returns the same stream regardless of `deviceId`. The app logic *did* call `getUserMedia` with the new `sourceId`; verify by wrapping `getUserMedia` and inspecting the constraints array.

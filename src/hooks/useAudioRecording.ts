@@ -71,7 +71,7 @@ export function useAudioRecording(): UseAudioRecordingApi {
         try {
           recorder.stop()
         } catch {
-          // ignore — defensive teardown.
+          // ignore: defensive teardown.
         }
       }
       stopStreamTracks(streamRef.current)

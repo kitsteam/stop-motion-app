@@ -87,10 +87,10 @@ afterEach(() => {
   cleanup()
 })
 
-// The animator store is a module singleton. `AnimatorService` resets it on
-// construction and `createMockAnimatorService` does the same, so tests that
-// go through either path already start clean. Reset here as well so future
-// tests that touch the store without those entry points stay isolated.
+// The animator store is a module singleton. `AnimatorProvider` and
+// `createMockAnimatorService` both reset it on construction, but reset here
+// as well so tests that touch the store without those entry points still
+// start clean.
 beforeEach(() => {
   animatorStore.getState().reset()
 })

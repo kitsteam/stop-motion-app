@@ -25,7 +25,8 @@ pnpm-debug.log*
 dist-ssr
 /node_modules
 *.local
-
+/.omc
+/.claude
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

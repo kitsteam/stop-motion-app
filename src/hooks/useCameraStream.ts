@@ -72,7 +72,7 @@ function buildConstraints(
   const aspectRatio = ctx.width && ctx.height ? ctx.width / ctx.height : undefined
 
   if (ctx.isIOS || ctx.isAndroid) {
-    // strange bug — width and height need to be swapped for portrait mode
+    // strange bug: width and height need to be swapped for portrait mode
     // (carried over from animator.ts:130).
     const width = ctx.isPortrait ? ctx.height : ctx.width
     const height = ctx.isPortrait ? ctx.width : ctx.height
@@ -241,7 +241,7 @@ export function useCameraStream(): UseCameraStreamApi {
         return
       }
 
-      // Stale srcObject — re-attach the same device.
+      // Stale srcObject: re-attach the same device.
       stopStream(streamRef.current)
       streamRef.current = null
       const deviceId = state.cameras[state.currentCameraIndex ?? 0]?.deviceId ?? null

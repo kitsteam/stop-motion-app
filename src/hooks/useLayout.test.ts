@@ -9,7 +9,7 @@ interface MockMQL {
   listeners: ChangeListener[]
   addEventListener: (type: 'change', l: ChangeListener) => void
   removeEventListener: (type: 'change', l: ChangeListener) => void
-  // Methods that exist on the real MediaQueryList interface — left as no-ops
+  // Methods that exist on the real MediaQueryList interface: left as no-ops
   // so the type is structurally compatible without leaking into the test.
   media: string
   onchange: null

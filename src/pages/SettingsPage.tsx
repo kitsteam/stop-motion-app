@@ -20,35 +20,33 @@ export default function SettingsPage() {
           className={styles.heroLogo}
         />
       </section>
-      <section className={`container ${styles.section}`}>
-        <div className="row">
-          <div className="col-md-4 offset-md-4">
-            <h2 className={styles.listHeadline}>
-              {t('labels_important_links')}
-            </h2>
-            <ul className={styles.linkList}>
-              <li>
-                <a
-                  href={IMPRINT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.link}
-                >
-                  {t('labels_imprint')}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={PRIVACY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.link}
-                >
-                  {t('labels_privacy')}
-                </a>
-              </li>
-            </ul>
-          </div>
+      <section className={styles.section}>
+        <div className={styles.column}>
+          <h2 className={styles.listHeadline}>
+            {t('labels_important_links')}
+          </h2>
+          <ul className={styles.linkList}>
+            <li>
+              <a
+                href={IMPRINT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.link}
+              >
+                {t('labels_imprint')}
+              </a>
+            </li>
+            <li>
+              <a
+                href={PRIVACY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.link}
+              >
+                {t('labels_privacy')}
+              </a>
+            </li>
+          </ul>
         </div>
       </section>
     </>

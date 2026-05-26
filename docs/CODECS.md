@@ -75,7 +75,7 @@ const result = await this.mediaExportService.createVideo(
 
 ### Video Codec: VP8 (MediaRecorder)
 
-Video encoding uses **VP8** via the browser's native MediaRecorder implementation. The recording pipeline renders frames onto an offscreen canvas, captures a `MediaStream` with `canvas.captureStream(frameRate)`, optionally merges an audio stream, and records with a VP8-capable MIME type (preferring `video/webm;codecs=vp9,opus` and falling back to `video/webm;codecs=vp8,opus`).
+Video encoding uses **VP8** via the browser's native MediaRecorder implementation. The recording pipeline renders frames onto an offscreen canvas, captures a `MediaStream` with `canvas.captureStream(frameRate)`, optionally merges an audio stream, and records with `video/webm;codecs=vp8,opus` (falling back to plain `video/webm`). VP9 is intentionally excluded: see [ADR 0001](adr/0001-force-vp8-exports.md).
 
 **Rationale:**
 - Royalty-free and hardware-accelerated in modern browsers
@@ -86,17 +86,6 @@ Video encoding uses **VP8** via the browser's native MediaRecorder implementatio
 - Scale to max width of 640px before rendering
 - YUV 4:2:0 color space is enforced by the browser implementation
 - Configurable frame rate (default: 6 fps for stop motion)
-
-### Future Consideration: VP9
-
-VP9 is the successor to VP8 and offers better compression:
-- 20-50% better compression than VP8
-- Supported in Chrome 29+, Firefox 28+, Safari 14.1+, Edge 14+
-
-**Not implemented yet because:**
-- Slower encoding (important for client-side processing)
-- VP8 provides sufficient quality for our use case
-- May be considered for future optimization
 
 ## Audio Formats
 
@@ -137,14 +126,20 @@ Projects are saved as ZIP files containing:
 
 ```
 project.zip
-├── video.webm   (WebM with VP8 video codec)
-└── audio.webm   (WebM with Opus audio codec)
+├── video.webm           (WebM with VP8 video codec)
+├── audio.webm           (WebM with Opus audio codec; optional)
+└── frames/
+    ├── manifest.json    (frame index with mime types, width, height, frameRate)
+    ├── frame-0001.webp
+    ├── frame-0002.webp
+    └── ...
 ```
 
 **Implementation:**
 - Uses @zip.js/zip.js library
 - Video blobs originate from `MediaRecorder` (via MediaExportService)
 - Audio is stored separately if present
+- Individual frame blobs are written alongside the video so loading a draft can rehydrate frames directly without demuxing the WebM
 
 ## Browser Compatibility Matrix
 
@@ -201,10 +196,9 @@ Times vary based on:
 - **License:** MIT
 - **Version:** 1.0.3
 
-### webm.js
-- **Purpose:** WebM container decoding
-- **License:** BSD-0
-- **Source:** Derived from szager/stop-motion
+### @zip.js/zip.js
+- **Purpose:** ZIP read/write for draft project files
+- **License:** BSD-3-Clause
 
 ## Recommendations
 
@@ -215,11 +209,11 @@ Times vary based on:
 ✅ No server-side processing required
 
 ### Future Improvements
-- Consider VP9 for better compression (when encoding speed improves)
 - Evaluate WebP for GIF export (better quality/size ratio)
 - Consider AV1 codec (when browser support improves)
 
 ## Related Documentation
 
 - [Third-Party Licenses](../THIRD_PARTY_LICENSES.md)
+- [ADR 0001: Force VP8 WebM exports](adr/0001-force-vp8-exports.md)
 - [WebM Container Specification](https://www.webmproject.org/docs/container/)

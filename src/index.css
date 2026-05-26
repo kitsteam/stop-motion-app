@@ -21,7 +21,7 @@
 }
 
 :root {
-  /* Kits brand palette — source of truth for brand colors. */
+  /* Kits brand palette: source of truth for brand colors. */
   --color-primary: #00456f; /* Kits navy */
   --color-primary-hover: #003a5c; /* Kits navy-dark */
   --color-accent: #00a3d3; /* Kits cyan */
@@ -57,6 +57,23 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+img,
+svg {
+  vertical-align: middle;
 }
 
 #root {

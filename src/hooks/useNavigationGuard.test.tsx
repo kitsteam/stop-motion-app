@@ -12,7 +12,7 @@ import { animatorStore } from '../stores/animator-store'
 import type { ReactNode } from 'react'
 
 // JSDOM has no navigator.mediaDevices, so useCameraStream's mount effect
-// short-circuits and the behavior hooks idle out — no service spying needed.
+// short-circuits and the behavior hooks idle out: no service spying needed.
 // Stub showModal so AlertDialog <dialog> doesn't error in JSDOM.
 beforeEach(() => {
   vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(

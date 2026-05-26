@@ -137,7 +137,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
       audio.stop()
       return
     }
-    // Cap the recording at the smaller of one minute or clip duration —
+    // Cap the recording at the smaller of one minute or clip duration:
     // export crops to clip duration anyway, so any extra is discarded.
     const clipMs = (frameCapture.frames.length * 1000) / Math.max(1, frameRate)
     const maxMs = Math.min(60_000, clipMs)
@@ -203,7 +203,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
           file,
           mediaImport,
         )
-        // Imported audio is currently dropped — useAudioRecording has no slot
+        // Imported audio is currently dropped: useAudioRecording has no slot
         // to inject a blob back in; users can re-record over the loaded draft.
         frameCapture.loadFrames(frames, frameBlobs)
         if (importedRate && importedRate > 0) {

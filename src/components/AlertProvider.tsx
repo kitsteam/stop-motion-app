@@ -54,7 +54,7 @@ export default function AlertProvider({ children }: AlertProviderProps) {
         await button.handler?.(inputValues)
       } catch (err) {
         // The show()-promise contract is "resolves when a button handler
-        // runs" — surface handler errors via console rather than leaving
+        // runs": surface handler errors via console rather than leaving
         // an unhandled rejection on the show() promise.
         console.error('[AlertProvider] button handler threw', err)
       } finally {

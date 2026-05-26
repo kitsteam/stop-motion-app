@@ -8,7 +8,7 @@ import AnimatorPage from './AnimatorPage'
 // AnimatorPage transitively renders <Thumbnails>, which imports swiper/react
 // and its CSS bundle. Both hit DOM APIs jsdom does not provide. Mock them so
 // the page test stays focused on layout and lifecycle. Only `children` is
-// forwarded — Swiper-only props would otherwise warn about unknown DOM attrs.
+// forwarded: Swiper-only props would otherwise warn about unknown DOM attrs.
 vi.mock('swiper/swiper-bundle.css', () => ({}))
 vi.mock('swiper/react', () => ({
   Swiper: ({ children }: { children?: React.ReactNode }) => (

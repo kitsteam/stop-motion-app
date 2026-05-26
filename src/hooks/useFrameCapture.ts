@@ -84,7 +84,7 @@ function buildOffscreen(width: number, height: number): OffscreenCacheEntry | nu
     return null
   }
   // alpha:false matches Animator.setupContext (animator.ts:167) and lets the
-  // compositor skip the alpha channel — measurable win on mobile Safari.
+  // compositor skip the alpha channel: measurable win on mobile Safari.
   const ctx = canvas.getContext('2d', { alpha: false }) as AnyContext | null
   if (!ctx) return null
   return { canvas, ctx, width, height }

@@ -5,10 +5,10 @@ import { useAlert } from './useAlert'
 import { useAnimator } from './useAnimator'
 import { useAnimatorStore } from './useAnimatorStore'
 
-// Replaces Angular's `AnimatorGuard.canDeactivate`: intercepts in-app navigations
-// away from /animator (via `useBlocker`) and tab-close / reload events (via
-// `useBeforeUnload`) when there are unsaved frames. The confirm handler clears
-// frames before completing the navigation so the page unmounts in a clean state.
+// Intercepts in-app navigations away from /animator (via `useBlocker`) and
+// tab-close / reload events (via `useBeforeUnload`) when there are unsaved
+// frames. The confirm handler clears frames before completing the navigation
+// so the page unmounts in a clean state.
 export function useNavigationGuard(): void {
   const { t } = useTranslation()
   const service = useAnimator()

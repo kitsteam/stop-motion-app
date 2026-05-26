@@ -71,7 +71,7 @@ describe('LoadButton', () => {
       expect(screen.getByText('Achtung')).toBeInTheDocument()
     })
 
-    // Click Yes — this triggers showUploadAlert() which enqueues the next alert
+    // Click Yes: this triggers showUploadAlert() which enqueues the next alert
     fireEvent.click(screen.getByText('Ja'))
 
     // Upload alert should appear after hint dismisses

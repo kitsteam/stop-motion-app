@@ -2,11 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/assets/icons/icon-192x192.png" />
-    <meta name="theme-color" content="#1976d2" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>StopClip</title>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/icon-72x72.png" />
+    <meta name="theme-color" content="#1976d2" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="StopClip" />
+    <link rel="apple-touch-icon" href="/assets/icons/ios/icons/apple-touch-icon_180x180.png" />
+
+    <!-- Portrait-only startup images (manifest locks orientation). Unmatched
+         devices fall back to the manifest's background_color + touch icon. -->
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/icons/ios/splash/splash_1125x2436.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/assets/icons/ios/splash/splash_2048x2732.png" />
   </head>
   <body>
     <div id="root"></div>

@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { i18nInitPromise } from './i18n'
-import 'bootstrap/dist/css/bootstrap.min.css'
 import './index.css'
 import { router } from './router'
 

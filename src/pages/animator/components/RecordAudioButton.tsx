@@ -56,7 +56,7 @@ export default function RecordAudioButton() {
           {
             text: t('buttons_record_audio'),
             // Defer so the alert (top-layer <dialog>) unmounts before the
-            // countdown renders — otherwise it hides behind the dialog.
+            // countdown renders: otherwise it hides behind the dialog.
             handler: () => {
               service.clearAudio()
               setTimeout(() => {

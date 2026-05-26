@@ -68,7 +68,7 @@ describe('HomePage', () => {
     ]
     for (const [name, expectedHref] of expectations) {
       // Each external link is rendered twice (desktop left panel + mobile
-      // footer) — both copies must carry the correct attributes.
+      // footer): both copies must carry the correct attributes.
       const matches = screen.getAllByRole('link', { name })
       expect(matches).toHaveLength(2)
       for (const link of matches) {

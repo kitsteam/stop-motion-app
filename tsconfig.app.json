@@ -24,7 +24,7 @@
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
 
-    /* Path aliases — resolved relative to this file when baseUrl is omitted. */
+    /* Path aliases: resolved relative to this file when baseUrl is omitted. */
     "paths": {
       "@enums/*":      ["./src/enums/*"],
       "@interfaces/*": ["./src/interfaces/*"]

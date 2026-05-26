@@ -91,7 +91,7 @@ export default function HomePage() {
             <li>{t('pages_home_bullet_3')}</li>
           </ul>
 
-          <Link to="/animator" className={`btn btn-primary ${styles.cta}`}>
+          <Link to="/animator" className={styles.cta}>
             {t('buttons_home_start')}
           </Link>
 

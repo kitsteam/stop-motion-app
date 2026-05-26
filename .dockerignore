@@ -1,6 +1,4 @@
 # Common
-README.md
-CHANGELOG.md
 docker-compose.yml
 Dockerfile
 
@@ -27,3 +25,10 @@ dist
 .idea/
 .omc/
 .claude/
+
+# Audit / repo-tooling files that should not enter build context
+scripts/
+docs/
+coverage/
+.secretlintrc.json
+*.md

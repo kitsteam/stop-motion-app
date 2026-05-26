@@ -34,7 +34,7 @@ describe('useToast', () => {
     act(() => {
       result.current.show({ message: 'hi' })
     })
-    // No assertion on DOM here — covered by ToastProvider.test.tsx. We only
+    // No assertion on DOM here: covered by ToastProvider.test.tsx. We only
     // verify the call doesn't throw and the hook value remains stable.
     expect(typeof result.current.show).toBe('function')
   })

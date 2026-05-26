@@ -18,8 +18,7 @@ export function useServiceWorker(): UseServiceWorkerResult {
     onRegisteredSW(_swUrl, registration) {
       if (!registration) return
       // useRegisterSW doesn't expose a teardown for onRegisteredSW; the
-      // interval lives for the page lifetime — matches the Angular
-      // appRef.isStable-then-everyHour subscription.
+      // interval lives for the page lifetime.
       setInterval(() => {
         void registration.update()
       }, HOUR_MS)

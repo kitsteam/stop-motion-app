@@ -142,7 +142,7 @@ describe('RecordAudioButton', () => {
     )
     fireEvent.click(screen.getByTestId('record-audio-button'))
     expect(service.recordAudio).toHaveBeenCalledTimes(1)
-    // No re-record dialog or countdown rendered — the dialog only appears
+    // No re-record dialog or countdown rendered: the dialog only appears
     // for the "has audio, not recording" branch.
     expect(
       screen.queryByRole('heading', { name: 'Audiospur vorhanden' }),

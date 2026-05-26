@@ -23,7 +23,7 @@ function drawFrame(
   height: number,
 ): void {
   if (!canvas || !frame) return
-  // Match the bitmap to the requested draw area — otherwise drawImage() clips
+  // Match the bitmap to the requested draw area: otherwise drawImage() clips
   // at the canvas element's default 300x150 bitmap.
   if (canvas.width !== width) canvas.width = width
   if (canvas.height !== height) canvas.height = height
