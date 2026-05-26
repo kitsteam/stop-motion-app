@@ -45,6 +45,26 @@
   font-size: 0.85rem;
 }
 
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radioOption {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.radioOption input {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
 .input {
   padding: 8px 10px;
   border: 1px solid #cbd5e0;

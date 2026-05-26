@@ -12,14 +12,22 @@
   width: 90%;
 }
 
+.shown :global(.swiper-slide) {
+  margin: 0 1%;
+  width: 18% !important;
+}
+
 .toggleButton {
   cursor: pointer;
   position: relative;
   width: 100%;
+  margin: 0;
+  padding-left: 8px;
   z-index: 9;
 }
 
 .toggleButton img {
   height: 28px;
   width: 28px;
+  filter: brightness(0) invert(1);
 }

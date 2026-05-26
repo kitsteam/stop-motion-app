@@ -137,13 +137,17 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
       audio.stop()
       return
     }
+    // Cap the recording at the smaller of one minute or clip duration —
+    // export crops to clip duration anyway, so any extra is discarded.
+    const clipMs = (frameCapture.frames.length * 1000) / Math.max(1, frameRate)
+    const maxMs = Math.min(60_000, clipMs)
     try {
-      await audio.start()
+      await audio.start(maxMs)
     } catch (err) {
       console.error('[useAnimator] recordAudio failed', err)
       toast.show({ message: translateApi.instant('toast_animator_audio_no_access') })
     }
-  }, [audio, toast])
+  }, [audio, frameCapture.frames.length, frameRate, toast])
 
   const save = useCallback(
     async (
@@ -221,6 +225,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
   const api = useMemo<AnimatorAPI>(
     () => ({
       hasAudio: audio.audioBlob !== null,
+      isRecordingAudio: audio.status === AudioRecorderStatus.recording,
       capture: frameCapture.capture,
       undoCapture: frameCapture.undo,
       removeFrames: frameCapture.removeAt,
@@ -240,6 +245,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     [
       audio.audioBlob,
       audio.clear,
+      audio.status,
       camera.rotate,
       camera.switchCamera,
       camera.toggle,

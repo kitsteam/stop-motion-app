@@ -4,7 +4,7 @@ import LoadingOverlay from '../../../components/LoadingOverlay'
 import { useAlert } from '../../../hooks/useAlert'
 import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
-import styles from './TabBarButton.module.css'
+import styles from './ToolbarButton.module.css'
 
 export default function LoadButton() {
   const { t } = useTranslation()

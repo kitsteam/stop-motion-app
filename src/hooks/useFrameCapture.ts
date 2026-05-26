@@ -193,6 +193,10 @@ export function useFrameCapture(options: UseFrameCaptureOptions): UseFrameCaptur
   useEffect(() => {
     const canvas = snapshotCanvasRef.current
     if (!canvas) return
+    // Match the bitmap to the layout size so drawImage() doesn't clip at the
+    // default 300x150 canvas dimensions.
+    if (canvas.width !== width) canvas.width = width
+    if (canvas.height !== height) canvas.height = height
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     if (state.frames.length === 0) {

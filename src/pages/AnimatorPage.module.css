@@ -8,20 +8,44 @@
 }
 
 .toolbar,
-.framerateSlider,
-.thumbnails,
-.tabbar {
+.framerateSlider {
   position: relative;
   z-index: 3;
 }
 
-.canvasContainer {
-  margin: 0 auto;
-  display: block;
-  background-color: #000;
-  height: 100%;
-  width: 100%;
+.tabbar {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
+  right: 0;
+  z-index: 3;
+}
+
+.cameraState {
+  position: absolute;
+  top: 110px;
+  right: 8px;
+  margin: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.canvasContainer {
+  position: absolute;
+  inset: 0;
+  background-color: #000;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.thumbnails {
+  position: absolute;
+  top: 110px;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  pointer-events: auto;
 }

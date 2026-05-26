@@ -21,7 +21,7 @@
 .footerLink {
   color: #ffffff;
   text-decoration: none;
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 
 .footerLink:hover,
@@ -50,9 +50,8 @@
 
 .leftFooterLinks {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: center;
-  margin-bottom: 0.5rem;
 }
 
 /* ---------- content panel ---------- */
@@ -61,37 +60,41 @@
   display: flex;
   flex-direction: column;
   min-height: var(--app-height, 100vh);
-  padding: 1rem;
-  /* room for the fixed-bottom mobile footer */
+  padding: var(--space-4);
+  /* room for the fixed-bottom mobile footer (out-of-scale literal) */
   padding-bottom: 6rem;
 }
 
 .kitsLogo {
   display: flex;
   justify-content: flex-end;
-  padding-top: 0.75rem;
+  padding-top: var(--space-3);
+  min-height: 100px;
 }
 
 .kitsLogo img {
-  height: 2.5rem;
+  /* out-of-scale logo display size */
+  height: 4.5rem;
   width: auto;
   display: block;
 }
 
 .callToAction {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
+  margin-top: var(--space-6);
+  /* out-of-scale max-width */
   max-width: 36rem;
-  margin: 0 auto;
 }
 
 .title {
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
+  color: var(--color-primary);
 }
 
 .title a {
@@ -101,32 +104,34 @@
 
 .bullets {
   list-style: none;
-  padding: 0;
-  margin: 0 0 1rem 0;
+  padding: 0 0 0 7px;
+  margin: 0 0 var(--space-4) 0;
+  border-left: 3px solid var(--color-accent);
 }
 
 .bullets li {
-  padding-bottom: 0.5rem;
+  padding-bottom: var(--space-2);
+  font-weight: 300;
 }
 
 .cta {
-  margin-top: 1rem;
-  background-color: #00a3d3;
-  border-color: #00a3d3;
+  margin-top: var(--space-4);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
   color: #ffffff;
 }
 
 .cta:hover,
 .cta:focus {
-  background-color: #008fba;
-  border-color: #008fba;
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   color: #ffffff;
 }
 
 .disclaimer {
-  margin-top: 1rem;
-  color: #6c757d;
-  font-size: 0.875rem;
+  margin-top: var(--space-4);
+  color: var(--color-neutral-500);
+  font-size: var(--text-sm);
 }
 
 /* ---------- mobile fixed footer (< 992 px) ---------- */
@@ -139,13 +144,14 @@
   z-index: 10;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #00a3d3 0%, #008fba 100%);
-  padding: 0.5rem 1rem;
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  padding: var(--space-2) var(--space-4);
 }
 
 .mobileFooterLogo {
   flex: 0 0 auto;
-  width: 3rem;
+  /* out-of-scale logo display size */
+  width: 5rem;
 }
 
 .mobileFooterLogo img {
@@ -159,7 +165,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 /* ---------- desktop split (≥ 992 px) ---------- */
@@ -175,15 +181,23 @@
     left: 0;
     width: 50%;
     height: var(--app-height, 100vh);
-    background: linear-gradient(135deg, #00a3d3 0%, #008fba 100%);
-    padding: 2rem 1rem;
+    background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    padding: var(--space-8) var(--space-4) 0;
     z-index: 1;
   }
 
   .contentPanel {
     margin-left: 50%;
     width: 50%;
-    padding-bottom: 1rem; /* no mobile footer to clear */
+    padding-bottom: var(--space-4); /* no mobile footer to clear */
+  }
+
+  .callToAction {
+    flex: 1 1 auto;
+    justify-content: center;
+    margin-top: 0;
+    /* anchor title against a consistent left edge of the right-half panel */
+    padding-left: var(--space-8);
   }
 
   .mobileFooter {

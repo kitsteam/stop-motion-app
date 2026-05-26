@@ -57,7 +57,7 @@ describe('SettingsPage', () => {
     const logo = screen.getByAltText('StopClip Logo')
     expect(logo).toHaveAttribute(
       'src',
-      '/assets/kits/images/stop-motion-logo-white.svg',
+      '/assets/images/stop-motion-logo-white.svg',
     )
   })
 })

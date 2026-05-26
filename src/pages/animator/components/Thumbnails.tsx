@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination, Scrollbar } from 'swiper/modules'
 import 'swiper/swiper-bundle.css'
 import type { Swiper as SwiperType } from 'swiper/types'
 import { useAlert } from '../../../hooks/useAlert'
@@ -94,8 +95,8 @@ export default function Thumbnails() {
           <img
             src={
               isHidden
-                ? '/assets/icons/custom/show.svg'
-                : '/assets/icons/custom/hidden.svg'
+                ? '/assets/icons/custom/hidden.svg'
+                : '/assets/icons/custom/show.svg'
             }
             alt=""
           />
@@ -106,6 +107,7 @@ export default function Thumbnails() {
         data-testid="thumbnails-container"
       >
         <Swiper
+          modules={[Navigation, Pagination, Scrollbar]}
           slidesPerView={5}
           speed={100}
           spaceBetween={0}

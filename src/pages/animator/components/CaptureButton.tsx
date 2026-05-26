@@ -31,7 +31,7 @@ export default function CaptureButton() {
   return (
     <button
       type="button"
-      className={`${styles.button}${animated ? ` ${styles.animated}` : ''}`}
+      className={`${styles.captureButton}${animated ? ` ${styles.animated}` : ''}`}
       aria-label={t('labels_capture')}
       data-testid="capture-button"
       onClick={() => void onClick()}
@@ -40,7 +40,7 @@ export default function CaptureButton() {
         src="/assets/icons/custom/rec-circle.svg"
         alt=""
         aria-hidden="true"
-        className={styles.icon}
+        className={styles.captureIcon}
       />
     </button>
   )

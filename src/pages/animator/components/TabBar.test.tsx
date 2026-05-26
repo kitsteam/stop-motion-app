@@ -14,7 +14,11 @@ describe('TabBar', () => {
     )
 
     expect(screen.getByTestId('animator-tabbar')).toBeInTheDocument()
-    // 5 buttons: Capture, Play, PlayVideo, Load, Save.
+    // 5 buttons: Play, CameraSelect, Capture (center FAB), Undo, RecordAudio.
+    expect(screen.getByTestId('capture-button')).toBeInTheDocument()
+    expect(screen.getByTestId('camera-select-button')).toBeInTheDocument()
+    expect(screen.getByTestId('undo-button')).toBeInTheDocument()
+    expect(screen.getByTestId('record-audio-button')).toBeInTheDocument()
     expect(screen.getAllByRole('button')).toHaveLength(5)
   })
 })

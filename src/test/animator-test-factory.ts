@@ -6,6 +6,7 @@ export interface MockAnimatorOverrides {
   cameras?: MediaDeviceInfo[]
   frames?: HTMLImageElement[]
   hasAudio?: boolean
+  isRecordingAudio?: boolean
   frameRate?: number
 }
 
@@ -34,6 +35,7 @@ export function createMockAnimatorService(
 
   return {
     hasAudio: overrides.hasAudio ?? false,
+    isRecordingAudio: overrides.isRecordingAudio ?? false,
     capture: vi.fn().mockResolvedValue(undefined),
     undoCapture: vi.fn(),
     removeFrames: vi.fn((index: number) => {

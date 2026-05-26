@@ -31,7 +31,13 @@ export default function Thumbnail({ frame, index, onDelete }: ThumbnailProps) {
       data-testid={`thumbnail-${index}`}
     >
       <canvas ref={canvasRef} className={styles.canvas} />
-      <img className={styles.deleteIcon} src="/assets/icons/custom/delete.svg" alt="" />
+      <span className={styles.deleteIcon} aria-hidden="true">
+        <img
+          className={styles.deleteIconImg}
+          src="/assets/icons/custom/delete.svg"
+          alt=""
+        />
+      </span>
     </div>
   )
 }

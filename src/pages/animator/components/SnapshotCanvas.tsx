@@ -1,4 +1,5 @@
 import { useAnimatorRefs } from '../../../components/animator-refs-context'
+import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
 import styles from './SnapshotCanvas.module.css'
 
 // Onion-skin overlay sitting on top of the live preview. useFrameCapture draws
@@ -7,10 +8,12 @@ import styles from './SnapshotCanvas.module.css'
 // into this canvas — it only owns the element lifecycle.
 export default function SnapshotCanvas() {
   const { snapshotCanvasRef } = useAnimatorRefs()
+  const { isAnimatorPlaying } = useAnimatorStore()
   return (
     <canvas
       ref={snapshotCanvasRef}
       className={styles.canvas}
+      hidden={isAnimatorPlaying}
       data-testid="animator-snapshot-canvas"
     />
   )

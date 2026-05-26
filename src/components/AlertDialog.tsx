@@ -114,9 +114,9 @@ export default function AlertDialog({
           <div className={styles.inputs}>
             {inputs.map((input) =>
               input.type === 'radio' ? (
-                <div key={input.name} role="radiogroup">
+                <div key={input.name} role="radiogroup" className={styles.radioGroup}>
                   {input.options.map((option) => (
-                    <label key={option.value} className={styles.inputLabel}>
+                    <label key={option.value} className={styles.radioOption}>
                       <input
                         type="radio"
                         name={input.name}

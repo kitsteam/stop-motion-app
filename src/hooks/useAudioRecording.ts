@@ -5,7 +5,7 @@ import { MimeTypes } from '@enums/mime-types.enum'
 export interface UseAudioRecordingApi {
   status: AudioRecorderStatus
   audioBlob: Blob | null
-  start: () => Promise<void>
+  start: (maxDurationMs?: number) => Promise<void>
   stop: () => void
   clear: () => void
 }
@@ -52,11 +52,20 @@ export function useAudioRecording(): UseAudioRecordingApi {
   const mimeTypeRef = useRef<string>(MimeTypes.audioWebm)
   const startInFlightRef = useRef(false)
   const mountedRef = useRef(true)
+  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearAutoStopTimer = useCallback((): void => {
+    if (autoStopTimerRef.current !== null) {
+      clearTimeout(autoStopTimerRef.current)
+      autoStopTimerRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
     return () => {
       mountedRef.current = false
+      clearAutoStopTimer()
       const recorder = recorderRef.current
       if (recorder && recorder.state !== 'inactive') {
         try {
@@ -69,9 +78,10 @@ export function useAudioRecording(): UseAudioRecordingApi {
       recorderRef.current = null
       streamRef.current = null
     }
-  }, [])
+  }, [clearAutoStopTimer])
 
   const finalize = useCallback((): void => {
+    clearAutoStopTimer()
     const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
     chunksRef.current = []
     stopStreamTracks(streamRef.current)
@@ -81,9 +91,9 @@ export function useAudioRecording(): UseAudioRecordingApi {
       setAudioBlob(blob)
       setStatus(AudioRecorderStatus.stopped)
     }
-  }, [])
+  }, [clearAutoStopTimer])
 
-  const start = useCallback(async (): Promise<void> => {
+  const start = useCallback(async (maxDurationMs?: number): Promise<void> => {
     if (startInFlightRef.current) return
     if (recorderRef.current && recorderRef.current.state !== 'inactive') return
 
@@ -149,12 +159,28 @@ export function useAudioRecording(): UseAudioRecordingApi {
       }
 
       if (mountedRef.current) setStatus(AudioRecorderStatus.recording)
+
+      clearAutoStopTimer()
+      if (typeof maxDurationMs === 'number' && maxDurationMs > 0) {
+        autoStopTimerRef.current = setTimeout(() => {
+          autoStopTimerRef.current = null
+          const r = recorderRef.current
+          if (r && r.state !== 'inactive') {
+            try {
+              r.stop()
+            } catch {
+              finalize()
+            }
+          }
+        }, maxDurationMs)
+      }
     } finally {
       startInFlightRef.current = false
     }
-  }, [finalize])
+  }, [clearAutoStopTimer, finalize])
 
   const stop = useCallback((): void => {
+    clearAutoStopTimer()
     const recorder = recorderRef.current
     if (!recorder || recorder.state === 'inactive') return
     try {
@@ -165,7 +191,7 @@ export function useAudioRecording(): UseAudioRecordingApi {
       console.warn('[useAudioRecording] recorder.stop() failed', err)
       finalize()
     }
-  }, [finalize])
+  }, [clearAutoStopTimer, finalize])
 
   const clear = useCallback((): void => {
     // Mirrors Animator.clearAudio (animator.ts:285): no-op while recording.

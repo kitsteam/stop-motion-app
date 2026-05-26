@@ -1,64 +1,66 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@font-face {
+  font-family: 'FiraSans';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/kits/font/firasans/FiraSans-Light.otf') format('opentype');
+}
+@font-face {
+  font-family: 'FiraSans';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/kits/font/firasans/FiraSans-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'FiraSans';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/kits/font/firasans/FiraSans-Bold.otf') format('opentype');
+}
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+:root {
+  /* Kits brand palette — source of truth for brand colors. */
+  --color-primary: #00456f; /* Kits navy */
+  --color-primary-hover: #003a5c; /* Kits navy-dark */
+  --color-accent: #00a3d3; /* Kits cyan */
+
+  /* Neutrals (Tailwind v4 gray-* scale values, mirrored without dependency). */
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-500: #6b7280;
+  --color-neutral-700: #374151;
+
+  /* Spacing scale on the 0.25rem grid. Only values used in components. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Font-size scale (Tailwind v4 text-* scale values, mirrored). */
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --sans: 'FiraSans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'FiraSans', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  font-family: var(--sans);
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-/* Placeholder shell — gets replaced by per-page layouts in M1+. The fixed
-   width constrains any nested Bootstrap `.container` on viewports > 1126px;
-   drop or relax this rule once a real layout lands. */
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -67,52 +69,32 @@
 
 body {
   margin: 0;
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  color: #212529;
 }
 
 h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  color: #08060d;
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: var(--text-4xl);
+  margin: 0 0 var(--space-2);
 }
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  font-size: var(--text-3xl);
+  margin: 0 0 var(--space-2);
 }
-/* Loads after bootstrap.min.css, so this zeroes Bootstrap's default
-   `p { margin-bottom: 1rem }`. Per-page layouts in M1+ should re-add
-   spacing locally (e.g. `.text-muted`, `.lead`, or container-scoped rules)
-   rather than relying on Bootstrap snippet defaults. */
 p {
   margin: 0;
+  font-weight: 300;
+  font-size: var(--text-base);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+li {
+  font-size: var(--text-base);
 }

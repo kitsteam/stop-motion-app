@@ -35,3 +35,6 @@ dist-ssr
 .pnpm-store/
 
 .devcontainer
+
+# Local dev helpers (kept untracked so individual setups don't get committed)
+scripts/dev/fake-camera.js

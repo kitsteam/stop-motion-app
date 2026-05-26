@@ -5,7 +5,7 @@ import { ToolbarTestProviders } from '../../../test/animator-test-utils'
 import { createMockAnimatorService } from '../../../test/animator-test-factory'
 
 describe('Toolbar', () => {
-  it('renders all six child buttons inside the toolbar container', () => {
+  it('renders the timer plus the four file-action buttons', () => {
     const service = createMockAnimatorService()
     render(
       <ToolbarTestProviders service={service}>
@@ -13,10 +13,9 @@ describe('Toolbar', () => {
       </ToolbarTestProviders>,
     )
     expect(screen.getByTestId('animator-toolbar')).toBeInTheDocument()
-    expect(screen.getByTestId('camera-select-button')).toBeInTheDocument()
-    expect(screen.getByTestId('toggle-button')).toBeInTheDocument()
-    expect(screen.getByTestId('record-audio-button')).toBeInTheDocument()
-    expect(screen.getByTestId('undo-button')).toBeInTheDocument()
+    expect(screen.getByTestId('timer')).toBeInTheDocument()
+    expect(screen.getByTestId('save-button')).toBeInTheDocument()
+    expect(screen.getByTestId('load-button')).toBeInTheDocument()
     expect(screen.getByTestId('clear-button')).toBeInTheDocument()
     expect(screen.getByTestId('settings-button')).toBeInTheDocument()
   })

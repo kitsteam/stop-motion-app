@@ -12,6 +12,8 @@ export default function FramerateSlider() {
     service.setFramerate(Number(e.target.value))
   }
 
+  const pct = ((frameRate - 1) / 11) * 100
+
   return (
     <div>
       <div className={styles.sliderRow}>
@@ -25,6 +27,7 @@ export default function FramerateSlider() {
           onChange={handleChange}
           data-testid="framerate-slider"
           className={styles.range}
+          style={{ '--pct': `${pct}%` } as React.CSSProperties}
         />
         <img src="/assets/icons/custom/fast.svg" alt="" />
       </div>

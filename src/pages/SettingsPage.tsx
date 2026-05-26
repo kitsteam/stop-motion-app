@@ -5,7 +5,7 @@ import styles from './SettingsPage.module.css'
 const IMPRINT_URL = 'https://kits.blog/impressum/'
 const PRIVACY_URL = 'https://kits.blog/datenschutz/#stopclip'
 
-const STOP_MOTION_LOGO = '/assets/kits/images/stop-motion-logo-white.svg'
+const STOP_MOTION_LOGO = '/assets/images/stop-motion-logo-white.svg'
 
 export default function SettingsPage() {
   const { t } = useTranslation()

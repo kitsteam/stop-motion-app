@@ -19,6 +19,7 @@
   width: 100%;
   height: 100%;
   transform-origin: center center;
+  /* #d1e5eb is a pale cyan-gray inset ring — decorative chrome, not brand. */
   box-shadow:
     inset 0 10px 0 #d1e5eb,
     inset 10px 0 0 #d1e5eb,
@@ -28,11 +29,12 @@
 }
 
 .counter {
+  /* display size for the countdown numeric; stays as literal */
   font-size: 75px;
   font-weight: 400;
   animation: beat 1s -0.5s linear infinite;
   display: block;
-  color: #00a3d3;
+  color: var(--color-accent);
   border-radius: 50%;
 }
 
@@ -51,11 +53,12 @@
 @keyframes beat {
   0% {
     transform: scale(1);
+    /* darker cyan beat color; not in the brand palette */
     color: #008fba;
   }
   50% {
     transform: scale(0.8);
-    color: #00a3d3;
+    color: var(--color-accent);
   }
   100% {
     color: #008fba;

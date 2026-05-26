@@ -6,7 +6,7 @@ import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
 import { useToast } from '../../../hooks/useToast'
 import { SaveState } from '@enums/save-state'
-import styles from './TabBarButton.module.css'
+import styles from './ToolbarButton.module.css'
 
 function formatProgress(progress: number): number {
   return Math.min(99, Math.round(progress * 100))

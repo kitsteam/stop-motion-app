@@ -1,8 +1,8 @@
+import CameraSelectButton from './CameraSelectButton'
 import CaptureButton from './CaptureButton'
 import PlayButton from './PlayButton'
-import PlayVideoButton from './PlayVideoButton'
-import LoadButton from './LoadButton'
-import SaveButton from './SaveButton'
+import RecordAudioButton from './RecordAudioButton'
+import UndoButton from './UndoButton'
 import styles from './TabBar.module.css'
 
 export default function TabBar() {
@@ -12,11 +12,11 @@ export default function TabBar() {
       data-testid="animator-tabbar"
       aria-label="animator-tabbar"
     >
-      <CaptureButton />
       <PlayButton />
-      <PlayVideoButton />
-      <LoadButton />
-      <SaveButton />
+      <CameraSelectButton />
+      <CaptureButton />
+      <UndoButton />
+      <RecordAudioButton />
     </nav>
   )
 }

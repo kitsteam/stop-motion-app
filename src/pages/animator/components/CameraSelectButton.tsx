@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useAnimator } from '../../../hooks/useAnimator'
 import { useAnimatorStore } from '../../../hooks/useAnimatorStore'
 import { layoutAPI } from '../../../services/layout-api'
-import styles from './ToolbarButton.module.css'
+import styles from './TabBarButton.module.css'
 
 export default function CameraSelectButton() {
   const { t } = useTranslation()

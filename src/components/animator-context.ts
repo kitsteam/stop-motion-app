@@ -4,6 +4,7 @@ import type { ProgressCallback } from '../services/types'
 
 export interface AnimatorAPI {
   hasAudio: boolean
+  isRecordingAudio: boolean
 
   capture: () => Promise<void>
   undoCapture: () => void

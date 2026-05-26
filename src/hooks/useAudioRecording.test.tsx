@@ -326,4 +326,65 @@ describe('useAudioRecording', () => {
 
     expect(track.stop).toHaveBeenCalledTimes(1)
   })
+
+  it('start(maxDurationMs) auto-stops the recorder once the cap elapses', async () => {
+    vi.useFakeTimers()
+    try {
+      installMediaDevices({ getUserMedia: vi.fn().mockResolvedValue(makeStream()) })
+      const { result } = renderHook(() => useAudioRecording())
+
+      await act(async () => {
+        await result.current.start(2_000)
+      })
+      expect(result.current.status).toBe(AudioRecorderStatus.recording)
+      expect(recorderInstances[0].stop).not.toHaveBeenCalled()
+
+      act(() => {
+        vi.advanceTimersByTime(2_000)
+      })
+      expect(recorderInstances[0].stop).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('manual stop() before the cap clears the auto-stop timer', async () => {
+    vi.useFakeTimers()
+    try {
+      installMediaDevices({ getUserMedia: vi.fn().mockResolvedValue(makeStream()) })
+      const { result } = renderHook(() => useAudioRecording())
+
+      await act(async () => {
+        await result.current.start(5_000)
+      })
+      act(() => {
+        result.current.stop()
+      })
+      // Advancing past the original cap must NOT trigger a second stop().
+      act(() => {
+        vi.advanceTimersByTime(10_000)
+      })
+      expect(recorderInstances[0].stop).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('start(0) does not schedule an auto-stop timer', async () => {
+    vi.useFakeTimers()
+    try {
+      installMediaDevices({ getUserMedia: vi.fn().mockResolvedValue(makeStream()) })
+      const { result } = renderHook(() => useAudioRecording())
+
+      await act(async () => {
+        await result.current.start(0)
+      })
+      act(() => {
+        vi.advanceTimersByTime(60_000)
+      })
+      expect(recorderInstances[0].stop).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

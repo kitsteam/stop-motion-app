@@ -130,4 +130,38 @@ describe('RecordAudioButton', () => {
     })
   })
 
+  it('clicking while recording calls recordAudio directly (no countdown)', async () => {
+    const service = createMockAnimatorService({
+      frames: [makeFrame()],
+      isRecordingAudio: true,
+    })
+    render(
+      <ToolbarTestProviders service={service}>
+        <RecordAudioButton />
+      </ToolbarTestProviders>,
+    )
+    fireEvent.click(screen.getByTestId('record-audio-button'))
+    expect(service.recordAudio).toHaveBeenCalledTimes(1)
+    // No re-record dialog or countdown rendered — the dialog only appears
+    // for the "has audio, not recording" branch.
+    expect(
+      screen.queryByRole('heading', { name: 'Audiospur vorhanden' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('reflects the recording state via aria-pressed and the .recording class', () => {
+    const service = createMockAnimatorService({
+      frames: [makeFrame()],
+      isRecordingAudio: true,
+    })
+    render(
+      <ToolbarTestProviders service={service}>
+        <RecordAudioButton />
+      </ToolbarTestProviders>,
+    )
+    const button = screen.getByTestId('record-audio-button')
+    expect(button).toHaveAttribute('aria-pressed', 'true')
+    expect(button.className).toMatch(/recording/)
+  })
+
 })

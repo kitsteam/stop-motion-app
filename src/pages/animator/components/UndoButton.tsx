@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useAnimator } from '../../../hooks/useAnimator'
-import styles from './ToolbarButton.module.css'
+import styles from './TabBarButton.module.css'
 
 export default function UndoButton() {
   const { t } = useTranslation()

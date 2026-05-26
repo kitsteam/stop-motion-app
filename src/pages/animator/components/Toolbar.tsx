@@ -1,18 +1,16 @@
-import CameraSelectButton from './CameraSelectButton'
 import ClearButton from './ClearButton'
-import RecordAudioButton from './RecordAudioButton'
+import LoadButton from './LoadButton'
+import SaveButton from './SaveButton'
 import SettingsButton from './SettingsButton'
-import ToggleButton from './ToggleButton'
-import UndoButton from './UndoButton'
+import Timer from './Timer'
 import styles from './Toolbar.module.css'
 
 export default function Toolbar() {
   return (
     <div className={styles.toolbar} data-testid="animator-toolbar">
-      <CameraSelectButton />
-      <ToggleButton />
-      <RecordAudioButton />
-      <UndoButton />
+      <Timer />
+      <SaveButton />
+      <LoadButton />
       <ClearButton />
       <SettingsButton />
     </div>

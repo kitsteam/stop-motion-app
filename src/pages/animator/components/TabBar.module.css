@@ -3,6 +3,6 @@
   width: 100%;
   align-items: stretch;
   justify-content: space-around;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px 0;
+  background: transparent;
+  padding: 4px 0 30px;
 }

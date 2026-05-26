@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
-import './App.css'
 import ToastProvider from './components/ToastProvider'
 import AlertProvider from './components/AlertProvider'
 import LoadingOverlay from './components/LoadingOverlay'
