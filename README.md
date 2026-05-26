@@ -38,6 +38,5 @@ Override `DOCKER_COMPOSE_APP_PORT_PUBLISHED` in `.env` to change the published p
 
 ## Documentation
 
-- [Codec Documentation](docs/CODECS.md): image, video, and audio codecs used
-- [Third-Party Licenses](THIRD_PARTY_LICENSES.md): codec-related dependencies
-- [ADR 0001: Force VP8 WebM exports](docs/adr/0001-force-vp8-exports.md)
+- [Codec Documentation](docs/CODECS.md) — image, video, and audio codecs used
+- [NOTICES](NOTICES.txt) — full third-party attribution for every bundled dependency

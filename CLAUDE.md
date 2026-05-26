@@ -4,21 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**StopClip**: a client-side-only PWA for creating stop-motion animations. All capture, encoding, and export happens in the browser; there is no backend. German is the only shipped locale.
-
-Forked from the kits GitLab repo, originally inspired by [szager/stop-motion](https://github.com/szager/stop-motion) (BSD-0). Licensed AGPL-3.0.
+**StopClip** — a client-side-only PWA for creating stop-motion animations. All capture, encoding, and export happens in the browser; there is no backend. German is the only shipped locale. Licensed AGPL-3.0.
 
 ## Tech stack
 
 - **React 19** + **TypeScript** + **Vite**
 - **react-router-dom 7** for routing
 - **react-i18next** + `i18next-http-backend` (loads `public/assets/i18n/de.json`)
-- **Bootstrap 5** CSS for layout primitives (no Bootstrap JS)
-- **Zustand** for the Animator state store (`src/stores/animator-store.ts`)
-- **pnpm 10.33.4** (via Corepack) on **Node 24**
+- CSS Modules per component (`*.module.css`) plus a global `src/index.css` for fonts and base styles — no CSS framework
+- **Zustand** for cross-component animator state (`src/stores/animator-store.ts`)
+- **pnpm** (via Corepack) on **Node 22**
 - **Vitest** + Testing Library + jsdom for unit tests
 - **vite-plugin-pwa** (Workbox) for the service worker and web app manifest
-- Media stack: native **MediaRecorder** (VP8 + Opus in WebM, see ADR 0001), **gifenc**, **@zip.js/zip.js**, **file-saver**, **Swiper** for the thumbnail carousel
+- Media stack: native **MediaRecorder** (VP8 + Opus in WebM), **gifenc**, **@zip.js/zip.js**, **file-saver**, **Swiper** for the thumbnail carousel
 
 ## Running the app
 
@@ -53,58 +51,91 @@ src/
   pages/
     HomePage.tsx
     SettingsPage.tsx
+    AnimatorPage.tsx
     animator/
-      AnimatorPage.tsx
       components/              # toolbar buttons, canvases, slider, timer, thumbs, tabbar
       modals/                  # CountdownModal, VideoPlayerModal
-  components/                  # shared: Header, Spinner, Countdown, Toast, AlertDialog,
-                               # LoadingOverlay, AnimatorProvider, AnimatorRefsContext
+  components/                  # AnimatorProvider, animator-context, animator-refs-context,
+                               # AlertProvider, ToastProvider, Header, Spinner, Countdown,
+                               # Toast, AlertDialog, LoadingOverlay, ServiceWorkerUpdater
   hooks/                       # useAnimator, useAnimatorStore, useCameraStream,
-                               # useFrameCapture, usePlayback, useAudioRecording,
+                               # useFrameCapture, useAudioRecording, usePlayback,
                                # useAlert, useToast, useLayout, useNavigationGuard,
                                # useOrientationChangeToast, useServiceWorker
+  stores/                      # animator-store.ts (Zustand)
   services/                    # media-export-service, media-import-service, recording-service,
-                               # draft-export, draft-import, alert-api, toast-api, translate-api
-  stores/                      # animator-store (Zustand)
-  enums/, interfaces/, types/
+                               # draft-export, draft-import, alert-api, toast-api,
+                               # translate-api, layout-api, user-agent
   test/                        # vitest setup
 ```
 
 ### Data flow
 
-The Animator page is the only stateful surface. The provider composes the camera, frame-capture, playback, and audio hooks, and mirrors their state into a Zustand store so components can subscribe to slices without re-rendering on unrelated changes:
+The Animator page is the only stateful surface. `AnimatorProvider`
+(`src/components/AnimatorProvider.tsx`) is the composition root: it allocates
+the `<video>` and `<canvas>` refs, exposes them through `AnimatorRefsContext`,
+and composes the feature hooks into a single API surface that consumers reach
+via `useAnimator()`.
 
 ```
-UI event → useAnimator (context API) → useCameraStream / useFrameCapture /
-           usePlayback / useAudioRecording → animator-store (Zustand)
-        → useAnimatorStore selectors → components re-render
+UI event → useAnimator (context) → AnimatorProvider hook composition
+        → useCameraStream / useFrameCapture / useAudioRecording / usePlayback
+        → live local hook state + Zustand store (animator-store.ts)
+        → components re-render via store selectors or context
 ```
 
-- **`AnimatorProvider`** (`components/AnimatorProvider.tsx`) holds the three canvas/video refs in `AnimatorRefsContext` and composes the feature hooks into a single `AnimatorAPI` exposed via `AnimatorContext`. **A 360-frame cap** is enforced via `hasMemoryCapacity()`.
-- **`animator-store`** (`stores/animator-store.ts`) is the single source of truth for state shared across components: `frames`, `cameras`, `cameraStatus`, `cameraIsRotated`, `isAnimatorPlaying`, `frameRate`.
-- **`useAnimator`** returns the `AnimatorAPI` (capture, undo, save, load, togglePlay, …). **`useAnimatorStore`** is the slice selector hook over the Zustand store.
+- **`useCameraStream`** owns the `MediaStream`, camera enumeration, rotation
+  flag, and `getUserMedia` lifecycle.
+- **`useFrameCapture`** owns the JPEG frame stack (`frames` /
+  `frameBlobs`), the offscreen canvas, and the onion-skin overlay. Capture
+  blocks when the 360-frame `FRAME_LIMIT` is hit (`hasMemoryCapacity`).
+- **`useAudioRecording`** wraps the audio `MediaRecorder` and exposes
+  `status`, `audioBlob`, `start`, `stop`, `clear`.
+- **`usePlayback`** drives the player canvas + audio playback at the
+  configured frame rate.
+- **`animatorStore`** (Zustand) mirrors the hooks' state so any component can
+  subscribe via `useAnimatorStore()` selectors without holding the full
+  context. `AnimatorProvider` keeps the store in sync through one-way effects.
 
 ### Media services
 
-Split by concern; all return Promises that resolve to `Blob`s.
+Pure-TypeScript classes; all return Promises that resolve to `Blob`s.
 
-- **`media-export-service.ts`**: builds WebM video via canvas `captureStream(frameRate)` piped through `MediaRecorder` (VP8 + Opus only, per ADR 0001). Builds GIFs via gifenc (downscaled to 480px). Normalizes audio to WebM/Opus through an `AudioContext` → `MediaStreamAudioDestination` → `MediaRecorder` round-trip.
-- **`recording-service.ts`**: wraps `MediaRecorder` setup, state transitions, and codec selection.
-- **`media-import-service.ts`**: reads ZIP drafts via `@zip.js/zip.js`: extracts `video.webm` + optional `audio.webm`, plus the `frames/manifest.json` index and the individual frame blobs.
-- **`draft-export.ts` / `draft-import.ts`**: orchestrate the round-trip between the in-memory frame list and the on-disk zip.
-- **`useServiceWorker`**: subscribes to Workbox `onNeedRefresh` / `onOfflineReady` and shows the "new version, reload?" prompt.
+- **`media-export-service.ts`** — builds GIFs via `gifenc` (downscaled to
+  480 px wide) and delegates video export to `RecordingService`.
+- **`recording-service.ts`** — renders frames onto an offscreen canvas,
+  captures the canvas with `canvas.captureStream(frameRate)`, optionally
+  merges an audio track decoded through an `AudioContext` →
+  `MediaStreamAudioDestination` round-trip, and records the result with
+  `MediaRecorder`. Prefers `video/webm;codecs=vp8,opus` and falls back to
+  generic `video/webm`.
+- **`media-import-service.ts`** — reads draft `.zip` files via
+  `@zip.js/zip.js`: extracts the manifest (`frames/manifest.json`), per-frame
+  image blobs from `frames/`, and any `video.*` / `audio.*` blobs.
+- **`draft-export.ts` / `draft-import.ts`** — write and read the draft zip
+  layout described below; the import side rebuilds `HTMLImageElement`s from
+  the frame blobs.
+- **`useServiceWorker`** — subscribes to Workbox `onNeedRefresh` /
+  `onOfflineReady` and shows the "new version, reload?" prompt.
 
-See `docs/CODECS.md` for the full codec rationale and `docs/adr/0001-force-vp8-exports.md` for the VP8-only decision.
+See `docs/CODECS.md` for the codec details.
 
 ### Draft project format
 
-A "draft" save is a `.zip` containing:
+A "draft" save is a `.zip` written with `@zip.js/zip.js`:
 
-- `video.webm`: VP8 video rendered from the frame sequence
-- `audio.webm`: optional, Opus audio if the user recorded any
-- `frames/manifest.json` + the individual frame blobs (WebP or JPEG)
+```
+project.zip
+├── video.webm                 # WebM video produced by the export pipeline
+├── audio.{webm|ogg|mp4|wav}   # optional; extension derived from blob MIME
+└── frames/
+    ├── manifest.json          # { version, width, height, frameRate, frames[] }
+    └── frame-00001.jpg        # one file per captured frame (.jpg / .webp / .png)
+```
 
-Loading a draft reads the frame manifest and rehydrates each frame as an `HTMLImageElement`; the WebM is not demuxed.
+Loading a draft reads `manifest.json` to restore frame order, dimensions, and
+rate. When no manifest is present, the importer falls back to filename-based
+classification so older `video.webm`-only drafts still load.
 
 ## Driving the app with agent-browser
 

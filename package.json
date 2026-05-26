@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:notices": "node scripts/generate-notices.mjs"
   },
   "dependencies": {
     "@zip.js/zip.js": "^2.8.26",

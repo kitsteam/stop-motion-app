@@ -32,3 +32,8 @@ docs/
 coverage/
 .secretlintrc.json
 *.md
+
+# Exception: the build regenerates NOTICES.txt from the installed
+# node_modules; falls back to the committed NOTICES.txt if the script
+# fails. Keep the rest of scripts/ excluded.
+!scripts/generate-notices.mjs
