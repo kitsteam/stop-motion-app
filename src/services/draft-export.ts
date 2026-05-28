@@ -15,7 +15,7 @@ export interface SaveDraftInput {
 
 export async function saveDraftZip(input: SaveDraftInput): Promise<void> {
   const { filename, frameBlobs, audioBlob, frameRate, width, height, mediaExport } = input
-  const videoBlob = await mediaExport.createVideo(frameBlobs, frameRate, undefined)
+  const videoBlob = await mediaExport.createVideo(frameBlobs, frameRate)
   const dataURI = await createZipFile({
     videoBlob,
     audioBlob,

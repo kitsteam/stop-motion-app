@@ -48,6 +48,9 @@ export default function SaveButton() {
                   }),
                 )
               })
+            } catch (err) {
+              console.error('[SaveButton] export failed', err)
+              toast.show({ message: t('toast_animator_export_error') })
             } finally {
               setOverlayVisible(false)
             }

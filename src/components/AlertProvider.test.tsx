@@ -64,7 +64,7 @@ describe('AlertProvider', () => {
     expect(screen.getByText('Hello')).toBeInTheDocument()
   })
 
-  it('resolves the show() promise after the button handler runs and clears the dialog', async () => {
+  it('resolves the show() promise and clears the dialog when a button is activated', async () => {
     const resolved = vi.fn()
     const handler = vi.fn().mockResolvedValue(undefined)
     render(
@@ -89,6 +89,45 @@ describe('AlertProvider', () => {
     expect(handler).toHaveBeenCalledWith({})
     expect(resolved).toHaveBeenCalledTimes(1)
     expect(screen.queryByText('Confirm?')).toBeNull()
+  })
+
+  it('closes the dialog before a slow handler finishes so it cannot hide the export overlay', async () => {
+    let resolveHandler: (() => void) | undefined
+    const handler = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveHandler = resolve
+        }),
+    )
+    render(
+      <AlertProvider>
+        <Trigger
+          label="open"
+          options={{
+            message: 'Working',
+            buttons: [{ text: 'Go', handler }],
+          }}
+        />
+      </AlertProvider>,
+    )
+    act(() => {
+      screen.getByRole('button', { name: 'open' }).click()
+    })
+    expect(screen.getByText('Working')).toBeInTheDocument()
+
+    // Activate the button; the handler stays pending (simulating a long export).
+    await act(async () => {
+      screen.getByRole('button', { name: 'Go' }).click()
+    })
+
+    // The dialog must already be gone even though the handler has not resolved.
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('Working')).toBeNull()
+
+    // Let the pending handler finish cleanly.
+    await act(async () => {
+      resolveHandler?.()
+    })
   })
 
   it('resolves even when the handler throws and still clears the dialog', async () => {

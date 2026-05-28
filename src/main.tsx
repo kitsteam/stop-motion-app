@@ -9,6 +9,12 @@ import { router } from './router'
 // translation keys. The de.json file is ~4 KB and served from the same origin.
 await i18nInitPromise
 
+// iOS Safari ignores `user-scalable=no`, so block its pinch-zoom gestures
+// explicitly. `touch-action: manipulation` (index.css) handles double-tap zoom.
+for (const event of ['gesturestart', 'gesturechange', 'gestureend']) {
+  document.addEventListener(event, (e) => e.preventDefault(), { passive: false })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />

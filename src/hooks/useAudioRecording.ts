@@ -8,6 +8,7 @@ export interface UseAudioRecordingApi {
   start: (maxDurationMs?: number) => Promise<void>
   stop: () => void
   clear: () => void
+  loadAudio: (blob: Blob | null) => void
 }
 
 // Preference order matches Animator.getAudioMimeType (animator.ts:602): try
@@ -138,12 +139,22 @@ export function useAudioRecording(): UseAudioRecordingApi {
       recorderRef.current = recorder
       streamRef.current = stream
 
+      // Safari ignores unsupported MIME hints and records MP4/AAC instead, so
+      // trust the recorder's actual mimeType over our requested label —
+      // otherwise the blob is mislabeled `audio/webm` while holding MP4 bytes.
+      if (recorder.mimeType) {
+        mimeTypeRef.current = recorder.mimeType
+      }
+
       recorder.ondataavailable = (event: BlobEvent) => {
         if (event.data && event.data.size > 0) {
           chunksRef.current.push(event.data)
         }
       }
       recorder.onstop = () => {
+        if (recorder.mimeType) {
+          mimeTypeRef.current = recorder.mimeType
+        }
         finalize()
       }
 
@@ -200,5 +211,13 @@ export function useAudioRecording(): UseAudioRecordingApi {
     setStatus(AudioRecorderStatus.idle)
   }, [])
 
-  return { status, audioBlob, start, stop, clear }
+  const loadAudio = useCallback((blob: Blob | null): void => {
+    // Inject an audio track restored from an imported draft. No-op while a
+    // recording is in progress so live capture isn't clobbered.
+    if (recorderRef.current && recorderRef.current.state === 'recording') return
+    setAudioBlob(blob)
+    setStatus(blob ? AudioRecorderStatus.stopped : AudioRecorderStatus.idle)
+  }, [])
+
+  return { status, audioBlob, start, stop, clear, loadAudio }
 }

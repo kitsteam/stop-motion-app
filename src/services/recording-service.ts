@@ -7,7 +7,6 @@ type MediaRecorderErrorEvent = Event & { error?: DOMException }
 interface CreateVideoOptions {
   frames: Blob[]
   frameRate: number
-  audioBlob?: Blob
   mimeType?: string
   progressCallback?: ProgressCallback
 }
@@ -19,24 +18,19 @@ interface DrawableFrame {
   dispose(): void
 }
 
-interface AudioRecordingContext {
-  stream: MediaStream
-  start(): void
-  stop(): void
-  duration: number
-  finished: Promise<void>
-}
-
 export class RecordingService {
   private readonly preferredVideoMimeTypes: string[] = [
-    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp8',
     MimeTypes.video,
   ]
 
   constructor(private readonly document: Document = globalThis.document) {}
 
+  // Records the frames as a video-only file. Audio is recorded separately and
+  // merged afterwards by `combineAudioVideo` (media-combine-service), so this
+  // recorder never muxes an audio track — that path was broken on Safari.
   public async createVideoFromFrames(options: CreateVideoOptions): Promise<Blob> {
-    const { frames, frameRate, audioBlob, mimeType, progressCallback } = options
+    const { frames, frameRate, mimeType, progressCallback } = options
 
     if (!frames || !frames.length) {
       throw new Error('No frames available for export.')
@@ -48,14 +42,11 @@ export class RecordingService {
     const drawable = await this.decodeFrame(frames[0])
     const context = this.createRenderingContext(drawable.width, drawable.height)
     const captureStream = this.captureCanvasStream(context.canvas, frameRate)
-    const audioContext = await this.createAudioRecordingContext(audioBlob)
-    const combinedStream = this.combineStreams(captureStream, audioContext?.stream)
-    const recorder = this.createRecorder(combinedStream, { preferredMimeType: mimeType })
+    const recorder = this.createRecorder(captureStream, { preferredMimeType: mimeType })
     const recordingPromise = this.collectRecording(recorder, MimeTypes.video)
     const startTime = performance.now()
 
     recorder.start(Math.min(1000, Math.max(100, Math.round(frameIntervalMs))))
-    audioContext?.start()
 
     this.reportProgress('converting_images', 1, frames.length, progressCallback, startTime)
     await this.renderDrawable(
@@ -87,8 +78,6 @@ export class RecordingService {
     const blob = await recordingPromise
 
     this.stopStreamTracks(captureStream)
-    this.stopStreamTracks(combinedStream)
-    audioContext?.stop()
 
     return blob
   }
@@ -240,16 +229,6 @@ export class RecordingService {
     })
   }
 
-  private combineStreams(videoStream: MediaStream, audioStream?: MediaStream): MediaStream {
-    if (!audioStream) {
-      return videoStream
-    }
-    const combined = new MediaStream()
-    videoStream.getTracks().forEach((track) => combined.addTrack(track))
-    audioStream.getTracks().forEach((track) => combined.addTrack(track))
-    return combined
-  }
-
   private stopStreamTracks(stream: MediaStream) {
     stream.getTracks().forEach((track) => track.stop())
   }
@@ -271,52 +250,6 @@ export class RecordingService {
         resolve(new Blob(chunks, { type }))
       }
     })
-  }
-
-  private async createAudioRecordingContext(
-    audioBlob?: Blob,
-  ): Promise<AudioRecordingContext | null> {
-    if (!audioBlob) {
-      return null
-    }
-
-    const win = this.document.defaultView as
-      | ({ AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
-      | null
-    const AudioContextCtor = win?.AudioContext || win?.webkitAudioContext
-    if (!AudioContextCtor) {
-      console.warn(
-        '[RecordingService] AudioContext is not supported. Audio track will be omitted.',
-      )
-      return null
-    }
-
-    const context = new AudioContextCtor()
-    const destination = context.createMediaStreamDestination()
-    const source = context.createBufferSource()
-    const arrayBuffer = await audioBlob.arrayBuffer()
-    const audioBuffer = await context.decodeAudioData(arrayBuffer)
-    source.buffer = audioBuffer
-    source.connect(destination)
-    const finished = new Promise<void>((resolve) => {
-      source.onended = () => resolve()
-    })
-
-    return {
-      stream: destination.stream,
-      duration: audioBuffer.duration,
-      finished,
-      start: () => source.start(0),
-      stop: () => {
-        try {
-          source.stop()
-        } catch (error) {
-          console.warn('[RecordingService] Stopping audio source failed.', error)
-        }
-        destination.stream.getTracks().forEach((track) => track.stop())
-        context.close()
-      },
-    }
   }
 
   private getFrameInterval(frameRate: number): number {

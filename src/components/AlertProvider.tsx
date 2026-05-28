@@ -50,18 +50,24 @@ export default function AlertProvider({ children }: AlertProviderProps) {
       if (!current) return
       if (resolvingRef.current.has(current.id)) return
       resolvingRef.current.add(current.id)
+
+      // Close the dialog (dequeue + resolve the show() promise) *before* running
+      // the handler. The handler can be long-running (e.g. a video export), and
+      // AlertDialog opens via showModal() — the browser top layer, above any
+      // z-index — so it must be unmounted first, otherwise it hides the export
+      // progress overlay for the whole run.
+      current.resolve()
+      if (mountedRef.current) {
+        setQueue((prev) => prev.filter((entry) => entry.id !== current.id))
+      }
+
       try {
         await button.handler?.(inputValues)
       } catch (err) {
-        // The show()-promise contract is "resolves when a button handler
-        // runs": surface handler errors via console rather than leaving
-        // an unhandled rejection on the show() promise.
+        // Surface handler errors via console rather than leaving an unhandled
+        // rejection on the (already-resolved) show() promise.
         console.error('[AlertProvider] button handler threw', err)
       } finally {
-        current.resolve()
-        if (mountedRef.current) {
-          setQueue((prev) => prev.filter((entry) => entry.id !== current.id))
-        }
         resolvingRef.current.delete(current.id)
       }
     },

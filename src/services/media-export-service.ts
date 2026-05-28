@@ -28,13 +28,11 @@ export class MediaExportService {
   public createVideo(
     imageBlobs: Blob[],
     frameRate: number,
-    audioBlob: Blob | undefined,
     progressCallback?: ProgressCallback,
   ): Promise<Blob> {
     return this.recordingService.createVideoFromFrames({
       frames: imageBlobs,
       frameRate,
-      audioBlob,
       progressCallback,
     })
   }

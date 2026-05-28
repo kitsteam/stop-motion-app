@@ -18,6 +18,7 @@ import { animatorStore } from '../stores/animator-store'
 import { MediaExportService } from '../services/media-export-service'
 import { MediaImportService } from '../services/media-import-service'
 import { RecordingService } from '../services/recording-service'
+import { combineAudioVideo } from '../services/media-combine-service'
 import { saveDraftZip } from '../services/draft-export'
 import { loadDraftZip } from '../services/draft-import'
 import { createToastAPI } from '../services/toast-api'
@@ -157,13 +158,19 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     ): Promise<void> => {
       const filename = sanitizeFilename(rawFilename)
       if (type === SaveState.video) {
-        const blob = await mediaExport.createVideo(
+        const video = await mediaExport.createVideo(
           frameCapture.frameBlobs,
           frameRate,
-          audio.audioBlob ?? undefined,
           progressCallback,
         )
-        saveAs(new Blob([blob]), filename + '.webm', { autoBom: true })
+        // Audio is recorded separately and stream-copied into the video
+        // container (mediabunny), sidestepping the Safari mux/decode bug. The
+        // container follows the recorded codec, so derive the extension from it.
+        const blob = audio.audioBlob
+          ? await combineAudioVideo(video, audio.audioBlob, { progressCallback })
+          : video
+        const extension = blob.type.includes('mp4') ? 'mp4' : 'webm'
+        saveAs(blob, `${filename}.${extension}`, { autoBom: true })
         return
       }
       if (type === SaveState.gif) {
@@ -172,7 +179,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
           frameRate,
           progressCallback,
         )
-        saveAs(new Blob([blob]), filename + '.gif', { autoBom: true })
+        saveAs(blob, filename + '.gif', { autoBom: true })
         return
       }
       await saveDraftZip({
@@ -199,13 +206,10 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
     async (file: Blob): Promise<void> => {
       try {
         clear()
-        const { frames, frameBlobs, frameRate: importedRate } = await loadDraftZip(
-          file,
-          mediaImport,
-        )
-        // Imported audio is currently dropped: useAudioRecording has no slot
-        // to inject a blob back in; users can re-record over the loaded draft.
+        const { frames, frameBlobs, frameRate: importedRate, audioBlob } =
+          await loadDraftZip(file, mediaImport)
         frameCapture.loadFrames(frames, frameBlobs)
+        audio.loadAudio(audioBlob)
         if (importedRate && importedRate > 0) {
           setFrameRateInStore(importedRate)
         }
@@ -213,7 +217,7 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
         console.error('[useAnimator] load failed', err)
       }
     },
-    [clear, frameCapture, mediaImport, setFrameRateInStore],
+    [audio, clear, frameCapture, mediaImport, setFrameRateInStore],
   )
 
   const formatTime = useCallback(

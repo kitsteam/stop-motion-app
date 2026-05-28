@@ -235,6 +235,50 @@ describe('useAudioRecording', () => {
     expect(result.current.status).toBe(AudioRecorderStatus.recording)
   })
 
+  it('loadAudio() injects an imported blob and sets status to stopped', () => {
+    removeMediaDevices()
+    const { result } = renderHook(() => useAudioRecording())
+    const blob = new Blob(['imported'], { type: 'audio/webm' })
+
+    act(() => {
+      result.current.loadAudio(blob)
+    })
+
+    expect(result.current.audioBlob).toBe(blob)
+    expect(result.current.status).toBe(AudioRecorderStatus.stopped)
+  })
+
+  it('loadAudio(null) clears the blob back to idle', () => {
+    removeMediaDevices()
+    const { result } = renderHook(() => useAudioRecording())
+
+    act(() => {
+      result.current.loadAudio(new Blob(['x'], { type: 'audio/webm' }))
+    })
+    act(() => {
+      result.current.loadAudio(null)
+    })
+
+    expect(result.current.audioBlob).toBeNull()
+    expect(result.current.status).toBe(AudioRecorderStatus.idle)
+  })
+
+  it('loadAudio() is a no-op while recording', async () => {
+    const getUserMedia = vi.fn().mockResolvedValue(makeStream())
+    installMediaDevices({ getUserMedia })
+    const { result } = renderHook(() => useAudioRecording())
+    await act(async () => {
+      await result.current.start()
+    })
+
+    act(() => {
+      result.current.loadAudio(new Blob(['nope'], { type: 'audio/webm' }))
+    })
+
+    expect(result.current.status).toBe(AudioRecorderStatus.recording)
+    expect(result.current.audioBlob).toBeNull()
+  })
+
   it('picks audioWebm (opus) when supported; falls back to audioWebmContainer', async () => {
     isTypeSupportedFn = (type: string) => type === MimeTypes.audioWebmContainer
     const getUserMedia = vi.fn().mockResolvedValue(makeStream())

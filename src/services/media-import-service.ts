@@ -77,7 +77,7 @@ export class MediaImportService {
   private classifyZipEntry(
     entry: ZipEntryHandle,
     hasVideo: boolean,
-  ): { role: 'video' | 'audio'; mimeType: MimeTypes } | null {
+  ): { role: 'video' | 'audio'; mimeType: string } | null {
     if (!entry || entry.directory) {
       return null
     }
@@ -97,7 +97,7 @@ export class MediaImportService {
     }
 
     if (baseName === 'audio.webm' || baseName.includes('audio')) {
-      return { role: 'audio', mimeType: MimeTypes.audioWebm }
+      return { role: 'audio', mimeType: this.getAudioMimeTypeFromName(baseName) }
     }
 
     if (baseName.endsWith('.webm')) {
@@ -108,6 +108,15 @@ export class MediaImportService {
     }
 
     return null
+  }
+
+  // Keep the recorded audio MIME so Safari drafts (audio.mp4/AAC) round-trip
+  // correctly instead of being mislabeled audio/webm.
+  private getAudioMimeTypeFromName(baseName: string): string {
+    if (baseName.endsWith('.mp4') || baseName.endsWith('.m4a')) return 'audio/mp4'
+    if (baseName.endsWith('.ogg')) return 'audio/ogg'
+    if (baseName.endsWith('.wav')) return 'audio/wav'
+    return MimeTypes.audioWebm
   }
 
   private getFrameMimeTypeFromEntry(filename: string): string {

@@ -91,6 +91,14 @@ body {
   color: #212529;
 }
 
+/* Suppress double-tap-to-zoom app-wide while keeping tap/scroll responsive.
+   Pinch-zoom is blocked by the viewport meta (Android) and the gesture guard
+   in main.tsx (iOS, which ignores user-scalable). */
+html,
+body {
+  touch-action: manipulation;
+}
+
 h1,
 h2 {
   font-family: var(--heading);
