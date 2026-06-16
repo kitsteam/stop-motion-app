@@ -1,0 +1,33 @@
+.header {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  padding: 0 10px;
+  position: relative;
+}
+
+.back {
+  background: none;
+  border: none;
+  padding: 0 12px;
+  /* display size for the chevron glyph; stays as literal */
+  font-size: 28px;
+  line-height: 1;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.back:hover,
+.back:focus-visible {
+  /* darker cyan hover; not in the brand palette */
+  color: #008fba;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-family: 'FiraSans', sans-serif;
+  font-weight: 500;
+  font-size: var(--text-lg);
+}

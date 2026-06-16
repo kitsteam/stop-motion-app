@@ -1,49 +1,43 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
+# cooldown.default-days: 7 matches pnpm-workspace.yaml minimumReleaseAge: 10080.
+# Security updates are exempt from cooldown (Dependabot rule).
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 25
+      day: "monday"
+    open-pull-requests-limit: 15
+    cooldown:
+      default-days: 7
     groups:
-      all-minor-patch-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      angular:
-        patterns:
-          - "@angular*"
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      development-dependencies:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
     ignore:
-      - dependency-name: "@angular*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
-        versions:
-          - "< 22"
-          - ">= 23"
-      - dependency-name: "typescript"
-        versions:
-          - ">= 5.5.5"
+        versions: ["< 24", ">= 25"]
+
   - package-ecosystem: "docker"
-    directory: "/" # Location of package manifests
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
     ignore:
+      # Node base image is bumped manually on the Node LTS cycle.
       - dependency-name: "node"
-        versions:
-          - "< 22"
-          - ">= 23"
+        versions: ["< 24", ">= 25"]
+
   - package-ecosystem: "github-actions"
-    directory: "/" # Location of package manifests
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7

@@ -1,0 +1,29 @@
+.overlay {
+  display: none;
+}
+
+@media (max-height: 680px) and (orientation: landscape) {
+  .overlay {
+    display: flex;
+    position: absolute;
+    inset: 44px 0 0 0;
+    background-color: #c2ebff;
+    justify-content: center;
+    padding-top: 45px;
+    z-index: 9999999;
+  }
+
+  .container {
+    text-align: center;
+  }
+
+  .icon {
+    width: 110px;
+    height: 110px;
+  }
+
+  .hint {
+    font-size: 20px;
+    margin: 0;
+  }
+}

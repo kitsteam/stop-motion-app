@@ -4,5 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
+    restart: unless-stopped
     ports:
       - "${DOCKER_COMPOSE_APP_PORT_PUBLISHED:-8080}:8080"

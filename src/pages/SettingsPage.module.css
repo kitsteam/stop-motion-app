@@ -1,0 +1,71 @@
+.hero {
+  background-color: var(--color-accent);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.heroLogo {
+  display: block;
+  margin: 0 auto;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+}
+
+.section {
+  padding: var(--space-4) 0.75rem;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .column {
+    max-width: 33.3333%;
+    margin: 0 auto;
+  }
+}
+
+.listHeadline {
+  font-size: var(--text-lg);
+  /* 300 to match the FiraSans Light glyphs registered in src/index.css. */
+  font-weight: 300;
+  margin: var(--space-4) 0;
+  padding-left: var(--space-4);
+}
+
+.linkList {
+  list-style: none;
+  margin: var(--space-4) 0;
+  padding: 0;
+}
+
+.linkList li {
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.link {
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-base);
+  padding: var(--space-4);
+  text-decoration: none;
+}
+
+.link::after {
+  content: '';
+  display: inline-block;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-top: 2px solid var(--color-neutral-300);
+  border-right: 2px solid var(--color-neutral-300);
+  transform: rotate(45deg);
+  margin-left: var(--space-2);
+  flex-shrink: 0;
+}
+
+.link:hover,
+.link:focus-visible {
+  background-color: #f5f5f5;
+}

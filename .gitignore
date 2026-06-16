@@ -1,6 +1,7 @@
 # Specifies intentionally untracked files to ignore when using Git
 # http://git-scm.com/docs/gitignore
 
+# OS / editor cruft
 *~
 *.sw[mnpcod]
 .tmp
@@ -10,34 +11,31 @@
 *.sublime-workspace
 .DS_Store
 Thumbs.db
-UserInterfaceState.xcuserstate
-$RECYCLE.BIN/
 
+# Logs
 *.log
 log.txt
 npm-debug.log*
+pnpm-debug.log*
 
+# Build / dependency dirs
 /.idea
-/.ionic
-/.sass-cache
-/.sourcemaps
-/.versions
 /coverage
 /dist
+dist-ssr
 /node_modules
-/platforms
-/plugins
-/www
+*.local
+/.omc
+/.claude
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 
-.angular
+# pnpm local content-addressable store (used when pnpm can't write to the
+# global store path).
+.pnpm-store/
+
 .devcontainer
-.nx/*
 
-# Ignore everything in .yarn except the essential subfolders for Zero-Installs
-.yarn/*
-!.yarn/cache/
-!.yarn/patches/
-!.yarn/plugins/
-!.yarn/releases/
-!.yarn/sdks/
-!.yarn/versions/
+# Local dev helpers (kept untracked so individual setups don't get committed)
+scripts/dev/fake-camera.js

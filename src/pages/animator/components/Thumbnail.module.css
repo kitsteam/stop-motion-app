@@ -1,0 +1,35 @@
+.wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.canvas {
+  border-radius: 7px;
+  cursor: pointer;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.deleteIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #eb445a;
+  border-radius: 7px;
+  padding: 2px;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 5px;
+  pointer-events: none;
+}
+
+.deleteIconImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: brightness(0) invert(1);
+}

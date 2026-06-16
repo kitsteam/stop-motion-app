@@ -1,0 +1,8 @@
+.tabbar {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  justify-content: space-around;
+  background: transparent;
+  padding: 4px 0 30px;
+}

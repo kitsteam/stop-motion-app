@@ -1,17 +1,34 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/app",
-    "types": [
-      "dom-mediacapture-record",
-      "@angular/localize"
-    ]
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client", "vite-plugin-pwa/client"],
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    /* The shared enums use TS `enum` syntax, which is not erasable. Keep this
+       off until they are converted to `as const` objects (out of scope here). */
+    "erasableSyntaxOnly": false,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path aliases: resolved relative to this file when baseUrl is omitted. */
+    "paths": {
+      "@enums/*":      ["./src/enums/*"],
+      "@interfaces/*": ["./src/interfaces/*"]
+    }
   },
-  "files": [
-    "src/main.ts",
-  ],
-  "include": [
-    "src/**/*.d.ts"
-  ]
+  "include": ["src"]
 }

@@ -1,0 +1,73 @@
+.container {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ababab;
+  width: 170px;
+  height: 170px;
+  text-align: center;
+  line-height: 170px;
+}
+
+.container::before {
+  content: '';
+  border-radius: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  /* #d1e5eb is a pale cyan-gray inset ring: decorative chrome, not brand. */
+  box-shadow:
+    inset 0 10px 0 #d1e5eb,
+    inset 10px 0 0 #d1e5eb,
+    inset 0 -10px 0 #d1e5eb,
+    inset -10px 0 0 #d1e5eb;
+  animation: rotate2 1s -0.5s linear infinite;
+}
+
+.counter {
+  /* display size for the countdown numeric; stays as literal */
+  font-size: 75px;
+  font-weight: 400;
+  animation: beat 1s -0.5s linear infinite;
+  display: block;
+  color: var(--color-accent);
+  border-radius: 50%;
+}
+
+@keyframes rotate2 {
+  0% {
+    transform: rotateZ(0deg) scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: rotateZ(-90deg) scaleX(1) scaleY(1);
+  }
+  100% {
+    transform: rotateZ(-180deg) scaleX(1) scaleY(1);
+  }
+}
+
+@keyframes beat {
+  0% {
+    transform: scale(1);
+    /* darker cyan beat color; not in the brand palette */
+    color: #008fba;
+  }
+  50% {
+    transform: scale(0.8);
+    color: var(--color-accent);
+  }
+  100% {
+    color: #008fba;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container::before,
+  .counter {
+    animation: none;
+  }
+}
