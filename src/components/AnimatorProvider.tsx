@@ -104,7 +104,6 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
   // defaults regardless of previous in-app navigation.
   useEffect(() => {
     animatorStore.getState().reset()
-
   }, [])
 
   const setFramerate = useCallback(
@@ -189,7 +188,6 @@ function AnimatorComposer({ children }: { children: ReactNode }) {
         frameRate,
         width: layout.width,
         height: layout.height,
-        mediaExport,
       })
     },
     [

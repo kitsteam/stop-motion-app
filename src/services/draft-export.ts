@@ -1,7 +1,6 @@
 import { saveAs } from 'file-saver'
 import * as zip from '@zip.js/zip.js'
 import type { FrameManifest } from '@interfaces/frame-manifest.interface'
-import type { MediaExportService } from './media-export-service'
 
 export interface SaveDraftInput {
   filename: string
@@ -10,14 +9,11 @@ export interface SaveDraftInput {
   frameRate: number
   width: number
   height: number
-  mediaExport: MediaExportService
 }
 
 export async function saveDraftZip(input: SaveDraftInput): Promise<void> {
-  const { filename, frameBlobs, audioBlob, frameRate, width, height, mediaExport } = input
-  const videoBlob = await mediaExport.createVideo(frameBlobs, frameRate)
+  const { filename, frameBlobs, audioBlob, frameRate, width, height } = input
   const dataURI = await createZipFile({
-    videoBlob,
     audioBlob,
     frameBlobs,
     frameRate,
@@ -29,7 +25,6 @@ export async function saveDraftZip(input: SaveDraftInput): Promise<void> {
 }
 
 interface CreateZipInput {
-  videoBlob: Blob
   audioBlob: Blob | null
   frameBlobs: Blob[]
   frameRate: number
@@ -38,10 +33,9 @@ interface CreateZipInput {
 }
 
 async function createZipFile(input: CreateZipInput): Promise<string> {
-  const { videoBlob, audioBlob, frameBlobs, frameRate, width, height } = input
+  const { audioBlob, frameBlobs, frameRate, width, height } = input
   zip.configure({ useWebWorkers: false })
   const zipWriter = new zip.ZipWriter(new zip.Data64URIWriter('application/zip'))
-  await zipWriter.add('video.webm', new zip.BlobReader(videoBlob))
   if (audioBlob) {
     const audioFileExtension = getAudioFileExtension(audioBlob)
     await zipWriter.add(`audio.${audioFileExtension}`, new zip.BlobReader(audioBlob))

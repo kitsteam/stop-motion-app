@@ -92,11 +92,11 @@ export class MediaImportService {
       return null
     }
 
-    if (baseName === 'video.webm' || baseName.includes('video')) {
+    if (baseName.includes('video')) {
       return { role: 'video', mimeType: MimeTypes.video }
     }
 
-    if (baseName === 'audio.webm' || baseName.includes('audio')) {
+    if (baseName.includes('audio')) {
       return { role: 'audio', mimeType: this.getAudioMimeTypeFromName(baseName) }
     }
 

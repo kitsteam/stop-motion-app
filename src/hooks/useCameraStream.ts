@@ -72,8 +72,7 @@ function buildConstraints(
   const aspectRatio = ctx.width && ctx.height ? ctx.width / ctx.height : undefined
 
   if (ctx.isIOS || ctx.isAndroid) {
-    // strange bug: width and height need to be swapped for portrait mode
-    // (carried over from animator.ts:130).
+    // strange bug: width and height need to be swapped for portrait mode.
     const width = ctx.isPortrait ? ctx.height : ctx.width
     const height = ctx.isPortrait ? ctx.width : ctx.height
     return {
@@ -90,8 +89,7 @@ function buildConstraints(
 
   if (deviceId) {
     // Legacy `deviceId` constraint shape; the `sourceId` field is silently
-    // ignored by modern browsers but preserved for backwards compatibility
-    // with the original code path (see animator.ts:141).
+    // ignored by modern browsers but preserved for backwards compatibility.
     return {
       audio: false,
       video: {

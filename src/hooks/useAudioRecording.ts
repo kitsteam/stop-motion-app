@@ -11,9 +11,8 @@ export interface UseAudioRecordingApi {
   loadAudio: (blob: Blob | null) => void
 }
 
-// Preference order matches Animator.getAudioMimeType (animator.ts:602): try
-// codec-tagged Opus first so the file MIME line matches what plays back, fall
-// back to the bare container.
+// Try codec-tagged Opus first so the file MIME line matches what plays back,
+// fall back to the bare container.
 const AUDIO_MIME_CANDIDATES: readonly MimeTypes[] = [
   MimeTypes.audioWebm,
   MimeTypes.audioWebmContainer,
@@ -197,15 +196,14 @@ export function useAudioRecording(): UseAudioRecordingApi {
     try {
       recorder.stop()
     } catch (err) {
-      // Mirrors Animator.stopActiveAudioRecorder (animator.ts:443): swallow
-      // and finalize manually so the hook still surfaces whatever was captured.
+      // Swallow and finalize manually so the hook still surfaces whatever was
+      // captured.
       console.warn('[useAudioRecording] recorder.stop() failed', err)
       finalize()
     }
   }, [clearAutoStopTimer, finalize])
 
   const clear = useCallback((): void => {
-    // Mirrors Animator.clearAudio (animator.ts:285): no-op while recording.
     if (recorderRef.current && recorderRef.current.state === 'recording') return
     setAudioBlob(null)
     setStatus(AudioRecorderStatus.idle)

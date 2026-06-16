@@ -121,7 +121,7 @@ async function main() {
     'production distribution, together with the full text of each license.',
     '',
     'StopClip itself is licensed under the GNU Affero General Public License',
-    'v3.0 or later (AGPL-3.0-or-later); see LICENSE. The dependency licenses',
+    'v3.0 (AGPL-3.0-only); see LICENSE. The dependency licenses',
     'recorded below (MIT, BSD-3-Clause and MPL-2.0) are compatible with',
     'redistribution under those terms. MPL-2.0 is a file-level (weak) copyleft',
     'license; under MPL-2.0 §3.3 its files may be combined into this AGPL-3.0',
@@ -140,7 +140,7 @@ async function main() {
     '\n' +
     '='.repeat(80) +
     '\n' +
-    'For the StopClip source license (AGPL-3.0-or-later) see LICENSE.\n'
+    'For the StopClip source license (AGPL-3.0-only) see LICENSE.\n'
 
   await writeFile(OUTPUT, header + '\n' + body + footer, 'utf8')
 

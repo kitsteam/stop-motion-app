@@ -8,4 +8,6 @@ allowBuilds:
   core-js: false             # transitive; no build script needed for browser bundle
 
 # Transitive-dep CVE pins, add entries as `pnpm audit` surfaces them.
-overrides: {}
+overrides:
+  # GHSA-4x5r-pxfx-6jf8: arbitrary file read via sourceMappingURL (pulled in by vite-plugin-pwa).
+  '@babel/core': '>=7.29.6'
