@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Generate NOTICES.txt: every third-party runtime dependency bundled into the
-// StopClip distribution, with its license text. Re-run after dependency
-// upgrades: `pnpm run generate:notices`.
+// StopClip distribution — direct *and* transitive — with its license text.
+// Re-run after dependency upgrades: `pnpm run generate:notices`.
 
 import { readFile, writeFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -16,8 +16,17 @@ const OUTPUT = join(ROOT, 'NOTICES.txt')
 // devDependencies whose code ships in the production artifact even though
 // they're listed under devDependencies (build-time tools that emit runtime
 // payloads). Add to this list if Vite/Workbox ever pull additional runtimes
-// into the bundle.
+// into the bundle. Transitive dependencies of these are walked too.
 const SHIPPED_DEV_DEPS = ['workbox-window']
+
+// Transitive packages that contain no runtime JavaScript and are therefore not
+// bundled into the distribution, so they need no attribution: TypeScript type
+// definitions (@types/*, csstype — only `.d.ts`) and the TypeScript compiler
+// itself (some packages list it under `dependencies` for their typings). These
+// subtrees are pruned during the walk.
+function isExcluded(name) {
+  return name.startsWith('@types/') || name === 'typescript' || name === 'csstype'
+}
 
 const LICENSE_FILENAMES = [
   'LICENSE',
@@ -66,12 +75,7 @@ function authorString(pkg) {
   return null
 }
 
-async function describePackage(name) {
-  const pkgDir = join(MODULES, name)
-  if (!existsSync(pkgDir)) {
-    return { name, missing: true }
-  }
-  const pkg = await readJson(join(pkgDir, 'package.json'))
+async function describePackage(name, pkgDir, pkg) {
   const license = await findLicenseText(pkgDir)
   return {
     name,
@@ -81,6 +85,42 @@ async function describePackage(name) {
     author: authorString(pkg),
     licenseFilename: license?.filename ?? null,
     licenseText: license?.text ?? null,
+  }
+}
+
+// The node_modules directory that holds `name` (one level up for an unscoped
+// package, two for a scoped one). Under pnpm, a package's own dependencies are
+// symlinked as siblings inside that same directory, so resolving a dependency
+// means joining its name onto this container.
+function depsContainer(pkgDir, name) {
+  let dir = pkgDir
+  for (let i = 0; i < name.split('/').length; i++) dir = dirname(dir)
+  return dir
+}
+
+// Walk the dependency tree from `container/name`, following each package's
+// `dependencies` recursively. Resolves symlinks so it works with pnpm's
+// content-addressed store, dedupes by resolved directory, and prunes the
+// excluded (non-bundled) subtrees. Collects describe() entries into `entries`.
+async function collect(name, container, seen, entries) {
+  const pkgDir = join(container, name)
+  let realDir
+  try {
+    realDir = realpathSync(pkgDir)
+  } catch {
+    entries.push({ name, missing: true })
+    return
+  }
+  if (seen.has(realDir)) return
+  seen.add(realDir)
+  if (isExcluded(name)) return
+
+  const pkg = await readJson(join(realDir, 'package.json'))
+  entries.push(await describePackage(name, realDir, pkg))
+
+  const childContainer = depsContainer(realDir, name)
+  for (const dep of Object.keys(pkg.dependencies ?? {})) {
+    await collect(dep, childContainer, seen, entries)
   }
 }
 
@@ -106,13 +146,17 @@ function formatEntry(entry) {
 async function main() {
   const rootPkg = await readJson(join(ROOT, 'package.json'))
   const runtimeDeps = Object.keys(rootPkg.dependencies ?? {})
-  const shipped = [...runtimeDeps, ...SHIPPED_DEV_DEPS]
-  const unique = [...new Set(shipped)].sort()
+  const roots = [...new Set([...runtimeDeps, ...SHIPPED_DEV_DEPS])].sort()
 
-  const entries = []
-  for (const name of unique) {
-    entries.push(await describePackage(name))
+  // Walk the full tree (direct + transitive) starting from each root, which is
+  // hoisted into the top-level node_modules.
+  const seen = new Set()
+  const collected = []
+  for (const name of roots) {
+    await collect(name, MODULES, seen, collected)
   }
+
+  const entries = collected.sort((a, b) => a.name.localeCompare(b.name))
 
   const header = [
     'NOTICES',
