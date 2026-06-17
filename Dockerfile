@@ -19,7 +19,7 @@ RUN corepack prepare pnpm@${PNPM_VERSION} --activate
 
 FROM base AS builder
 
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY --chown=node:node src ./src
@@ -34,7 +34,7 @@ RUN pnpm run build \
 
 FROM base AS development
 
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 
