@@ -38,5 +38,4 @@ Override `DOCKER_COMPOSE_APP_PORT_PUBLISHED` in `.env` to change the published p
 
 ## Documentation
 
-- [Codec Documentation](docs/CODECS.md) — image, video, and audio codecs used
 - [NOTICES](NOTICES.txt) — full third-party attribution for every bundled dependency

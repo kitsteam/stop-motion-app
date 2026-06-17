@@ -61,7 +61,7 @@ UI event → useAnimator → AnimatorProvider hook composition
 
 ### Media services
 
-Pure-TS classes returning `Promise<Blob>`. See `docs/CODECS.md` for codec details.
+Pure-TS classes returning `Promise<Blob>`.
 
 - **`media-export-service`** — GIFs via `gifenc` (downscaled to 480px wide); delegates video to `RecordingService`.
 - **`recording-service`** — renders frames to an offscreen canvas, `captureStream(frameRate)`, optionally merges audio (decoded through `AudioContext` → `MediaStreamAudioDestination`), records via `MediaRecorder`. Prefers `video/webm;codecs=vp8,opus`, falls back to `video/webm`.
