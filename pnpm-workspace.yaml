@@ -2,10 +2,15 @@
 # Mirrored by Dependabot cooldown.default-days: 7 in .github/dependabot.yml.
 minimumReleaseAge: 10080
 
+# strictDepBuilds turns an unreviewed dependency lifecycle script into a hard install
+# failure instead of a warning, so a new build script gates CI.
+strictDepBuilds: true
+
 # pnpm 10 disables install scripts by default for transitive deps; allowBuilds is the explicit allowlist.
 allowBuilds:
   esbuild: true              # bundled by Vite; needs to extract its native binary
-  core-js: false             # transitive; no build script needed for browser bundle
+  core-js: true              # transitive; postinstall is a funding banner only, but
+                             # strictDepBuilds fails on any ignored script, so run the no-op
 
 # Transitive-dep CVE pins, add entries as `pnpm audit` surfaces them.
 overrides:
