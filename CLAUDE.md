@@ -12,7 +12,7 @@ Guidance for Claude Code when working in this repository.
 - **react-i18next** + `i18next-http-backend` (loads `public/assets/i18n/de.json`)
 - CSS Modules per component (`*.module.css`) + global `src/index.css`; no CSS framework
 - **Zustand** for animator state (`src/stores/animator-store.ts`)
-- **pnpm** (Corepack) on **Node 22**
+- **pnpm** (Corepack) on **Node 24**
 - **Vitest** + Testing Library + jsdom
 - **vite-plugin-pwa** (Workbox) for the service worker + manifest
 - Media: native **MediaRecorder** (VP8/Opus WebM), **gifenc**, **@zip.js/zip.js**, **file-saver**, **Swiper**
