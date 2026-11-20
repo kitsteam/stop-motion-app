@@ -1,7 +1,7 @@
 ARG NODE_VERSION=24.22.1
 ARG ALPINE_VERSION=3.24
 ARG PNPM_VERSION=10.33.4
-ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:1.31.7-alpine3.24-slim
+ARG NGINX_IMAGE=nginx/nginx-unprivileged:1.31.9-alpine3.24-slim
 
 FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS base
 
